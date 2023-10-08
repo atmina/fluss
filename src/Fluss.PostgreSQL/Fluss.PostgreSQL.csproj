@@ -1,0 +1,27 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+    <PropertyGroup>
+        <TargetFrameworks>net8.0; net7.0; net6.0</TargetFrameworks>
+        <ImplicitUsings>enable</ImplicitUsings>
+        <Nullable>enable</Nullable>
+    </PropertyGroup>
+
+    <ItemGroup>
+      <PackageReference Include="FluentMigrator.Runner" Version="3.3.2" />
+      <PackageReference Include="FluentMigrator.Runner.Postgres" Version="3.3.2" />
+      <PackageReference Include="Microsoft.Extensions.Hosting.Abstractions" Version="7.0.0" />
+      <PackageReference Include="Npgsql" Version="7.0.6" />
+      <PackageReference Include="Npgsql.Json.NET" Version="7.0.6" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <Reference Include="OpenTelemetry.Api">
+        <HintPath>..\..\..\..\..\.nuget\packages\opentelemetry.api\1.6.0\lib\net6.0\OpenTelemetry.Api.dll</HintPath>
+      </Reference>
+    </ItemGroup>
+
+    <ItemGroup>
+      <ProjectReference Include="..\Fluss\Fluss.csproj" />
+    </ItemGroup>
+
+</Project>
