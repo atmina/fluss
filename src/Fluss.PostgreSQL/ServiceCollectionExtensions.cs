@@ -14,10 +14,7 @@ public static class ServiceCollectionExtensions
     public static IServiceCollection AddPostgresEventSourcingRepository(this IServiceCollection services,
         string connectionString, Assembly? upcasterSourceAssembly = null)
     {
-        if (services is null)
-        {
-            throw new ArgumentNullException(nameof(services));
-        }
+        ArgumentNullException.ThrowIfNull(services);
 
         if (upcasterSourceAssembly is not null)
         {
@@ -27,7 +24,7 @@ public static class ServiceCollectionExtensions
         }
 
         return services
-            .AddScoped<IBaseEventRepository, Fluss.PostgreSQL.PostgreSQLEventRepository>()
+            .AddBaseEventRepository<PostgreSQLEventRepository>()
             .AddFluentMigratorCore()
             .ConfigureRunner(rb => rb
                 .AddPostgres()
@@ -43,15 +40,15 @@ public static class ServiceCollectionExtensions
 public class Migrator : BackgroundService
 {
     private readonly ILogger<Migrator> _logger;
-    private readonly IMigrationRunner _migrationRunner;
+    private readonly IServiceProvider _serviceProvider;
     private bool _didFinish;
 
     private readonly SemaphoreSlim _didFinishChanged = new(0, 1);
 
-    public Migrator(IMigrationRunner migrationRunner, ILogger<Migrator> logger)
+    public Migrator(ILogger<Migrator> logger, IServiceProvider serviceProvider)
     {
-        _migrationRunner = migrationRunner;
         _logger = logger;
+        _serviceProvider = serviceProvider;
     }
 
     public async Task WaitForFinish()
@@ -77,29 +74,19 @@ public class Migrator : BackgroundService
         {
             try
             {
-                Migrate();
+                var scope = _serviceProvider.CreateScope();
+                var migrationRunner = scope.ServiceProvider.GetRequiredService<IMigrationRunner>();
+                migrationRunner.MigrateUp();
+
+                _didFinish = true;
+                _didFinishChanged.Release();
             }
             catch (Exception e)
             {
                 _logger.LogError(e, "Error while migrating");
+                Environment.Exit(-1);
             }
         }, stoppingToken);
-    }
-
-    public void Migrate()
-    {
-        //_migrationRunner.ListMigrations();
-        try
-        {
-            _migrationRunner.MigrateUp();
-        }
-        catch
-        {
-            Environment.Exit(-1);
-        }
-
-        _didFinish = true;
-        _didFinishChanged.Release();
     }
 }
 

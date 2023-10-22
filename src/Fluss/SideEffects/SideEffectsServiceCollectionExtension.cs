@@ -11,7 +11,7 @@ public static class SideEffectsServiceCollectionExtension
 
         foreach (var @class in implementingClasses)
         {
-            services.AddScoped(typeof(SideEffect), @class);
+            services.AddSingleton(typeof(SideEffect), @class);
         }
 
         services.AddHostedService<SideEffectDispatcher>();

@@ -11,9 +11,9 @@ public static class ServiceCollectionExtensions
 
         foreach (var policyType in policyTypes)
         {
-            services = services
-                .AddScoped(policyType)
-                .AddScoped(sp => (Policy)sp.GetRequiredService(policyType));
+            services
+                .AddSingleton(policyType)
+                .AddSingleton(sp => (Policy)sp.GetRequiredService(policyType));
         }
 
         return services;

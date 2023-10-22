@@ -12,7 +12,7 @@ public static class ValidationServiceCollectionExtension
             sourceAssembly.GetTypes().Where(t => t.IsAssignableTo(aggregateValidatorType)).ToList();
         foreach (var aggregateValidator in aggregateValidators)
         {
-            services.AddScoped(aggregateValidatorType, aggregateValidator);
+            services.AddSingleton(aggregateValidatorType, aggregateValidator);
         }
 
         var eventValidatorType = typeof(EventValidator);
@@ -20,7 +20,7 @@ public static class ValidationServiceCollectionExtension
             sourceAssembly.GetTypes().Where(t => t.IsAssignableTo(eventValidatorType)).ToList();
         foreach (var eventValidator in eventValidators)
         {
-            services.AddScoped(eventValidatorType, eventValidator);
+            services.AddSingleton(eventValidatorType, eventValidator);
         }
 
         services.AddSingleton<IRootValidator, RootValidator>();

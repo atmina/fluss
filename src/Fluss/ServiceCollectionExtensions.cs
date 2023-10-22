@@ -91,7 +91,7 @@ public static class ServiceCollectionExtensions
 
         foreach (var upcaster in upcasters)
         {
-            services.AddScoped(upcasterType, upcaster);
+            services.AddSingleton(upcasterType, upcaster);
         }
 
         return services.AddSingleton<EventUpcasterService>().AddSingleton<UpcasterSorter>();
