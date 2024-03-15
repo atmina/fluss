@@ -94,7 +94,8 @@ public partial class UnitOfWork
         using var activity = FlussActivitySource.Source.StartActivity();
 
         var validatedEnvelopes = new List<EventEnvelope>();
-        foreach (var envelope in PublishedEventEnvelopes) {
+        foreach (var envelope in PublishedEventEnvelopes)
+        {
             await _validator.ValidateEvent(envelope, validatedEnvelopes);
             validatedEnvelopes.Add(envelope);
         }

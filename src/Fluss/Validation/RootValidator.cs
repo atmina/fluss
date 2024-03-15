@@ -61,7 +61,8 @@ public class RootValidator : IRootValidator
         var willBePublishedEnvelopes = previousEnvelopes ?? new List<EventEnvelope>();
 
         var versionedUnitOfWork = unitOfWork.WithPrefilledVersion(envelope.Version - willBePublishedEnvelopes.Count - 1);
-        foreach (var willBePublishedEnvelope in willBePublishedEnvelopes) {
+        foreach (var willBePublishedEnvelope in willBePublishedEnvelopes)
+        {
             versionedUnitOfWork.PublishedEventEnvelopes.Enqueue(willBePublishedEnvelope);
         }
 
