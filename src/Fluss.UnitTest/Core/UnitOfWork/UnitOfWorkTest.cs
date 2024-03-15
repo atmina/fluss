@@ -28,7 +28,7 @@ public partial class UnitOfWorkTest
         _policies = new List<Policy>();
 
         _validator = new Mock<IRootValidator>(MockBehavior.Strict);
-        _validator.Setup(v => v.ValidateEvent(It.IsAny<EventEnvelope>()))
+        _validator.Setup(v => v.ValidateEvent(It.IsAny<EventEnvelope>(), It.IsAny<IReadOnlyList<EventEnvelope>?>()))
             .Returns<EventEnvelope>(_ => Task.CompletedTask);
         _validator.Setup(v => v.ValidateAggregate(It.IsAny<AggregateRoot>(), It.IsAny<Fluss.UnitOfWork.UnitOfWork>()))
             .Returns<AggregateRoot, Fluss.UnitOfWork.UnitOfWork>((_, _) => Task.CompletedTask);

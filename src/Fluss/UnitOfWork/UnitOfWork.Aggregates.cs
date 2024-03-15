@@ -93,7 +93,11 @@ public partial class UnitOfWork
     {
         using var activity = FlussActivitySource.Source.StartActivity();
 
-        await Task.WhenAll(PublishedEventEnvelopes.Select(envelope => _validator.ValidateEvent(envelope)));
+        var validatedEnvelopes = new List<EventEnvelope>();
+        foreach (var envelope in PublishedEventEnvelopes) {
+            await _validator.ValidateEvent(envelope, validatedEnvelopes);
+            validatedEnvelopes.Add(envelope);
+        }
 
         await _eventRepository.Publish(PublishedEventEnvelopes);
         _consistentVersion += PublishedEventEnvelopes.Count;

@@ -7,7 +7,7 @@ namespace Fluss.Core.Validation;
 
 public interface IRootValidator
 {
-    public Task ValidateEvent(EventEnvelope envelope);
+    public Task ValidateEvent(EventEnvelope envelope, IReadOnlyList<EventEnvelope>? PreviousEnvelopes = null);
     public Task ValidateAggregate(AggregateRoot aggregate, Fluss.UnitOfWork.UnitOfWork unitOfWork);
 }
 
@@ -54,11 +54,17 @@ public class RootValidator : IRootValidator
         }
     }
 
-    public async Task ValidateEvent(EventEnvelope envelope)
+    public async Task ValidateEvent(EventEnvelope envelope, IReadOnlyList<EventEnvelope>? previousEnvelopes = null)
     {
         var unitOfWork = _serviceProvider.GetUserUnitOfWork(envelope.By ?? SystemUser.SystemUserGuid);
 
-        var versionedUnitOfWork = unitOfWork.WithPrefilledVersion(envelope.Version - 1);
+        var willBePublishedEnvelopes = previousEnvelopes ?? new List<EventEnvelope>();
+
+        var versionedUnitOfWork = unitOfWork.WithPrefilledVersion(envelope.Version - willBePublishedEnvelopes.Count - 1);
+        foreach (var willBePublishedEnvelope in willBePublishedEnvelopes) {
+            versionedUnitOfWork.PublishedEventEnvelopes.Enqueue(willBePublishedEnvelope);
+        }
+
         var type = envelope.Event.GetType();
 
         if (!_eventValidators.ContainsKey(type)) return;
