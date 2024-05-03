@@ -1,5 +1,6 @@
 using System.Linq.Expressions;
 using System.Reflection;
+using Fluss.UnitOfWork;
 using HotChocolate.Internal;
 using HotChocolate.Resolvers;
 
@@ -36,7 +37,8 @@ public class UnitOfWorkParameterExpressionBuilder : IParameterExpressionBuilder
         typeof(IHasContextData).GetProperty(
             nameof(IHasContextData.ContextData))!;
 
-    public bool CanHandle(ParameterInfo parameter) => typeof(UnitOfWork.UnitOfWork) == parameter.ParameterType;
+    public bool CanHandle(ParameterInfo parameter) => typeof(UnitOfWork.UnitOfWork) == parameter.ParameterType
+        || typeof(IUnitOfWork) == parameter.ParameterType;
 
     /*
      * Produces something like this: context.GetOrSetGlobalState(
