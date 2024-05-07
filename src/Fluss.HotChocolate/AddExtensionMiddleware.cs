@@ -37,8 +37,10 @@ public class AddExtensionMiddleware
             return;
         }
 
-        if (true != context.Services.GetRequiredService<IHttpContextAccessor>().HttpContext?.WebSockets
-                .IsWebSocketRequest)
+        var httpContext = context.Services.GetRequiredService<IHttpContextAccessor>().HttpContext;
+        var isWebsocket = true == httpContext?.WebSockets.IsWebSocketRequest;
+        var isSse = httpContext?.Request.Headers.Accept.ToString() == "text/event-stream";
+        if (!isWebsocket && !isSse)
         {
             return;
         }
@@ -76,16 +78,18 @@ public class AddExtensionMiddleware
             yield break;
         }
 
+        contextData.TryGetValue(nameof(HttpContext), out var httpContext);
+        var isWebsocket = (httpContext as HttpContext)?.WebSockets.IsWebSocketRequest ?? false;
         var foundSocketSession = contextData.TryGetValue(nameof(ISocketSession), out var contextSocketSession); // as ISocketSession
         var foundOperationId = contextData.TryGetValue("HotChocolate.Execution.Transport.OperationSessionId", out var operationId); // as string
 
-        if (!foundSocketSession || !foundOperationId)
+        if (isWebsocket && (!foundSocketSession || !foundOperationId))
         {
             _logger.LogWarning("Trying to add live results but {SocketSession} or {OperationId} is not present in context!", nameof(contextSocketSession), nameof(operationId));
             yield break;
         }
 
-        if (contextSocketSession is not ISocketSession socketSession)
+        if (isWebsocket && contextSocketSession is not ISocketSession)
         {
             _logger.LogWarning("{ContextSocketSession} key present in context but not an {ISocketSession}!", contextSocketSession?.GetType().FullName, nameof(ISocketSession));
             yield break;
@@ -108,7 +112,7 @@ public class AddExtensionMiddleware
                 unitOfWork.ReadModels
             );
 
-            if (socketSession.Operations.All(operationSession => operationSession.Id != operationId?.ToString()))
+            if (isWebsocket && contextSocketSession is ISocketSession socketSession && socketSession.Operations.All(operationSession => operationSession.Id != operationId?.ToString()))
             {
                 break;
             }
