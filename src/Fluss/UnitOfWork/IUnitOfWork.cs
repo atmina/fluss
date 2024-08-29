@@ -5,8 +5,7 @@ using Fluss.ReadModel;
 
 namespace Fluss;
 
-// Allows mocking
-public interface IUnitOfWork
+public partial interface IUnitOfWork
 {
     ValueTask<TAggregate> GetAggregate<TAggregate, TKey>(TKey key)
         where TAggregate : AggregateRoot<TKey>, new();
