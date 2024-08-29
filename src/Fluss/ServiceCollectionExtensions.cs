@@ -22,6 +22,7 @@ public static class ServiceCollectionExtensions
         ArgumentNullException.ThrowIfNull(services);
 
         services
+            .AddLogging()
             .AddBaseEventRepository<InMemoryEventRepository>()
             .AddSingleton<EventListenerFactory>()
             .AddSingleton<EventListenerFactoryPipeline, InMemoryEventListenerCache>()
@@ -37,10 +38,14 @@ public static class ServiceCollectionExtensions
 
                 return eventListenerFactory;
             })
-            .AddSingleton<ArbitraryUserUnitOfWorkCache>()
+            .AddSingleton<IArbitraryUserUnitOfWorkCache, ArbitraryUserUnitOfWorkCache>()
             .AddTransient<Fluss.UnitOfWork.UnitOfWork>()
             .AddTransient<IUnitOfWork>(sp => sp.GetRequiredService<Fluss.UnitOfWork.UnitOfWork>())
-            .AddTransient<UnitOfWorkFactory>();
+            .AddTransient<UnitOfWorkFactory>()
+            .AddSingleton<IRootValidator, RootValidator>()
+            .AddHostedService<SideEffectDispatcher>()
+            .AddSingleton<EventUpcasterService>()
+            .AddSingleton<UpcasterSorter>();
 
         if (addCaching)
         {
@@ -71,7 +76,8 @@ public static class ServiceCollectionExtensions
         }
 
         return services
-            .AddSingleton<IBaseEventRepository, TBaseEventRepository>()
+            .AddSingleton<TBaseEventRepository>()
+            .AddSingleton<IBaseEventRepository, TBaseEventRepository>(sp => sp.GetRequiredService<TBaseEventRepository>())
             .AddSingleton(sp =>
             {
                 var pipeline = sp.GetServices<EventRepositoryPipeline>();
@@ -96,6 +102,6 @@ public static class ServiceCollectionExtensions
             services.AddSingleton(upcasterType, upcaster);
         }
 
-        return services.AddSingleton<EventUpcasterService>().AddSingleton<UpcasterSorter>();
+        return services;
     }
 }

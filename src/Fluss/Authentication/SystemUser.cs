@@ -11,7 +11,7 @@ public static class SystemUser
         return serviceProvider.GetUserUnitOfWorkFactory(SystemUserGuid);
     }
 
-    public static UnitOfWork.UnitOfWork GetSystemUserUnitOfWork(this IServiceProvider serviceProvider)
+    public static IUnitOfWork GetSystemUserUnitOfWork(this IServiceProvider serviceProvider)
     {
         return serviceProvider.GetUserUnitOfWork(SystemUserGuid);
     }

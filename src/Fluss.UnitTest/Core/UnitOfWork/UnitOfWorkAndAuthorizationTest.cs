@@ -48,4 +48,17 @@ public partial class UnitOfWorkTest
             return (await authContext.GetReadModel<HasAllowEventReadModel>()).HasAllowEvent;
         }
     }
+
+    [Fact]
+    public async Task AnEmptyPolicyDoesNotAllowAnything()
+    {
+        Policy emptyPolicy = new EmptyPolicy();
+        
+        Assert.False(await emptyPolicy.AuthenticateEvent(null!, null!));
+        Assert.False(await emptyPolicy.AuthenticateReadModel(null!, null!));
+    }
+
+    private class EmptyPolicy : Policy
+    {
+    }
 }

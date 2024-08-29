@@ -1,3 +1,4 @@
+using System.Collections.Concurrent;
 using Fluss.Aggregates;
 using Fluss.Events;
 using Fluss.ReadModel;
@@ -10,9 +11,10 @@ public interface IUnitOfWork
     ValueTask<TAggregate> GetAggregate<TAggregate, TKey>(TKey key)
         where TAggregate : AggregateRoot<TKey>, new();
 
-    ValueTask Publish(Event @event, AggregateRoot aggregate);
+    ValueTask Publish(Event @event, AggregateRoot? aggregate = null);
     ValueTask<long> ConsistentVersion();
     IReadOnlyCollection<EventListener> ReadModels { get; }
+    ConcurrentQueue<EventEnvelope> PublishedEventEnvelopes { get; }
 
     ValueTask<TReadModel> GetReadModel<TReadModel>(long? at = null)
         where TReadModel : EventListener, IRootEventListener, IReadModel, new();
@@ -34,4 +36,6 @@ public interface IUnitOfWork
     ValueTask<IReadOnlyList<TReadModel>>
         UnsafeGetMultipleReadModelsWithoutAuthorization<TReadModel, TKey>(IEnumerable<TKey> keys, long? at = null)
         where TKey : notnull where TReadModel : EventListener, IReadModel, IEventListenerWithKey<TKey>, new();
+
+    IUnitOfWork WithPrefilledVersion(long? version);
 }

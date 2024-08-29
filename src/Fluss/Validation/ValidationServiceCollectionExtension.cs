@@ -23,8 +23,6 @@ public static class ValidationServiceCollectionExtension
             services.AddSingleton(eventValidatorType, eventValidator);
         }
 
-        services.AddSingleton<IRootValidator, RootValidator>();
-
         return services;
     }
 }

@@ -54,7 +54,7 @@ public partial class UnitOfWork : IUnitOfWork
         return await _latestVersionLoader;
     }
 
-    public UnitOfWork WithPrefilledVersion(long? version)
+    public IUnitOfWork WithPrefilledVersion(long? version)
     {
         lock (this)
         {

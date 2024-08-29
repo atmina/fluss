@@ -14,8 +14,6 @@ public static class SideEffectsServiceCollectionExtension
             services.AddSingleton(typeof(SideEffect), @class);
         }
 
-        services.AddHostedService<SideEffectDispatcher>();
-
         return services;
     }
 }
