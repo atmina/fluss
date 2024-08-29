@@ -1,7 +1,6 @@
 using Fluss.Authentication;
 using Fluss.Events;
 using Fluss.ReadModel;
-using Fluss.UnitOfWork;
 using Moq;
 
 namespace Fluss.UnitTest.Core.Authentication;

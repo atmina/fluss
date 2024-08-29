@@ -2,7 +2,7 @@ using Fluss.Authentication;
 using Fluss.Events;
 using Fluss.Validation;
 
-namespace Fluss.UnitOfWork;
+namespace Fluss;
 
 public partial class UnitOfWork : IUnitOfWork
 {

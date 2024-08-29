@@ -8,7 +8,7 @@ namespace Fluss.Validation;
 public interface IRootValidator
 {
     public Task ValidateEvent(EventEnvelope envelope, IReadOnlyList<EventEnvelope>? PreviousEnvelopes = null);
-    public Task ValidateAggregate(AggregateRoot aggregate, Fluss.UnitOfWork.UnitOfWork unitOfWork);
+    public Task ValidateAggregate(AggregateRoot aggregate, UnitOfWork unitOfWork);
 }
 
 public class RootValidator : IRootValidator
@@ -89,7 +89,7 @@ public class RootValidator : IRootValidator
         }
     }
 
-    public async Task ValidateAggregate(AggregateRoot aggregate, Fluss.UnitOfWork.UnitOfWork unitOfWork)
+    public async Task ValidateAggregate(AggregateRoot aggregate, UnitOfWork unitOfWork)
     {
         var type = aggregate.GetType();
 

@@ -4,7 +4,6 @@ using Fluss.Authentication;
 using Fluss.Events;
 using Fluss.Events.TransientEvents;
 using Fluss.SideEffects;
-using Fluss.UnitOfWork;
 using Fluss.Upcasting;
 using Fluss.Validation;
 using Microsoft.Extensions.DependencyInjection;
@@ -39,8 +38,8 @@ public static class ServiceCollectionExtensions
                 return eventListenerFactory;
             })
             .AddSingleton<IArbitraryUserUnitOfWorkCache, ArbitraryUserUnitOfWorkCache>()
-            .AddTransient<Fluss.UnitOfWork.UnitOfWork>()
-            .AddTransient<IUnitOfWork>(sp => sp.GetRequiredService<Fluss.UnitOfWork.UnitOfWork>())
+            .AddTransient<UnitOfWork>()
+            .AddTransient<IUnitOfWork>(sp => sp.GetRequiredService<UnitOfWork>())
             .AddTransient<UnitOfWorkFactory>()
             .AddSingleton<IRootValidator, RootValidator>()
             .AddHostedService<SideEffectDispatcher>()

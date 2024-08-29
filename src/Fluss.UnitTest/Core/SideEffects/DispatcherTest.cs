@@ -2,7 +2,6 @@
 using Fluss.Events;
 using Fluss.Events.TransientEvents;
 using Fluss.SideEffects;
-using Fluss.UnitOfWork;
 using Fluss.Upcasting;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
@@ -63,7 +62,7 @@ public class DispatcherTest
     {
         public bool DidTrigger { get; set; } = false;
 
-        public Task<IEnumerable<Event>> HandleAsync(TestEvent @event, Fluss.UnitOfWork.UnitOfWork unitOfWork)
+        public Task<IEnumerable<Event>> HandleAsync(TestEvent @event, Fluss.UnitOfWork unitOfWork)
         {
             DidTrigger = true;
             return Task.FromResult<IEnumerable<Event>>(Array.Empty<Event>());
@@ -113,7 +112,7 @@ public class DispatcherTest
         public bool DidTrigger { get; set; } = false;
 
         public Task<IEnumerable<Event>> HandleAsync(TestTransientEvent @event,
-            Fluss.UnitOfWork.UnitOfWork unitOfWork)
+            Fluss.UnitOfWork unitOfWork)
         {
             DidTrigger = true;
             return Task.FromResult<IEnumerable<Event>>(Array.Empty<Event>());
@@ -163,7 +162,7 @@ public class DispatcherTest
 
     private class TestReturningSideEffect : SideEffect<TestTriggerEvent>
     {
-        public Task<IEnumerable<Event>> HandleAsync(TestTriggerEvent @event, Fluss.UnitOfWork.UnitOfWork unitOfWork)
+        public Task<IEnumerable<Event>> HandleAsync(TestTriggerEvent @event, Fluss.UnitOfWork unitOfWork)
         {
             return Task.FromResult<IEnumerable<Event>>(new[] { new TestReturnedEvent() });
         }

@@ -1,5 +1,3 @@
-using Fluss.UnitOfWork;
-
 namespace Fluss.Authentication;
 
 public static class SystemUser

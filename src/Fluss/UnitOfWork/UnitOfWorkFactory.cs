@@ -4,7 +4,7 @@ using Polly;
 using Polly.Contrib.WaitAndRetry;
 using Polly.Retry;
 
-namespace Fluss.UnitOfWork;
+namespace Fluss;
 
 public class UnitOfWorkFactory
 {
@@ -23,27 +23,27 @@ public class UnitOfWorkFactory
         .Handle<RetryException>()
         .WaitAndRetryAsync(Delay);
 
-    public async ValueTask Commit(Func<Fluss.UnitOfWork.UnitOfWork, ValueTask> action)
+    public async ValueTask Commit(Func<UnitOfWork, ValueTask> action)
     {
         using var activity = FlussActivitySource.Source.StartActivity();
 
         await RetryPolicy
             .ExecuteAsync(async () =>
             {
-                var unitOfWork = _serviceProvider.GetRequiredService<Fluss.UnitOfWork.UnitOfWork>();
+                var unitOfWork = _serviceProvider.GetRequiredService<UnitOfWork>();
                 await action(unitOfWork);
                 await unitOfWork.CommitInternal();
             });
     }
 
-    public async ValueTask<T> Commit<T>(Func<Fluss.UnitOfWork.UnitOfWork, ValueTask<T>> action)
+    public async ValueTask<T> Commit<T>(Func<UnitOfWork, ValueTask<T>> action)
     {
         using var activity = FlussActivitySource.Source.StartActivity();
 
         return await RetryPolicy
             .ExecuteAsync(async () =>
             {
-                var unitOfWork = _serviceProvider.GetRequiredService<Fluss.UnitOfWork.UnitOfWork>();
+                var unitOfWork = _serviceProvider.GetRequiredService<UnitOfWork>();
                 var result = await action(unitOfWork);
                 await unitOfWork.CommitInternal();
                 return result;

@@ -102,7 +102,7 @@ public class AddExtensionMiddleware
                 break;
             }
 
-            if (contextData[nameof(UnitOfWork)] is not UnitOfWork.UnitOfWork unitOfWork)
+            if (contextData[nameof(UnitOfWork)] is not UnitOfWork unitOfWork)
             {
                 break;
             }

@@ -3,7 +3,7 @@ using Fluss.Aggregates;
 using Fluss.Events;
 using Fluss.ReadModel;
 
-namespace Fluss.UnitOfWork;
+namespace Fluss;
 
 // Allows mocking
 public interface IUnitOfWork

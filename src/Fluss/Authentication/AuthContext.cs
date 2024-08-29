@@ -1,6 +1,5 @@
 using Fluss.Events;
 using Fluss.ReadModel;
-using Fluss.UnitOfWork;
 
 namespace Fluss.Authentication;
 

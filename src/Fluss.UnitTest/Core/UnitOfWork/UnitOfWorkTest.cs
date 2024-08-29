@@ -2,7 +2,6 @@ using Fluss.Aggregates;
 using Fluss.Authentication;
 using Fluss.Events;
 using Fluss.ReadModel;
-using Fluss.UnitOfWork;
 using Fluss.Validation;
 using Microsoft.Extensions.DependencyInjection;
 using Moq;
@@ -15,7 +14,7 @@ public partial class UnitOfWorkTest
     private readonly EventListenerFactory _eventListenerFactory;
     private readonly Guid _userId;
     private readonly List<Policy> _policies;
-    private readonly Fluss.UnitOfWork.UnitOfWork _unitOfWork;
+    private readonly Fluss.UnitOfWork _unitOfWork;
     private readonly UnitOfWorkFactory _unitOfWorkFactory;
 
     private readonly Mock<IRootValidator> _validator;
@@ -30,10 +29,10 @@ public partial class UnitOfWorkTest
         _validator = new Mock<IRootValidator>(MockBehavior.Strict);
         _validator.Setup(v => v.ValidateEvent(It.IsAny<EventEnvelope>(), It.IsAny<IReadOnlyList<EventEnvelope>?>()))
             .Returns<EventEnvelope, IReadOnlyList<EventEnvelope>?>((_, _) => Task.CompletedTask);
-        _validator.Setup(v => v.ValidateAggregate(It.IsAny<AggregateRoot>(), It.IsAny<Fluss.UnitOfWork.UnitOfWork>()))
-            .Returns<AggregateRoot, Fluss.UnitOfWork.UnitOfWork>((_, _) => Task.CompletedTask);
+        _validator.Setup(v => v.ValidateAggregate(It.IsAny<AggregateRoot>(), It.IsAny<Fluss.UnitOfWork>()))
+            .Returns<AggregateRoot, Fluss.UnitOfWork>((_, _) => Task.CompletedTask);
 
-        _unitOfWork = new Fluss.UnitOfWork.UnitOfWork(
+        _unitOfWork = new Fluss.UnitOfWork(
             _eventRepository,
             _eventListenerFactory,
             _policies,

@@ -4,7 +4,7 @@ namespace Fluss.Aggregates;
 
 public abstract record AggregateRoot : EventListener, IRootEventListener
 {
-    public UnitOfWork.UnitOfWork UnitOfWork { private get; init; } = null!;
+    public UnitOfWork UnitOfWork { private get; init; } = null!;
     protected abstract override AggregateRoot When(EventEnvelope envelope);
 
     protected async ValueTask Apply(Event @event)

@@ -1,7 +1,6 @@
 ﻿using Fluss.Aggregates;
 using Fluss.Authentication;
 using Fluss.Events;
-using Fluss.UnitOfWork;
 using Fluss.Validation;
 using Moq;
 
@@ -57,7 +56,7 @@ public class RootValidatorTests
             new[] { new EventValidatorAlwaysValid() }
         );
 
-        await validator.ValidateAggregate(new TestAggregate(), new Fluss.UnitOfWork.UnitOfWork(null!, null!, null!, null!, null!));
+        await validator.ValidateAggregate(new TestAggregate(), new Fluss.UnitOfWork(null!, null!, null!, null!, null!));
     }
     
     [Fact]
@@ -71,7 +70,7 @@ public class RootValidatorTests
 
         await Assert.ThrowsAsync<Exception>(async () =>
         {
-            await validator.ValidateAggregate(new TestAggregate(), new Fluss.UnitOfWork.UnitOfWork(null!, null!, null!, null!, null!));
+            await validator.ValidateAggregate(new TestAggregate(), new Fluss.UnitOfWork(null!, null!, null!, null!, null!));
         });
     }
 

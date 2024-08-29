@@ -2,7 +2,7 @@ using System.Collections.Concurrent;
 using Fluss.Aggregates;
 using Fluss.Events;
 
-namespace Fluss.UnitOfWork;
+namespace Fluss;
 
 public partial class UnitOfWork
 {

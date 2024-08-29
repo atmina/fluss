@@ -1,4 +1,3 @@
-using Fluss.UnitOfWork;
 using HotChocolate.Execution.Configuration;
 using HotChocolate.Internal;
 using Microsoft.Extensions.DependencyInjection;

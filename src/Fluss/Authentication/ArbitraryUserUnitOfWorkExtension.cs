@@ -1,5 +1,4 @@
 using System.Collections.Concurrent;
-using Fluss.UnitOfWork;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace Fluss.Authentication;
@@ -29,7 +28,7 @@ public class ArbitraryUserUnitOfWorkCache : IArbitraryUserUnitOfWorkCache
     public IUnitOfWork GetUserUnitOfWork(Guid userId)
     {
         var sp = GetCachedServiceProvider(userId);
-        return sp.GetRequiredService<UnitOfWork.UnitOfWork>();
+        return sp.GetRequiredService<UnitOfWork>();
     }
 
     private IServiceProvider GetCachedServiceProvider(Guid userId)
@@ -40,7 +39,7 @@ public class ArbitraryUserUnitOfWorkCache : IArbitraryUserUnitOfWorkCache
     private IServiceProvider CreateUserServiceProvider(Guid providedId)
     {
         var collection = new ServiceCollection();
-        var constructorArgumentTypes = typeof(UnitOfWork.UnitOfWork).GetConstructors().Single().GetParameters()
+        var constructorArgumentTypes = typeof(UnitOfWork).GetConstructors().Single().GetParameters()
             .Select(p => p.ParameterType);
 
         foreach (var type in constructorArgumentTypes)
@@ -50,8 +49,8 @@ public class ArbitraryUserUnitOfWorkCache : IArbitraryUserUnitOfWorkCache
         }
 
         collection.ProvideUserIdFrom(_ => providedId);
-        collection.AddTransient<UnitOfWork.UnitOfWork>();
-        collection.AddTransient<IUnitOfWork>(sp => sp.GetRequiredService<UnitOfWork.UnitOfWork>());
+        collection.AddTransient<UnitOfWork>();
+        collection.AddTransient<IUnitOfWork>(sp => sp.GetRequiredService<UnitOfWork>());
         collection.AddTransient<UnitOfWorkFactory>();
 
         return collection.BuildServiceProvider();

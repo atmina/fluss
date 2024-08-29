@@ -21,7 +21,7 @@ public class ArbitraryUserUnitOfWorkExtensionTest
         // ReSharper disable once InvokeAsExtensionMethod
         var unitOfWork = ArbitraryUserUnitOfWorkExtension.GetUserUnitOfWork(serviceProvider, guid);
         await unitOfWork.Publish(new TestEvent());
-        await ((Fluss.UnitOfWork.UnitOfWork) unitOfWork).CommitInternal();
+        await ((Fluss.UnitOfWork) unitOfWork).CommitInternal();
 
         var inMemoryEventRepository = serviceProvider.GetRequiredService<InMemoryEventRepository>();
         var events = await inMemoryEventRepository.GetEvents(-1, 0);
