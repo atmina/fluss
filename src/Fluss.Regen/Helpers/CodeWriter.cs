@@ -73,7 +73,7 @@ public class CodeWriter : TextWriter
 
         WriteLine();
     }
-    
+
     public void WriteIndented(string format, params object?[] args)
     {
         WriteIndent();
@@ -115,10 +115,10 @@ public class CodeWriter : TextWriter
 
         return new Block(() =>
         {
-            WriteLine();
             indent.Dispose();
             WriteIndent();
             WriteRightBrace();
+            WriteLine();
         });
     }
 

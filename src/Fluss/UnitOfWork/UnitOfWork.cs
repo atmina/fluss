@@ -4,7 +4,7 @@ using Fluss.Validation;
 
 namespace Fluss;
 
-public partial class UnitOfWork : IUnitOfWork
+public partial class UnitOfWork : IWriteUnitOfWork
 {
     private readonly IEventListenerFactory _eventListenerFactory;
     private readonly IEventRepository _eventRepository;

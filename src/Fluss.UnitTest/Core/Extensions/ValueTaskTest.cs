@@ -5,25 +5,25 @@ namespace Fluss.UnitTest.Core.Extensions;
 public class ValueTaskTest
 {
     [Fact]
-    public async void AnyReturnsFalse()
+    public async Task AnyReturnsFalse()
     {
         Assert.False(await new[] { False() }.AnyAsync());
     }
 
     [Fact]
-    public async void AnyReturnsTrue()
+    public async Task AnyReturnsTrue()
     {
         Assert.True(await new[] { False(), True() }.AnyAsync());
     }
 
     [Fact]
-    public async void AllReturnsFalse()
+    public async Task AllReturnsFalse()
     {
         Assert.False(await new[] { False(), True() }.AllAsync());
     }
 
     [Fact]
-    public async void AllReturnsTrue()
+    public async Task AllReturnsTrue()
     {
         Assert.True(await new[] { True(), True() }.AllAsync());
     }

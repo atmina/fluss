@@ -9,17 +9,17 @@ namespace Fluss.UnitTest.Core.Validation;
 public class RootValidatorTests
 {
     private readonly Mock<IArbitraryUserUnitOfWorkCache> _arbitraryUserUnitOfWorkCacheMock = new(MockBehavior.Strict);
-    private readonly Mock<IUnitOfWork> _unitOfWorkMock = new(MockBehavior.Strict);
+    private readonly Mock<IWriteUnitOfWork> _unitOfWorkMock = new(MockBehavior.Strict);
 
     public RootValidatorTests()
     {
         _arbitraryUserUnitOfWorkCacheMock.Setup(c => c.GetUserUnitOfWork(It.IsAny<Guid>()))
             .Returns(() => _unitOfWorkMock.Object);
-        
+
         _unitOfWorkMock.Setup(u => u.WithPrefilledVersion(It.IsAny<long>()))
             .Returns(() => _unitOfWorkMock.Object);
     }
-    
+
     [Fact]
     public async Task ValidatesValidEvent()
     {
@@ -31,7 +31,7 @@ public class RootValidatorTests
 
         await validator.ValidateEvent(new EventEnvelope { Event = new TestEvent() });
     }
-    
+
     [Fact]
     public async Task ValidatesInvalidEvent()
     {
@@ -46,7 +46,7 @@ public class RootValidatorTests
             await validator.ValidateEvent(new EventEnvelope { Event = new TestEvent() });
         });
     }
-    
+
     [Fact]
     public async Task ValidatesValidAggregate()
     {
@@ -58,7 +58,7 @@ public class RootValidatorTests
 
         await validator.ValidateAggregate(new TestAggregate(), new Fluss.UnitOfWork(null!, null!, null!, null!, null!));
     }
-    
+
     [Fact]
     public async Task ValidatesInvalidAggregate()
     {
@@ -107,7 +107,7 @@ public class RootValidatorTests
             return ValueTask.CompletedTask;
         }
     }
-    
+
     private class AggregateValidatorAlwaysInvalid : AggregateValidator<TestAggregate>
     {
         public ValueTask ValidateAsync(TestAggregate aggregateAfterEvent, IUnitOfWork unitOfWorkBeforeEvent)

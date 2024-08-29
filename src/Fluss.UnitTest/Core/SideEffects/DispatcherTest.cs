@@ -40,7 +40,7 @@ public class DispatcherTest
         var testSideEffect = serviceProvider.GetRequiredService<TestSideEffect>();
 
         await WaitUntilTrue(() => testSideEffect.DidTrigger, TimeSpan.FromMilliseconds(100));
-        
+
         Assert.True(testSideEffect.DidTrigger);
 
         await dispatcher.StopAsync(CancellationToken.None);
@@ -118,7 +118,7 @@ public class DispatcherTest
             return Task.FromResult<IEnumerable<Event>>(Array.Empty<Event>());
         }
     }
-    
+
     [Fact]
     public async Task PublishesNewEventsReturnedBySideEffect()
     {
@@ -147,18 +147,18 @@ public class DispatcherTest
         });
 
         var repository = serviceProvider.GetRequiredService<InMemoryEventRepository>();
-        
+
         await WaitUntilTrue(async () => await repository.GetLatestVersion() >= 1, TimeSpan.FromMilliseconds(100));
 
         var newEvent = (await repository.GetEvents(0, 1).ToFlatEventList())[0];
-        
+
         Assert.True(newEvent.Event is TestReturnedEvent);
 
         await dispatcher.StopAsync(CancellationToken.None);
     }
-    
-    private class TestTriggerEvent : Event {}
-    private class TestReturnedEvent : Event {}
+
+    private class TestTriggerEvent : Event { }
+    private class TestReturnedEvent : Event { }
 
     private class TestReturningSideEffect : SideEffect<TestTriggerEvent>
     {

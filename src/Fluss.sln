@@ -10,11 +10,7 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Fluss.UnitTest", "Fluss.Uni
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Fluss.Testing", "Fluss.Testing\Fluss.Testing.csproj", "{EB267687-7C88-4DF4-85E4-ACE3FC41BB73}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Fluss.Regen", "Fluss.Regen\Fluss.Regen\Fluss.Regen.csproj", "{6E250321-6993-4B94-8600-85E15BF713FA}"
-EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Fluss.Regen.Tests", "Fluss.Regen\Fluss.Regen.Tests\Fluss.Regen.Tests.csproj", "{A4D8B2DD-0046-48FE-A765-A6E032A13FAE}"
-EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Fluss.Sample", "Fluss.Sample\Fluss.Sample.csproj", "{A5D49E3A-163D-4BF4-830A-C5384B21859F}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Fluss.Regen", "Fluss.Regen\Fluss.Regen.csproj", "{6E250321-6993-4B94-8600-85E15BF713FA}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -46,13 +42,5 @@ Global
 		{6E250321-6993-4B94-8600-85E15BF713FA}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{6E250321-6993-4B94-8600-85E15BF713FA}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{6E250321-6993-4B94-8600-85E15BF713FA}.Release|Any CPU.Build.0 = Release|Any CPU
-		{A4D8B2DD-0046-48FE-A765-A6E032A13FAE}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{A4D8B2DD-0046-48FE-A765-A6E032A13FAE}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{A4D8B2DD-0046-48FE-A765-A6E032A13FAE}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{A4D8B2DD-0046-48FE-A765-A6E032A13FAE}.Release|Any CPU.Build.0 = Release|Any CPU
-		{A5D49E3A-163D-4BF4-830A-C5384B21859F}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{A5D49E3A-163D-4BF4-830A-C5384B21859F}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{A5D49E3A-163D-4BF4-830A-C5384B21859F}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{A5D49E3A-163D-4BF4-830A-C5384B21859F}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 EndGlobal

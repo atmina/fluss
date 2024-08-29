@@ -23,7 +23,7 @@ public class UnitOfWorkFactory
         .Handle<RetryException>()
         .WaitAndRetryAsync(Delay);
 
-    public async ValueTask Commit(Func<UnitOfWork, ValueTask> action)
+    public async ValueTask Commit(Func<IWriteUnitOfWork, ValueTask> action)
     {
         using var activity = FlussActivitySource.Source.StartActivity();
 
@@ -36,7 +36,7 @@ public class UnitOfWorkFactory
             });
     }
 
-    public async ValueTask<T> Commit<T>(Func<UnitOfWork, ValueTask<T>> action)
+    public async ValueTask<T> Commit<T>(Func<IWriteUnitOfWork, ValueTask<T>> action)
     {
         using var activity = FlussActivitySource.Source.StartActivity();
 

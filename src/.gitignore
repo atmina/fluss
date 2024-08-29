@@ -14,3 +14,5 @@ msbuild.err
 msbuild.wrn
 
 .idea
+
+*.received.*

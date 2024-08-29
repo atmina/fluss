@@ -53,7 +53,7 @@ public partial class UnitOfWorkTest
     public async Task AnEmptyPolicyDoesNotAllowAnything()
     {
         Policy emptyPolicy = new EmptyPolicy();
-        
+
         Assert.False(await emptyPolicy.AuthenticateEvent(null!, null!));
         Assert.False(await emptyPolicy.AuthenticateReadModel(null!, null!));
     }

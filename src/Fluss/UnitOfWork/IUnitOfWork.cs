@@ -1,19 +1,16 @@
 using System.Collections.Concurrent;
-using Fluss.Aggregates;
 using Fluss.Events;
 using Fluss.ReadModel;
 
 namespace Fluss;
 
-public partial interface IUnitOfWork
+public interface IUnitOfWork
 {
-    ValueTask<TAggregate> GetAggregate<TAggregate, TKey>(TKey key)
-        where TAggregate : AggregateRoot<TKey>, new();
-
-    ValueTask Publish(Event @event, AggregateRoot? aggregate = null);
     ValueTask<long> ConsistentVersion();
     IReadOnlyCollection<EventListener> ReadModels { get; }
     ConcurrentQueue<EventEnvelope> PublishedEventEnvelopes { get; }
+
+    ValueTask<IReadModel> GetReadModel(Type tReadModel, object? key, long? at = null);
 
     ValueTask<TReadModel> GetReadModel<TReadModel>(long? at = null)
         where TReadModel : EventListener, IRootEventListener, IReadModel, new();

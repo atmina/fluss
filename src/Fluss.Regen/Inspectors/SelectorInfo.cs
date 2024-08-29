@@ -5,15 +5,11 @@ namespace Fluss.Regen.Inspectors;
 
 public sealed class SelectorInfo : ISyntaxInfo
 {
-    public AttributeSyntax AttributeSyntax { get; }
-    public IMethodSymbol AttributeSymbol { get; }
+    private AttributeSyntax AttributeSyntax { get; }
     public IMethodSymbol MethodSymbol { get; }
-    public MethodDeclarationSyntax MethodSyntax { get; }
+    private MethodDeclarationSyntax MethodSyntax { get; }
     public string Name { get; }
-    public string InterfaceName { get; }
     public string Namespace { get; }
-    public string FullName { get; }
-    public string InterfaceFullName { get; }
     public string ContainingType { get; }
 
     public SelectorInfo(
@@ -24,19 +20,14 @@ public sealed class SelectorInfo : ISyntaxInfo
         )
     {
         AttributeSyntax = attributeSyntax;
-        AttributeSymbol = attributeSymbol;
         MethodSymbol = methodSymbol;
         MethodSyntax = methodSyntax;
 
         Name = methodSymbol.Name;
-        InterfaceName = $"I{Name}";
         Namespace = methodSymbol.ContainingNamespace.ToDisplayString();
-        FullName = $"{Namespace}.{Name}";
-        InterfaceFullName = $"{Namespace}.{InterfaceName}";
-
         ContainingType = methodSymbol.ContainingType.ToDisplayString();
     }
-    
+
     public bool Equals(SelectorInfo? other)
     {
         if (ReferenceEquals(null, other))
@@ -52,7 +43,7 @@ public sealed class SelectorInfo : ISyntaxInfo
         return AttributeSyntax.Equals(other.AttributeSyntax) &&
                MethodSyntax.Equals(other.MethodSyntax);
     }
-    
+
     public bool Equals(ISyntaxInfo other)
     {
         if (ReferenceEquals(null, other))
