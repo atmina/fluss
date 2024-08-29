@@ -2,7 +2,6 @@ using System.Reflection;
 using Fluss.Aggregates;
 using Fluss.Authentication;
 using Fluss.Events;
-using Fluss.Extensions;
 using Fluss.Validation;
 using Moq;
 using Xunit;
@@ -12,7 +11,7 @@ namespace Fluss.Testing;
 public class AggregateTestBed<TAggregate, TKey> : EventTestBed where TAggregate : AggregateRoot<TKey>, new()
 {
     private readonly UnitOfWork _unitOfWork;
-    private readonly IList<Type> _ignoredTypes = new List<Type>();
+    private readonly List<Type> _ignoredTypes = [];
 
     public AggregateTestBed()
     {
@@ -22,7 +21,7 @@ public class AggregateTestBed<TAggregate, TKey> : EventTestBed where TAggregate 
         validator.Setup(v => v.ValidateAggregate(It.IsAny<AggregateRoot>(), It.IsAny<UnitOfWork>()))
             .Returns<AggregateRoot, UnitOfWork>((_, _) => Task.CompletedTask);
 
-        _unitOfWork = new UnitOfWork(EventRepository, EventListenerFactory, new[] { new AllowAllPolicy() },
+        _unitOfWork = new UnitOfWork(EventRepository, EventListenerFactory, [new AllowAllPolicy()],
             new UserIdProvider(_ => Guid.Empty, null!), validator.Object);
     }
 
@@ -34,7 +33,7 @@ public class AggregateTestBed<TAggregate, TKey> : EventTestBed where TAggregate 
 
     public AggregateTestBed<TAggregate, TKey> Calling(TKey key, Func<TAggregate, Task> action)
     {
-        var aggregate = _unitOfWork.GetAggregate<TAggregate, TKey>(key).GetResult();
+        var aggregate = _unitOfWork.GetAggregate<TAggregate, TKey>(key).AsTask().Result;
         action(aggregate).GetAwaiter().GetResult();
         return this;
     }
@@ -52,7 +51,7 @@ public class AggregateTestBed<TAggregate, TKey> : EventTestBed where TAggregate 
 
         if (expectedEvents.Length == publishedEvents.Length)
         {
-            for (int i = 0; i < expectedEvents.Length; i++)
+            for (var i = 0; i < expectedEvents.Length; i++)
             {
                 expectedEvents[i] = GetEventRespectingIgnoredTypes(expectedEvents[i], publishedEvents[i]);
             }
@@ -69,7 +68,7 @@ public class AggregateTestBed<TAggregate, TKey> : EventTestBed where TAggregate 
         }
 
         var cloneMethod = expected.GetType().GetMethod("<Clone>$");
-        var exp = (Event)cloneMethod!.Invoke(expected, Array.Empty<object>())!;
+        var exp = (Event)cloneMethod!.Invoke(expected, [])!;
         foreach (var fieldInfo in expected.GetType().GetFields(BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic))
         {
             if (_ignoredTypes.Contains(fieldInfo.FieldType))

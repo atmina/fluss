@@ -8,14 +8,12 @@ namespace Fluss.UnitTest.Core.Authentication;
 public class AuthContextTest
 {
     private readonly Mock<IUnitOfWork> _unitOfWork;
-    private readonly Guid _userId;
     private readonly AuthContext _authContext;
 
     public AuthContextTest()
     {
         _unitOfWork = new Mock<IUnitOfWork>();
-        _userId = Guid.NewGuid();
-        _authContext = new AuthContext(_unitOfWork.Object, _userId);
+        _authContext = new AuthContext(_unitOfWork.Object, Guid.NewGuid());
     }
 
     [Fact]
@@ -56,12 +54,12 @@ public class AuthContextTest
         var testReadModel = new TestReadModelWithKey { Id = 0 };
         _unitOfWork
             .Setup(uow => uow.UnsafeGetMultipleReadModelsWithoutAuthorization<TestReadModelWithKey, int>(new[] { 0, 1 }, null))
-            .Returns(ValueTask.FromResult((IReadOnlyList<TestReadModelWithKey>)new List<TestReadModelWithKey> { testReadModel }.AsReadOnly()));
+            .Returns(ValueTask.FromResult<IReadOnlyList<TestReadModelWithKey>>(new List<TestReadModelWithKey> { testReadModel }.AsReadOnly()));
 
-        Assert.Equal(new List<TestReadModelWithKey> { testReadModel }, await _authContext.GetMultipleReadModels<TestReadModelWithKey, int>(new[] { 0, 1 }));
+        Assert.Equal(new List<TestReadModelWithKey> { testReadModel }, await _authContext.GetMultipleReadModels<TestReadModelWithKey, int>([0, 1]));
     }
 
-    public record TestReadModel : RootReadModel
+    private record TestReadModel : RootReadModel
     {
         protected override EventListener When(EventEnvelope envelope)
         {
@@ -69,7 +67,7 @@ public class AuthContextTest
         }
     }
 
-    public record TestReadModelWithKey : ReadModelWithKey<int>
+    private record TestReadModelWithKey : ReadModelWithKey<int>
     {
         protected override EventListener When(EventEnvelope envelope)
         {

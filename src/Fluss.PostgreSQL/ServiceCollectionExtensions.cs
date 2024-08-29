@@ -27,7 +27,7 @@ public static class ServiceCollectionExtensions
             .ConfigureRunner(rb => rb
                 .AddPostgres()
                 .WithGlobalConnectionString(connectionString)
-                .ScanIn(typeof(Fluss.PostgreSQL.PostgreSQLEventRepository).Assembly).For.Migrations())
+                .ScanIn(typeof(PostgreSQLEventRepository).Assembly).For.Migrations())
             .AddLogging(lb => lb.AddFluentMigratorConsole())
             .AddSingleton(new PostgreSQLConfig(connectionString))
             .AddSingleton<Migrator>()
@@ -35,19 +35,11 @@ public static class ServiceCollectionExtensions
     }
 }
 
-public class Migrator : BackgroundService
+public class Migrator(ILogger<Migrator> logger, IServiceProvider serviceProvider) : BackgroundService
 {
-    private readonly ILogger<Migrator> _logger;
-    private readonly IServiceProvider _serviceProvider;
     private bool _didFinish;
 
     private readonly SemaphoreSlim _didFinishChanged = new(0, 1);
-
-    public Migrator(ILogger<Migrator> logger, IServiceProvider serviceProvider)
-    {
-        _logger = logger;
-        _serviceProvider = serviceProvider;
-    }
 
     public async Task WaitForFinish()
     {
@@ -72,7 +64,7 @@ public class Migrator : BackgroundService
         {
             try
             {
-                var scope = _serviceProvider.CreateScope();
+                var scope = serviceProvider.CreateScope();
                 var migrationRunner = scope.ServiceProvider.GetRequiredService<IMigrationRunner>();
                 migrationRunner.MigrateUp();
 
@@ -81,54 +73,39 @@ public class Migrator : BackgroundService
             }
             catch (Exception e)
             {
-                _logger.LogError(e, "Error while migrating");
+                logger.LogError(e, "Error while migrating");
                 Environment.Exit(-1);
             }
         }, stoppingToken);
     }
 }
 
-public class Upcaster : BackgroundService
+public class Upcaster(EventUpcasterService upcasterService, Migrator migrator, ILogger<Upcaster> logger)
+    : BackgroundService
 {
-    private readonly EventUpcasterService _upcasterService;
-    private readonly Migrator _migrator;
-    private readonly ILogger<Upcaster> _logger;
-
-    public Upcaster(EventUpcasterService upcasterService, Migrator migrator, ILogger<Upcaster> logger)
-    {
-        _upcasterService = upcasterService;
-        _migrator = migrator;
-        _logger = logger;
-    }
-
     protected override Task ExecuteAsync(CancellationToken stoppingToken)
     {
         return Task.Run(async () =>
         {
-            _logger.LogInformation("Waiting for migration to finish");
-            await _migrator.WaitForFinish();
-            _logger.LogInformation("Migration finished, starting event upcasting");
+            logger.LogInformation("Waiting for migration to finish");
+            await migrator.WaitForFinish();
+            logger.LogInformation("Migration finished, starting event upcasting");
 
             try
             {
-                await _upcasterService.Run();
-                _logger.LogInformation("Event upcasting finished");
+                await upcasterService.Run();
+                logger.LogInformation("Event upcasting finished");
             }
             catch (Exception e)
             {
-                _logger.LogError(e, "Error while upcasting");
+                logger.LogError(e, "Error while upcasting");
                 throw;
             }
         }, stoppingToken);
     }
 }
 
-public class PostgreSQLConfig
+public class PostgreSQLConfig(string connectionString)
 {
-    public PostgreSQLConfig(string connectionString)
-    {
-        ConnectionString = connectionString;
-    }
-
-    public string ConnectionString { get; }
+    public string ConnectionString { get; } = connectionString;
 }

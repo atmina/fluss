@@ -46,9 +46,7 @@ public class DispatcherTest
         await dispatcher.StopAsync(CancellationToken.None);
     }
 
-    private class TestEvent : Event
-    {
-    }
+    private class TestEvent : Event;
 
     private class AllowAllPolicy : Policy
     {
@@ -60,7 +58,7 @@ public class DispatcherTest
 
     private class TestSideEffect : SideEffect<TestEvent>
     {
-        public bool DidTrigger { get; set; } = false;
+        public bool DidTrigger { get; private set; }
 
         public Task<IEnumerable<Event>> HandleAsync(TestEvent @event, Fluss.UnitOfWork unitOfWork)
         {
@@ -105,11 +103,11 @@ public class DispatcherTest
         await dispatcher.StopAsync(CancellationToken.None);
     }
 
-    private class TestTransientEvent : TransientEvent { }
+    private class TestTransientEvent : TransientEvent;
 
     private class TestTransientSideEffect : SideEffect<TestTransientEvent>
     {
-        public bool DidTrigger { get; set; } = false;
+        public bool DidTrigger { get; set; }
 
         public Task<IEnumerable<Event>> HandleAsync(TestTransientEvent @event,
             Fluss.UnitOfWork unitOfWork)
@@ -157,18 +155,18 @@ public class DispatcherTest
         await dispatcher.StopAsync(CancellationToken.None);
     }
 
-    private class TestTriggerEvent : Event { }
-    private class TestReturnedEvent : Event { }
+    private class TestTriggerEvent : Event;
+    private class TestReturnedEvent : Event;
 
     private class TestReturningSideEffect : SideEffect<TestTriggerEvent>
     {
         public Task<IEnumerable<Event>> HandleAsync(TestTriggerEvent @event, Fluss.UnitOfWork unitOfWork)
         {
-            return Task.FromResult<IEnumerable<Event>>(new[] { new TestReturnedEvent() });
+            return Task.FromResult<IEnumerable<Event>>([new TestReturnedEvent()]);
         }
     }
 
-    private async Task WaitUntilTrue(Func<Task<bool>> f, TimeSpan timeSpan)
+    private static async Task WaitUntilTrue(Func<Task<bool>> f, TimeSpan timeSpan)
     {
         var cancellationTokenSource = new CancellationTokenSource();
         cancellationTokenSource.CancelAfter(timeSpan);

@@ -6,7 +6,7 @@ namespace Fluss.Events;
 
 public class InMemoryEventRepository : IBaseEventRepository
 {
-    private readonly List<EventEnvelope> _events = new();
+    private readonly List<EventEnvelope> _events = [];
     public event EventHandler? NewEvents;
 
     public ValueTask Publish(IEnumerable<EventEnvelope> eventEnvelopes)

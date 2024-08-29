@@ -8,6 +8,6 @@ public static class Setup
     public static void Init()
     {
         VerifySourceGenerators.Initialize();
-        Verifier.UseSourceFileRelativeDirectory("Snapshots");
+        UseSourceFileRelativeDirectory("Snapshots");
     }
 }

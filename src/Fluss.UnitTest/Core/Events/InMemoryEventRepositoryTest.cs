@@ -5,7 +5,7 @@ namespace Fluss.UnitTest.Core.Events;
 
 public class InMemoryEventRepositoryTest : EventRepositoryTestBase<InMemoryEventRepository>
 {
-    protected sealed override InMemoryEventRepository Repository { get; set; } = new();
+    protected sealed override InMemoryEventRepository Repository { get; } = new();
 
     [Fact]
     public async Task ThrowsOnWrongGetEventsUsage()

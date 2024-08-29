@@ -3,18 +3,11 @@ using System.Diagnostics.Contracts;
 
 namespace Fluss.Events;
 
-public sealed class EventListenerFactory : IEventListenerFactory
+public sealed class EventListenerFactory(IEventRepository eventRepository) : IEventListenerFactory
 {
-    private readonly IEventRepository _eventRepository;
-
-    public EventListenerFactory(IEventRepository eventRepository)
-    {
-        _eventRepository = eventRepository;
-    }
-
     public async ValueTask<TEventListener> UpdateTo<TEventListener>(TEventListener eventListener, long to) where TEventListener : EventListener
     {
-        var events = await _eventRepository.GetEvents(eventListener.Tag.LastSeen, to);
+        var events = await eventRepository.GetEvents(eventListener.Tag.LastSeen, to);
 
         return UpdateWithEvents(eventListener, events);
     }

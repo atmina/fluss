@@ -8,31 +8,20 @@ using RequestDelegate = HotChocolate.Execution.RequestDelegate;
 
 namespace Fluss.HotChocolate;
 
-public class AddExtensionMiddleware
+public class AddExtensionMiddleware(
+    RequestDelegate next,
+    IServiceProvider rootServiceProvider,
+    ILogger<AddExtensionMiddleware> logger)
 {
     private const string SubsequentRequestMarker = nameof(AddExtensionMiddleware) + ".subsequentRequestMarker";
 
-    private readonly RequestDelegate _next;
-
-    private readonly IServiceProvider _rootServiceProvider;
-    private readonly ILogger<AddExtensionMiddleware> _logger;
-
-    public AddExtensionMiddleware(
-        RequestDelegate next,
-        IServiceProvider rootServiceProvider,
-        ILogger<AddExtensionMiddleware> logger
-    )
-    {
-        _next = next ?? throw new ArgumentNullException(nameof(next));
-        _rootServiceProvider = rootServiceProvider;
-        _logger = logger;
-    }
+    private readonly RequestDelegate _next = next ?? throw new ArgumentNullException(nameof(next));
 
     public async ValueTask InvokeAsync(IRequestContext context)
     {
         await _next.Invoke(context);
 
-        if (!context.ContextData.ContainsKey(nameof(UnitOfWork)))
+        if (!context.ContextData.TryGetValue(nameof(UnitOfWork), out var unitOfWork))
         {
             return;
         }
@@ -50,7 +39,7 @@ public class AddExtensionMiddleware
             if (context.Result is QueryResult subsequentQueryResult)
             {
                 context.Result = QueryResultBuilder.FromResult(subsequentQueryResult).AddContextData(nameof(UnitOfWork),
-                    context.ContextData[nameof(UnitOfWork)]).Create();
+unitOfWork).Create();
             }
 
             return;
@@ -69,12 +58,12 @@ public class AddExtensionMiddleware
     {
         yield return firstResult;
 
-        using var serviceScope = _rootServiceProvider.CreateScope();
+        using var serviceScope = rootServiceProvider.CreateScope();
         var serviceProvider = serviceScope.ServiceProvider;
 
         if (contextData == null)
         {
-            _logger.LogWarning("Trying to add live results but {ContextData} is null!", nameof(contextData));
+            logger.LogWarning("Trying to add live results but {ContextData} is null!", nameof(contextData));
             yield break;
         }
 
@@ -83,26 +72,24 @@ public class AddExtensionMiddleware
         var foundSocketSession = contextData.TryGetValue(nameof(ISocketSession), out var contextSocketSession); // as ISocketSession
         var foundOperationId = contextData.TryGetValue("HotChocolate.Execution.Transport.OperationSessionId", out var operationId); // as string
 
-        if (isWebsocket && (!foundSocketSession || !foundOperationId))
+        switch (isWebsocket)
         {
-            _logger.LogWarning("Trying to add live results but {SocketSession} or {OperationId} is not present in context!", nameof(contextSocketSession), nameof(operationId));
-            yield break;
-        }
-
-        if (isWebsocket && contextSocketSession is not ISocketSession)
-        {
-            _logger.LogWarning("{ContextSocketSession} key present in context but not an {ISocketSession}!", contextSocketSession?.GetType().FullName, nameof(ISocketSession));
-            yield break;
+            case true when !foundSocketSession || !foundOperationId:
+                logger.LogWarning("Trying to add live results but {SocketSession} or {OperationId} is not present in context!", nameof(contextSocketSession), nameof(operationId));
+                yield break;
+            case true when contextSocketSession is not ISocketSession:
+                logger.LogWarning("{ContextSocketSession} key present in context but not an {ISocketSession}!", contextSocketSession?.GetType().FullName, nameof(ISocketSession));
+                yield break;
         }
 
         while (true)
         {
-            if (contextData == null || !contextData.ContainsKey(nameof(UnitOfWork)))
+            if (contextData == null || !contextData.TryGetValue(nameof(UnitOfWork), out var value))
             {
                 break;
             }
 
-            if (contextData[nameof(UnitOfWork)] is not UnitOfWork unitOfWork)
+            if (value is not UnitOfWork unitOfWork)
             {
                 break;
             }

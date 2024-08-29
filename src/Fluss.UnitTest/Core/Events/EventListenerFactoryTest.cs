@@ -6,18 +6,17 @@ namespace Fluss.UnitTest.Core.Events;
 public class EventListenerFactoryTest
 {
     private readonly EventListenerFactory _eventListenerFactory;
-    private readonly InMemoryEventRepository _eventRepository;
 
     public EventListenerFactoryTest()
     {
-        _eventRepository = new InMemoryEventRepository();
-        _eventListenerFactory = new EventListenerFactory(_eventRepository);
+        var repository = new InMemoryEventRepository();
+        _eventListenerFactory = new EventListenerFactory(repository);
 
-        _eventRepository.Publish(new[] {
+        repository.Publish([
             new EventEnvelope { Event = new TestEvent(1), Version = 0 },
             new EventEnvelope { Event = new TestEvent(2), Version = 1 },
             new EventEnvelope { Event = new TestEvent(1), Version = 2 },
-        });
+        ]).AsTask().Wait();
     }
 
     [Fact]
@@ -36,26 +35,28 @@ public class EventListenerFactoryTest
 
     private record TestRootReadModel : RootReadModel
     {
-        public int GotEvents { get; private set; }
+        public int GotEvents { get; private init; }
+
         protected override TestRootReadModel When(EventEnvelope envelope)
         {
             return envelope.Event switch
             {
                 TestEvent => this with { GotEvents = GotEvents + 1 },
-                _ => this
+                _ => this,
             };
         }
     }
 
     private record TestReadModel : ReadModelWithKey<int>
     {
-        public int GotEvents { get; private set; }
+        public int GotEvents { get; private init; }
+
         protected override TestReadModel When(EventEnvelope envelope)
         {
             return envelope.Event switch
             {
                 TestEvent testEvent when testEvent.Id == Id => this with { GotEvents = GotEvents + 1 },
-                _ => this
+                _ => this,
             };
         }
     }

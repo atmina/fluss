@@ -48,36 +48,36 @@ public class UpcasterSorterTest
     }
 }
 
-class ExampleUpcasterNoDeps : IUpcaster
+internal class ExampleUpcasterNoDeps : IUpcaster
 {
     public IEnumerable<JObject> Upcast(JObject eventJson) => throw new NotImplementedException();
 }
 
-class ExampleUpcasterDeps1 : IUpcaster
+internal class ExampleUpcasterDeps1 : IUpcaster
 {
     public IEnumerable<JObject> Upcast(JObject eventJson) => throw new NotImplementedException();
 }
 
 [DependsOn(typeof(ExampleUpcasterDeps1), typeof(ExampleUpcasterNoDeps))]
-class ExampleUpcasterDeps2 : IUpcaster
+internal class ExampleUpcasterDeps2 : IUpcaster
 {
     public IEnumerable<JObject> Upcast(JObject eventJson) => throw new NotImplementedException();
 }
 
 [DependsOn(typeof(ExampleUpcasterDeps1), typeof(ExampleUpcasterDeps2))]
-class ExampleUpcasterDeps3 : IUpcaster
+internal class ExampleUpcasterDeps3 : IUpcaster
 {
     public IEnumerable<JObject> Upcast(JObject eventJson) => throw new NotImplementedException();
 }
 
 [DependsOn(typeof(ExampleUpcasterCyclic2))]
-class ExampleUpcasterCyclic1 : IUpcaster
+internal class ExampleUpcasterCyclic1 : IUpcaster
 {
     public IEnumerable<JObject> Upcast(JObject eventJson) => throw new NotImplementedException();
 }
 
 [DependsOn(typeof(ExampleUpcasterCyclic1))]
-class ExampleUpcasterCyclic2 : IUpcaster
+internal class ExampleUpcasterCyclic2 : IUpcaster
 {
     public IEnumerable<JObject> Upcast(JObject eventJson) => throw new NotImplementedException();
 }

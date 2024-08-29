@@ -35,7 +35,7 @@ public class TransientEventAwareEventListenerFactoryTest
         };
 
         var readModel = new ExampleReadModel();
-        await _transientRepository.Publish(new[] { transientEventEnvelope });
+        await _transientRepository.Publish([transientEventEnvelope]);
 
         var updatedReadModel = await _transientFactory.UpdateTo(readModel, -1);
 
@@ -43,11 +43,9 @@ public class TransientEventAwareEventListenerFactoryTest
     }
 }
 
-record ExampleReadModel : RootReadModel
+internal record ExampleReadModel : RootReadModel
 {
     protected override EventListener When(EventEnvelope envelope) => this;
 }
 
-class ExampleTransientEvent : TransientEvent
-{
-}
+internal class ExampleTransientEvent : TransientEvent;

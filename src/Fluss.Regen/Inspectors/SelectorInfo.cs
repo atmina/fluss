@@ -3,30 +3,18 @@ using Microsoft.CodeAnalysis.CSharp.Syntax;
 
 namespace Fluss.Regen.Inspectors;
 
-public sealed class SelectorInfo : ISyntaxInfo
+public sealed class SelectorInfo(
+    AttributeSyntax attributeSyntax,
+    IMethodSymbol methodSymbol,
+    MethodDeclarationSyntax methodSyntax)
+    : ISyntaxInfo
 {
-    private AttributeSyntax AttributeSyntax { get; }
-    public IMethodSymbol MethodSymbol { get; }
-    private MethodDeclarationSyntax MethodSyntax { get; }
-    public string Name { get; }
-    public string Namespace { get; }
-    public string ContainingType { get; }
-
-    public SelectorInfo(
-        AttributeSyntax attributeSyntax,
-        IMethodSymbol attributeSymbol,
-        IMethodSymbol methodSymbol,
-        MethodDeclarationSyntax methodSyntax
-        )
-    {
-        AttributeSyntax = attributeSyntax;
-        MethodSymbol = methodSymbol;
-        MethodSyntax = methodSyntax;
-
-        Name = methodSymbol.Name;
-        Namespace = methodSymbol.ContainingNamespace.ToDisplayString();
-        ContainingType = methodSymbol.ContainingType.ToDisplayString();
-    }
+    private AttributeSyntax AttributeSyntax { get; } = attributeSyntax;
+    public IMethodSymbol MethodSymbol { get; } = methodSymbol;
+    private MethodDeclarationSyntax MethodSyntax { get; } = methodSyntax;
+    public string Name { get; } = methodSymbol.Name;
+    public string Namespace { get; } = methodSymbol.ContainingNamespace.ToDisplayString();
+    public string ContainingType { get; } = methodSymbol.ContainingType.ToDisplayString();
 
     public bool Equals(SelectorInfo? other)
     {

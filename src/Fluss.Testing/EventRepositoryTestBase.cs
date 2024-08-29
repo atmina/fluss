@@ -13,7 +13,7 @@ public abstract class EventRepositoryTestBase<T> where T : IBaseEventRepository
         return d.AddTicks(-(d.Ticks % TimeSpan.TicksPerSecond));
     }
 
-    protected abstract T Repository { get; set; }
+    protected abstract T Repository { get; }
 
     [Fact]
     public async Task ReturnRightLatestVersion()
@@ -81,7 +81,7 @@ public abstract class EventRepositoryTestBase<T> where T : IBaseEventRepository
 
         var rawEnvelopes = (await Repository.GetRawEvents()).ToList();
         Assert.Equal(envelopes.Count, rawEnvelopes.Count);
-        for (int i = 0; i < envelopes.Count; i++)
+        for (var i = 0; i < envelopes.Count; i++)
         {
             var envelope = envelopes[i];
             var rawEnvelope = rawEnvelopes[i];
@@ -126,7 +126,7 @@ public abstract class EventRepositoryTestBase<T> where T : IBaseEventRepository
         var envelopes = GetMockEnvelopes(0, 2).ToList();
         await Repository.Publish(envelopes);
 
-        await Repository.ReplaceEvent(1, Enumerable.Empty<RawEventEnvelope>());
+        await Repository.ReplaceEvent(1, []);
 
         var latestVersion = await Repository.GetLatestVersion();
         Assert.Equal(1, latestVersion);
@@ -150,7 +150,7 @@ public abstract class EventRepositoryTestBase<T> where T : IBaseEventRepository
             await Repository.Publish(envelopes2));
     }
 
-    private IEnumerable<EventEnvelope> GetMockEnvelopes(int from, int to)
+    private static List<EventEnvelope> GetMockEnvelopes(int from, int to)
     {
         return Enumerable.Range(from, to - from + 1).Select(version =>
                 new EventEnvelope { At = DateTimeOffset.UtcNow, By = null, Version = version, Event = new MockEvent() })
@@ -159,7 +159,7 @@ public abstract class EventRepositoryTestBase<T> where T : IBaseEventRepository
 
     private record MockEvent : Event;
 
-    public class AtTickIgnoringEnvelopeCompare : EqualityComparer<EventEnvelope>
+    private class AtTickIgnoringEnvelopeCompare : EqualityComparer<EventEnvelope>
     {
         public override bool Equals(EventEnvelope? a, EventEnvelope? b)
         {

@@ -12,12 +12,10 @@ public static class EventMemoryArrayExtensions
                 casted.ToArray().AsMemory().AsReadOnly()
             }.AsReadOnly();
         }
-        else
-        {
-            return new[] {
-                envelopes.Cast<EventEnvelope>().ToArray().AsMemory().AsReadOnly()
-            }.AsReadOnly();
-        }
+
+        return new[] {
+            envelopes.Cast<EventEnvelope>().ToArray().AsMemory().AsReadOnly()
+        }.AsReadOnly();
     }
 
     public static IReadOnlyList<EventEnvelope> ToFlatEventList(this ReadOnlyCollection<ReadOnlyMemory<EventEnvelope>> pagedMemory)

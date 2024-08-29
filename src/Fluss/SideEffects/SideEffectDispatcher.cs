@@ -87,13 +87,14 @@ public sealed class SideEffectDispatcher : IHostedService
         foreach (var sideEffect in sideEffects)
         {
             var eventType = sideEffect.GetType().GetInterface(typeof(SideEffect<>).Name)!.GetGenericArguments()[0];
-            if (!_sideEffectCache.ContainsKey(eventType))
+            if (!_sideEffectCache.TryGetValue(eventType, out var value))
             {
-                _sideEffectCache[eventType] = new List<(SideEffect, MethodInfo)>();
+                value = [];
+                _sideEffectCache[eventType] = value;
             }
 
             var method = sideEffect.GetType().GetMethod(nameof(SideEffect<Event>.HandleAsync))!;
-            _sideEffectCache[eventType].Add((sideEffect, method));
+            value.Add((sideEffect, method));
         }
     }
 
@@ -122,8 +123,7 @@ public sealed class SideEffectDispatcher : IHostedService
                             long? version = envelope.Event is not TransientEvent ? envelope.Version : null;
                             var versionedUnitOfWork = unitOfWork.WithPrefilledVersion(version);
 
-                            var invocationResult = handleAsync.Invoke(sideEffect,
-                                new object?[] { envelope.Event, versionedUnitOfWork });
+                            var invocationResult = handleAsync.Invoke(sideEffect, [envelope.Event, versionedUnitOfWork]);
                             if (invocationResult is not Task<IEnumerable<Event>> resultTask)
                             {
                                 throw new Exception(

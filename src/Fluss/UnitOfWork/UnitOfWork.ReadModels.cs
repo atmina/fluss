@@ -6,7 +6,7 @@ namespace Fluss;
 
 public partial class UnitOfWork
 {
-    private readonly ConcurrentBag<EventListener> _readModels = new();
+    private readonly ConcurrentBag<EventListener> _readModels = [];
     public IReadOnlyCollection<EventListener> ReadModels => _readModels;
 
     public async ValueTask<IReadModel> GetReadModel(Type tReadModel, object? key, long? at = null)

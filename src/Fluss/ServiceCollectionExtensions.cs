@@ -69,10 +69,7 @@ public static class ServiceCollectionExtensions
     public static IServiceCollection AddBaseEventRepository<TBaseEventRepository>(this IServiceCollection services)
         where TBaseEventRepository : class, IBaseEventRepository
     {
-        if (services is null)
-        {
-            throw new ArgumentNullException(nameof(services));
-        }
+        ArgumentNullException.ThrowIfNull(services);
 
         return services
             .AddSingleton<TBaseEventRepository>()

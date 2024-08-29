@@ -5,10 +5,10 @@ namespace Fluss.Events.TransientEvents;
 
 public sealed class TransientEventAwareEventRepository : EventRepositoryPipeline
 {
-    private readonly List<TransientEventEnvelope> _transientEvents = new();
+    private readonly List<TransientEventEnvelope> _transientEvents = [];
     private long _transientEventVersion;
-    private bool _cleanTaskIsRunning = false;
-    private bool _anotherCleanTaskRequired = false;
+    private bool _cleanTaskIsRunning;
+    private bool _anotherCleanTaskRequired;
 
     public event EventHandler? NewTransientEvents;
 
@@ -25,7 +25,7 @@ public sealed class TransientEventAwareEventRepository : EventRepositoryPipeline
     public override async ValueTask Publish(IEnumerable<EventEnvelope> events)
     {
         var eventEnvelopes = events.ToList();
-        if (!eventEnvelopes.Any()) return;
+        if (eventEnvelopes.Count == 0) return;
 
         var transientEventEnvelopes = eventEnvelopes.Where(e => e.Event is TransientEvent);
 

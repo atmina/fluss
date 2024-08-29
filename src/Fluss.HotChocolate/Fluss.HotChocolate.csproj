@@ -1,19 +1,20 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
     <PropertyGroup>
-        <TargetFrameworks>net8.0; net7.0</TargetFrameworks>
+        <TargetFramework>net8.0</TargetFramework>
         <ImplicitUsings>enable</ImplicitUsings>
         <Nullable>enable</Nullable>
+        <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
     </PropertyGroup>
 
     <ItemGroup>
-      <PackageReference Include="HotChocolate" Version="13.5.1" />
-      <PackageReference Include="HotChocolate.AspNetCore" Version="13.5.1" />
-      <PackageReference Include="HotChocolate.Data" Version="13.5.1" />
+        <PackageReference Include="HotChocolate" Version="13.5.1"/>
+        <PackageReference Include="HotChocolate.AspNetCore" Version="13.5.1"/>
+        <PackageReference Include="HotChocolate.Data" Version="13.5.1"/>
     </ItemGroup>
 
     <ItemGroup>
-      <ProjectReference Include="..\Fluss\Fluss.csproj" />
+        <ProjectReference Include="..\Fluss\Fluss.csproj"/>
     </ItemGroup>
 
 </Project>

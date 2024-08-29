@@ -56,45 +56,17 @@ public class TransientEventAwareEventRepositoryTest
         Assert.Empty(thirdResult);
     }
 
-    private List<EventEnvelope> Wrap(params Event[] events)
+    private static List<EventEnvelope> Wrap(params Event[] events)
     {
         return events.Select((e, i) =>
             new EventEnvelope { At = DateTimeOffset.Now, By = null, Version = i, Event = e })
             .ToList();
     }
 
-    private class MockEvent : Event { }
+    private class MockEvent : Event;
 
-    private class TransientMockEvent : TransientEvent { }
+    private class TransientMockEvent : TransientEvent;
 
     [ExpiresAfter(200)]
-    private class ExpiringTransientMockEvent : TransientEvent { }
-
-    private class EventEnvelopeEqualityComparer : IEqualityComparer<EventEnvelope>
-    {
-        public bool Equals(EventEnvelope? x, EventEnvelope? y)
-        {
-            if (ReferenceEquals(x, y))
-            {
-                return true;
-            }
-
-            if (ReferenceEquals(x, null))
-            {
-                return false;
-            }
-
-            if (ReferenceEquals(y, null))
-            {
-                return false;
-            }
-
-            return x.At == y.At && x.Event == y.Event && x.Version == y.Version;
-        }
-
-        public int GetHashCode(EventEnvelope obj)
-        {
-            return obj.Event.GetHashCode();
-        }
-    }
+    private class ExpiringTransientMockEvent : TransientEvent;
 }

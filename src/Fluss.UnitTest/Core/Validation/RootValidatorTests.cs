@@ -25,8 +25,8 @@ public class RootValidatorTests
     {
         var validator = new RootValidator(
             _arbitraryUserUnitOfWorkCacheMock.Object,
-            new[] { new AggregateValidatorAlwaysValid() },
-            new[] { new EventValidatorAlwaysValid() }
+            [new AggregateValidatorAlwaysValid()],
+            [new EventValidatorAlwaysValid()]
         );
 
         await validator.ValidateEvent(new EventEnvelope { Event = new TestEvent() });
@@ -37,8 +37,8 @@ public class RootValidatorTests
     {
         var validator = new RootValidator(
             _arbitraryUserUnitOfWorkCacheMock.Object,
-            new[] { new AggregateValidatorAlwaysValid() },
-            new[] { new EventValidatorAlwaysInvalid() }
+            [new AggregateValidatorAlwaysValid()],
+            [new EventValidatorAlwaysInvalid()]
         );
 
         await Assert.ThrowsAsync<Exception>(async () =>
@@ -52,8 +52,8 @@ public class RootValidatorTests
     {
         var validator = new RootValidator(
             _arbitraryUserUnitOfWorkCacheMock.Object,
-            new[] { new AggregateValidatorAlwaysValid() },
-            new[] { new EventValidatorAlwaysValid() }
+            [new AggregateValidatorAlwaysValid()],
+            [new EventValidatorAlwaysValid()]
         );
 
         await validator.ValidateAggregate(new TestAggregate(), new Fluss.UnitOfWork(null!, null!, null!, null!, null!));
@@ -64,8 +64,8 @@ public class RootValidatorTests
     {
         var validator = new RootValidator(
             _arbitraryUserUnitOfWorkCacheMock.Object,
-            new[] { new AggregateValidatorAlwaysInvalid() },
-            new[] { new EventValidatorAlwaysValid() }
+            [new AggregateValidatorAlwaysInvalid()],
+            [new EventValidatorAlwaysValid()]
         );
 
         await Assert.ThrowsAsync<Exception>(async () =>
@@ -74,7 +74,7 @@ public class RootValidatorTests
         });
     }
 
-    private class TestEvent : Event { }
+    private class TestEvent : Event;
 
     private class EventValidatorAlwaysValid : EventValidator<TestEvent>
     {
