@@ -3,7 +3,7 @@ using Fluss.Aggregates;
 using Fluss.Authentication;
 using Fluss.Events;
 
-namespace Fluss.Core.Validation;
+namespace Fluss.Validation;
 
 public interface IRootValidator
 {

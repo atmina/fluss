@@ -1,6 +1,7 @@
 using Fluss.Events;
+using Fluss.UnitOfWork;
 
-namespace Fluss.Core.Validation;
+namespace Fluss.Validation;
 
 public interface EventValidator { }
 

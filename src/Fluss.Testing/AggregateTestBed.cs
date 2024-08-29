@@ -1,9 +1,9 @@
 using System.Reflection;
 using Fluss.Aggregates;
 using Fluss.Authentication;
-using Fluss.Core.Validation;
 using Fluss.Events;
 using Fluss.Extensions;
+using Fluss.Validation;
 using Moq;
 using Xunit;
 

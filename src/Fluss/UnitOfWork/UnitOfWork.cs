@@ -1,6 +1,6 @@
 using Fluss.Authentication;
-using Fluss.Core.Validation;
 using Fluss.Events;
+using Fluss.Validation;
 
 namespace Fluss.UnitOfWork;
 

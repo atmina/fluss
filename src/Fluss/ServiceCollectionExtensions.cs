@@ -3,15 +3,17 @@ using System.Runtime.CompilerServices;
 using Fluss.Authentication;
 using Fluss.Events;
 using Fluss.Events.TransientEvents;
+using Fluss.SideEffects;
 using Fluss.UnitOfWork;
 using Fluss.Upcasting;
+using Fluss.Validation;
 using Microsoft.Extensions.DependencyInjection;
 
 [assembly: InternalsVisibleTo("Fluss.UnitTest")]
 [assembly: InternalsVisibleTo("Fluss.HotChocolate")]
 [assembly: InternalsVisibleTo("Fluss.Testing")]
 
-namespace Fluss.Core;
+namespace Fluss;
 
 public static class ServiceCollectionExtensions
 {

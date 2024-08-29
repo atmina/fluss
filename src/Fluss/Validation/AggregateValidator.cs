@@ -1,6 +1,6 @@
 using Fluss.Aggregates;
 
-namespace Fluss.Core.Validation;
+namespace Fluss.Validation;
 
 public interface AggregateValidator { }
 

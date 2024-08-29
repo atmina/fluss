@@ -1,9 +1,9 @@
 using Fluss.Aggregates;
 using Fluss.Authentication;
-using Fluss.Core.Validation;
 using Fluss.Events;
 using Fluss.ReadModel;
 using Fluss.UnitOfWork;
+using Fluss.Validation;
 using Microsoft.Extensions.DependencyInjection;
 using Moq;
 
