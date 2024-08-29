@@ -1,7 +1,5 @@
 using System.Reflection;
 using FluentMigrator.Runner;
-using Fluss.Core;
-using Fluss.Events;
 using Fluss.Upcasting;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;

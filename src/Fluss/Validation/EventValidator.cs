@@ -1,10 +1,10 @@
 using Fluss.Events;
 
-namespace Fluss.Core.Validation;
+namespace Fluss.Validation;
 
 public interface EventValidator { }
 
 public interface EventValidator<in T> : EventValidator where T : Event
 {
-    ValueTask Validate(T @event, Fluss.UnitOfWork.UnitOfWork unitOfWorkBeforeEvent);
+    ValueTask Validate(T @event, IUnitOfWork unitOfWorkBeforeEvent);
 }

@@ -5,7 +5,7 @@ using Fluss.ReadModel;
 using Fluss.Extensions;
 #endif
 
-namespace Fluss.UnitOfWork;
+namespace Fluss;
 
 public partial class UnitOfWork
 {

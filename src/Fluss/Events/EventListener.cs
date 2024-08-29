@@ -74,7 +74,18 @@ public interface IRootEventListener
 {
 }
 
-public interface IEventListenerWithKey<TKey>
+public interface IEventListenerWithKey
 {
-    public TKey Id { get; init; }
+    public object Id { get; init; }
+}
+
+public interface IEventListenerWithKey<TKey> : IEventListenerWithKey
+{
+    public new TKey Id { get; init; }
+
+    object IEventListenerWithKey.Id
+    {
+        get => Id!;
+        init => Id = (TKey)value;
+    }
 }

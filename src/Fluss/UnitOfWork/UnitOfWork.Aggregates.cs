@@ -2,12 +2,12 @@ using System.Collections.Concurrent;
 using Fluss.Aggregates;
 using Fluss.Events;
 
-namespace Fluss.UnitOfWork;
+namespace Fluss;
 
 public partial class UnitOfWork
 {
     private readonly List<AggregateRoot> _aggregateRoots = new();
-    internal readonly ConcurrentQueue<EventEnvelope> PublishedEventEnvelopes = new();
+    public ConcurrentQueue<EventEnvelope> PublishedEventEnvelopes { get; } = new();
 
     public async ValueTask<TAggregate> GetAggregate<TAggregate>() where TAggregate : AggregateRoot, new()
     {

@@ -8,5 +8,5 @@ public interface SideEffect
 
 public interface SideEffect<in T> : SideEffect where T : Event
 {
-    public Task<IEnumerable<Event>> HandleAsync(T @event, UnitOfWork.UnitOfWork unitOfWork);
+    public Task<IEnumerable<Event>> HandleAsync(T @event, UnitOfWork unitOfWork);
 }

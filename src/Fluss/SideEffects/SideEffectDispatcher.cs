@@ -22,14 +22,14 @@ public sealed class SideEffectDispatcher : IHostedService
     private readonly SemaphoreSlim _dispatchLock = new(1, 1);
     private readonly ILogger<SideEffectDispatcher> _logger;
 
-    public SideEffectDispatcher(IEnumerable<SideEffect> events, IServiceProvider serviceProvider,
+    public SideEffectDispatcher(IEnumerable<SideEffect> sideEffects, IServiceProvider serviceProvider,
         TransientEventAwareEventRepository transientEventRepository, ILogger<SideEffectDispatcher> logger)
     {
         _serviceProvider = serviceProvider;
         _transientEventRepository = transientEventRepository;
         _logger = logger;
 
-        CacheSideEffects(events);
+        CacheSideEffects(sideEffects);
     }
 
     public async Task StartAsync(CancellationToken cancellationToken)
@@ -82,9 +82,9 @@ public sealed class SideEffectDispatcher : IHostedService
         }
     }
 
-    private void CacheSideEffects(IEnumerable<SideEffect> events)
+    private void CacheSideEffects(IEnumerable<SideEffect> sideEffects)
     {
-        foreach (var sideEffect in events)
+        foreach (var sideEffect in sideEffects)
         {
             var eventType = sideEffect.GetType().GetInterface(typeof(SideEffect<>).Name)!.GetGenericArguments()[0];
             if (!_sideEffectCache.ContainsKey(eventType))
@@ -101,7 +101,7 @@ public sealed class SideEffectDispatcher : IHostedService
     {
         var eventList = events.Where(e => _sideEffectCache.ContainsKey(e.Event.GetType())).ToList();
 
-        while (eventList.Any())
+        while (eventList.Count != 0)
         {
             var userId = eventList.First().By;
             var userEvents = eventList.TakeWhile(e => e.By == userId).ToList();

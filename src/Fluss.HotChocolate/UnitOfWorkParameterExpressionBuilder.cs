@@ -1,6 +1,5 @@
 using System.Linq.Expressions;
 using System.Reflection;
-using Fluss.UnitOfWork;
 using HotChocolate.Internal;
 using HotChocolate.Resolvers;
 
@@ -13,7 +12,7 @@ public class UnitOfWorkParameterExpressionBuilder : IParameterExpressionBuilder
     private static readonly MethodInfo GetOrSetGlobalStateUnitOfWorkMethod =
         typeof(ResolverContextExtensions).GetMethods()
             .First(m => m.Name == nameof(ResolverContextExtensions.GetOrSetGlobalState))
-            .MakeGenericMethod(typeof(UnitOfWork.UnitOfWork));
+            .MakeGenericMethod(typeof(UnitOfWork));
 
     private static readonly MethodInfo GetGlobalStateOrDefaultLongMethod =
         typeof(ResolverContextExtensions).GetMethods()
@@ -24,20 +23,20 @@ public class UnitOfWorkParameterExpressionBuilder : IParameterExpressionBuilder
         typeof(IPureResolverContext).GetMethods().First(
             method => method.Name == nameof(IPureResolverContext.Service) &&
                       method.IsGenericMethod)
-            .MakeGenericMethod(typeof(UnitOfWork.UnitOfWork));
+            .MakeGenericMethod(typeof(UnitOfWork));
 
     private static readonly MethodInfo GetValueOrDefaultMethod =
         typeof(CollectionExtensions).GetMethods().First(m => m.Name == nameof(CollectionExtensions.GetValueOrDefault) && m.GetParameters().Length == 2);
 
     private static readonly MethodInfo WithPrefilledVersionMethod =
-        typeof(UnitOfWork.UnitOfWork).GetMethods(BindingFlags.Instance | BindingFlags.Public)
-            .First(m => m.Name == nameof(UnitOfWork.UnitOfWork.WithPrefilledVersion));
+        typeof(UnitOfWork).GetMethods(BindingFlags.Instance | BindingFlags.Public)
+            .First(m => m.Name == nameof(UnitOfWork.WithPrefilledVersion));
 
     private static readonly PropertyInfo ContextData =
         typeof(IHasContextData).GetProperty(
             nameof(IHasContextData.ContextData))!;
 
-    public bool CanHandle(ParameterInfo parameter) => typeof(UnitOfWork.UnitOfWork) == parameter.ParameterType
+    public bool CanHandle(ParameterInfo parameter) => typeof(UnitOfWork) == parameter.ParameterType
         || typeof(IUnitOfWork) == parameter.ParameterType;
 
     /*
@@ -63,7 +62,7 @@ public class UnitOfWorkParameterExpressionBuilder : IParameterExpressionBuilder
                 Expression.Constant(PrefillUnitOfWorkVersion)));
 
         return Expression.Call(null, GetOrSetGlobalStateUnitOfWorkMethod, context, Expression.Constant(nameof(UnitOfWork)),
-            Expression.Lambda<Func<string, UnitOfWork.UnitOfWork>>(
+            Expression.Lambda<Func<string, UnitOfWork>>(
                 getNewUnitOfWork,
                 Expression.Parameter(typeof(string))));
     }

@@ -3,15 +3,16 @@ using System.Runtime.CompilerServices;
 using Fluss.Authentication;
 using Fluss.Events;
 using Fluss.Events.TransientEvents;
-using Fluss.UnitOfWork;
+using Fluss.SideEffects;
 using Fluss.Upcasting;
+using Fluss.Validation;
 using Microsoft.Extensions.DependencyInjection;
 
 [assembly: InternalsVisibleTo("Fluss.UnitTest")]
 [assembly: InternalsVisibleTo("Fluss.HotChocolate")]
 [assembly: InternalsVisibleTo("Fluss.Testing")]
 
-namespace Fluss.Core;
+namespace Fluss;
 
 public static class ServiceCollectionExtensions
 {
@@ -20,6 +21,7 @@ public static class ServiceCollectionExtensions
         ArgumentNullException.ThrowIfNull(services);
 
         services
+            .AddLogging()
             .AddBaseEventRepository<InMemoryEventRepository>()
             .AddSingleton<EventListenerFactory>()
             .AddSingleton<EventListenerFactoryPipeline, InMemoryEventListenerCache>()
@@ -35,10 +37,14 @@ public static class ServiceCollectionExtensions
 
                 return eventListenerFactory;
             })
-            .AddSingleton<ArbitraryUserUnitOfWorkCache>()
-            .AddTransient<Fluss.UnitOfWork.UnitOfWork>()
-            .AddTransient<IUnitOfWork>(sp => sp.GetRequiredService<Fluss.UnitOfWork.UnitOfWork>())
-            .AddTransient<UnitOfWorkFactory>();
+            .AddSingleton<IArbitraryUserUnitOfWorkCache, ArbitraryUserUnitOfWorkCache>()
+            .AddTransient<UnitOfWork>()
+            .AddTransient<IUnitOfWork>(sp => sp.GetRequiredService<UnitOfWork>())
+            .AddTransient<UnitOfWorkFactory>()
+            .AddSingleton<IRootValidator, RootValidator>()
+            .AddHostedService<SideEffectDispatcher>()
+            .AddSingleton<EventUpcasterService>()
+            .AddSingleton<UpcasterSorter>();
 
         if (addCaching)
         {
@@ -69,7 +75,8 @@ public static class ServiceCollectionExtensions
         }
 
         return services
-            .AddSingleton<IBaseEventRepository, TBaseEventRepository>()
+            .AddSingleton<TBaseEventRepository>()
+            .AddSingleton<IBaseEventRepository, TBaseEventRepository>(sp => sp.GetRequiredService<TBaseEventRepository>())
             .AddSingleton(sp =>
             {
                 var pipeline = sp.GetServices<EventRepositoryPipeline>();
@@ -94,6 +101,6 @@ public static class ServiceCollectionExtensions
             services.AddSingleton(upcasterType, upcaster);
         }
 
-        return services.AddSingleton<EventUpcasterService>().AddSingleton<UpcasterSorter>();
+        return services;
     }
 }

@@ -2,12 +2,47 @@ using System.Collections.Concurrent;
 using Fluss.Events;
 using Fluss.ReadModel;
 
-namespace Fluss.UnitOfWork;
+namespace Fluss;
 
 public partial class UnitOfWork
 {
     private readonly ConcurrentBag<EventListener> _readModels = new();
     public IReadOnlyCollection<EventListener> ReadModels => _readModels;
+
+    public async ValueTask<IReadModel> GetReadModel(Type tReadModel, object? key, long? at = null)
+    {
+        using var activity = FlussActivitySource.Source.StartActivity();
+        activity?.SetTag("EventSourcing.ReadModel", tReadModel.FullName);
+
+        if (Activator.CreateInstance(tReadModel) is not EventListener eventListener)
+        {
+            throw new InvalidOperationException("Type " + tReadModel.FullName + " is not a event listener.");
+        }
+
+        if (eventListener is IEventListenerWithKey eventListenerWithKey)
+        {
+            eventListenerWithKey.GetType().GetProperty("Id")?.SetValue(eventListenerWithKey, key);
+        }
+
+        eventListener = await UpdateAndApplyPublished(eventListener, at);
+
+        if (eventListener is not IReadModel readModel)
+        {
+            throw new InvalidOperationException("Type " + tReadModel.FullName + " is not a read model.");
+        }
+
+        if (!await AuthorizeUsage(readModel))
+        {
+            throw new UnauthorizedAccessException($"Cannot read {eventListener.GetType()} as the current user.");
+        }
+
+        if (at is null)
+        {
+            _readModels.Add(eventListener);
+        }
+
+        return readModel;
+    }
 
     public async ValueTask<TReadModel> GetReadModel<TReadModel>(long? at = null)
         where TReadModel : EventListener, IRootEventListener, IReadModel, new()

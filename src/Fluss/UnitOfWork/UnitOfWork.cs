@@ -1,10 +1,10 @@
 using Fluss.Authentication;
-using Fluss.Core.Validation;
 using Fluss.Events;
+using Fluss.Validation;
 
-namespace Fluss.UnitOfWork;
+namespace Fluss;
 
-public partial class UnitOfWork : IUnitOfWork
+public partial class UnitOfWork : IWriteUnitOfWork
 {
     private readonly IEventListenerFactory _eventListenerFactory;
     private readonly IEventRepository _eventRepository;
@@ -54,7 +54,7 @@ public partial class UnitOfWork : IUnitOfWork
         return await _latestVersionLoader;
     }
 
-    public UnitOfWork WithPrefilledVersion(long? version)
+    public IUnitOfWork WithPrefilledVersion(long? version)
     {
         lock (this)
         {

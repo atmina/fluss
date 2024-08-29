@@ -1,7 +1,7 @@
 using System.Reflection;
 using Microsoft.Extensions.DependencyInjection;
 
-namespace Fluss.Core.Validation;
+namespace Fluss.Validation;
 
 public static class ValidationServiceCollectionExtension
 {
@@ -22,8 +22,6 @@ public static class ValidationServiceCollectionExtension
         {
             services.AddSingleton(eventValidatorType, eventValidator);
         }
-
-        services.AddSingleton<IRootValidator, RootValidator>();
 
         return services;
     }
