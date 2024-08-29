@@ -98,12 +98,12 @@ public class InMemoryCacheTest
         }
     }
 
-    private ReadOnlyCollection<ReadOnlyMemory<EventEnvelope>> GetMockEnvelopes(int from, int to)
+    private static ReadOnlyCollection<ReadOnlyMemory<EventEnvelope>> GetMockEnvelopes(int from, int to)
     {
         return Enumerable.Range(from, to - from + 1).Select(version =>
                 new EventEnvelope { At = DateTimeOffset.Now, By = null, Version = version, Event = new MockEvent() })
             .ToList().ToPagedMemory();
     }
 
-    private class MockEvent : Event { }
+    private class MockEvent : Event;
 }

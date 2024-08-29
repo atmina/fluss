@@ -14,32 +14,32 @@ public class SelectorGeneratorTests
         var driver = CSharpGeneratorDriver.Create(generator);
 
         var compilation = CSharpCompilation.Create(nameof(SelectorGeneratorTests),
-            new[]
-            {
+            [
                 CSharpSyntaxTree.ParseText(
-                    @"
-using Fluss.Regen;
-using System.Threading.Tasks;
+                    """
 
-namespace TestNamespace;
+                    using Fluss.Regen;
+                    using System.Threading.Tasks;
 
-public class Test
-{
-    [Selector]
-    public static async ValueTask<int> Add(int a, int b) {
-        return a + b;
-    }
+                    namespace TestNamespace;
 
-    [Selector]
-    public static async ValueTask<int> Add2(int a, int b) {
-        return a + b;
-    }
-}")
-            },
-            new[]
-            {
+                    public class Test
+                    {
+                        [Selector]
+                        public static async ValueTask<int> Add(int a, int b) {
+                            return a + b;
+                        }
+                    
+                        [Selector]
+                        public static async ValueTask<int> Add2(int a, int b) {
+                            return a + b;
+                        }
+                    }
+                    """)
+            ],
+            [
                 MetadataReference.CreateFromFile(typeof(object).Assembly.Location)
-            });
+            ]);
 
         var runResult = driver.RunGenerators(compilation).GetRunResult();
 
@@ -54,26 +54,26 @@ public class Test
         var driver = CSharpGeneratorDriver.Create(generator);
 
         var compilation = CSharpCompilation.Create(nameof(SelectorGeneratorTests),
-            new[]
-            {
+            [
                 CSharpSyntaxTree.ParseText(
-                    @"
-using Fluss.Regen;
+                    """
 
-namespace TestNamespace;
+                    using Fluss.Regen;
 
-public class Test
-{
-    [Selector]
-    public static int Add(int a, int b) {
-        return a + b;
-    }
-}")
-            },
-            new[]
-            {
+                    namespace TestNamespace;
+
+                    public class Test
+                    {
+                        [Selector]
+                        public static int Add(int a, int b) {
+                            return a + b;
+                        }
+                    }
+                    """)
+            ],
+            [
                 MetadataReference.CreateFromFile(typeof(object).Assembly.Location)
-            });
+            ]);
 
         var runResult = driver.RunGenerators(compilation).GetRunResult();
 
@@ -88,28 +88,28 @@ public class Test
         var driver = CSharpGeneratorDriver.Create(generator);
 
         var compilation = CSharpCompilation.Create(nameof(SelectorGeneratorTests),
-            new[]
-            {
+            [
                 CSharpSyntaxTree.ParseText(
-                    @"
-using Fluss;
-using Fluss.Regen;
+                    """
 
-namespace TestNamespace;
+                    using Fluss;
+                    using Fluss.Regen;
 
-public class Test
-{
-    [Selector]
-    public static int Add(IUnitOfWork unitOfWork, int a, int b) {
-        return a + b;
-    }
-}")
-            },
-            new[]
-            {
+                    namespace TestNamespace;
+
+                    public class Test
+                    {
+                        [Selector]
+                        public static int Add(IUnitOfWork unitOfWork, int a, int b) {
+                            return a + b;
+                        }
+                    }
+                    """)
+            ],
+            [
                 MetadataReference.CreateFromFile(typeof(object).Assembly.Location),
                 MetadataReference.CreateFromFile(typeof(UnitOfWork).Assembly.Location)
-            });
+            ]);
 
         var runResult = driver.RunGenerators(compilation).GetRunResult();
 

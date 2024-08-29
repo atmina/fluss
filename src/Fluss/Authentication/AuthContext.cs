@@ -20,21 +20,14 @@ public interface IAuthContext
     public Guid UserId { get; }
 }
 
-internal class AuthContext : IAuthContext
+internal class AuthContext(IUnitOfWork unitOfWork, Guid userId) : IAuthContext
 {
-    private readonly IUnitOfWork _unitOfWork;
-    public readonly Dictionary<string, object> Data = new();
-    public Guid UserId { get; private set; }
-
-    public AuthContext(IUnitOfWork unitOfWork, Guid userId)
-    {
-        _unitOfWork = unitOfWork;
-        UserId = userId;
-    }
+    private readonly Dictionary<string, object> Data = new();
+    public Guid UserId { get; private set; } = userId;
 
     public async ValueTask<T> CacheAndGet<T>(string key, Func<Task<T>> func)
     {
-        var o = Data.ContainsKey(key) ? Data[key] : null;
+        var o = Data.GetValueOrDefault(key);
 
         switch (o)
         {
@@ -55,19 +48,19 @@ internal class AuthContext : IAuthContext
     public ValueTask<TReadModel> GetReadModel<TReadModel>()
         where TReadModel : EventListener, IRootEventListener, IReadModel, new()
     {
-        return _unitOfWork.UnsafeGetReadModelWithoutAuthorization<TReadModel>();
+        return unitOfWork.UnsafeGetReadModelWithoutAuthorization<TReadModel>();
     }
 
     public ValueTask<TReadModel> GetReadModel<TReadModel, TKey>(TKey key)
         where TReadModel : EventListener, IEventListenerWithKey<TKey>, IReadModel, new()
     {
-        return _unitOfWork.UnsafeGetReadModelWithoutAuthorization<TReadModel, TKey>(key);
+        return unitOfWork.UnsafeGetReadModelWithoutAuthorization<TReadModel, TKey>(key);
     }
 
     public ValueTask<IReadOnlyList<TReadModel>>
         GetMultipleReadModels<TReadModel, TKey>(IEnumerable<TKey> keys) where TKey : notnull
         where TReadModel : EventListener, IReadModel, IEventListenerWithKey<TKey>, new()
     {
-        return _unitOfWork.UnsafeGetMultipleReadModelsWithoutAuthorization<TReadModel, TKey>(keys);
+        return unitOfWork.UnsafeGetMultipleReadModelsWithoutAuthorization<TReadModel, TKey>(keys);
     }
 }

@@ -2,17 +2,11 @@ using System.Collections.ObjectModel;
 
 namespace Fluss.Events;
 
-public class InMemoryEventCache : EventRepositoryPipeline
+public class InMemoryEventCache(long cacheSizePerItem = 10_000) : EventRepositoryPipeline
 {
-    private readonly long _cacheSizePerItem;
-    private readonly List<EventEnvelope[]> _cache = new();
+    private readonly List<EventEnvelope[]> _cache = [];
     private long _lastKnownVersion = -1;
     private readonly SemaphoreSlim _loadLock = new(1, 1);
-
-    public InMemoryEventCache(long cacheSizePerItem = 10_000)
-    {
-        _cacheSizePerItem = cacheSizePerItem;
-    }
 
     public override async ValueTask<ReadOnlyCollection<ReadOnlyMemory<EventEnvelope>>> GetEvents(long fromExclusive,
         long toInclusive)
@@ -35,19 +29,19 @@ public class InMemoryEventCache : EventRepositoryPipeline
         {
             return new[] {
                 _cache[fromItemId]
-                    .AsMemory((int)((fromExclusive + 1) % _cacheSizePerItem), (int)(toInclusive - fromExclusive)).AsReadOnly()
+                    .AsMemory((int)((fromExclusive + 1) % cacheSizePerItem), (int)(toInclusive - fromExclusive)).AsReadOnly()
             }.AsReadOnly();
         }
 
         var result = new ReadOnlyMemory<EventEnvelope>[toItemId - fromItemId + 1];
 
-        result[0] = _cache[fromItemId].AsMemory((int)((fromExclusive + 1) % _cacheSizePerItem));
+        result[0] = _cache[fromItemId].AsMemory((int)((fromExclusive + 1) % cacheSizePerItem));
         for (var i = fromItemId + 1; i < toItemId; i++)
         {
             result[i - fromItemId] = _cache[i].AsMemory();
         }
 
-        result[^1] = _cache[toItemId].AsMemory(0, (int)(toInclusive % _cacheSizePerItem) + 1);
+        result[^1] = _cache[toItemId].AsMemory(0, (int)(toInclusive % cacheSizePerItem) + 1);
 
         return result.AsReadOnly();
     }
@@ -97,12 +91,12 @@ public class InMemoryEventCache : EventRepositoryPipeline
 
     private int GetCacheKey(long i)
     {
-        return (int)(i / _cacheSizePerItem);
+        return (int)(i / cacheSizePerItem);
     }
 
     private long MinItemForCache(int itemId)
     {
-        return _cacheSizePerItem * itemId;
+        return cacheSizePerItem * itemId;
     }
 
     private void AddEvents(ReadOnlyCollection<ReadOnlyMemory<EventEnvelope>> eventEnvelopes)
@@ -120,7 +114,7 @@ public class InMemoryEventCache : EventRepositoryPipeline
                 var cacheKey = GetCacheKey(eventEnvelope.Version);
                 while (_cache.Count <= cacheKey)
                 {
-                    _cache.Add(new EventEnvelope[_cacheSizePerItem]);
+                    _cache.Add(new EventEnvelope[cacheSizePerItem]);
                 }
 
                 _cache[cacheKey][eventEnvelope.Version - MinItemForCache(cacheKey)] = eventEnvelope;

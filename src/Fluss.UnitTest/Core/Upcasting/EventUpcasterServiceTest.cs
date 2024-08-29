@@ -8,14 +8,14 @@ namespace Fluss.UnitTest.Core.Upcasting;
 
 public class EventUpcasterServiceTest
 {
-    private RawEventEnvelope GetRawTestEvent1Envelope(int version)
+    private static RawEventEnvelope GetRawTestEvent1Envelope(int version)
     {
         var jObject = new TestEvent1("Value").ToJObject();
 
         return new RawEventEnvelope { Version = version, RawEvent = jObject };
     }
 
-    private RawEventEnvelope GetRawTestEvent2Envelope(int version)
+    private static RawEventEnvelope GetRawTestEvent2Envelope(int version)
     {
         var jObject = new TestEvent2("Value2").ToJObject();
 
@@ -39,7 +39,7 @@ public class EventUpcasterServiceTest
     [Fact]
     public async Task UpcasterReturningNullDoesntReplaceEvents()
     {
-        var (upcasterService, eventRepositoryMock) = GetServices(new[] { new NoopUpcast() });
+        var (upcasterService, eventRepositoryMock) = GetServices([new NoopUpcast()]);
         await upcasterService.Run();
 
         eventRepositoryMock.Verify(
@@ -54,7 +54,7 @@ public class EventUpcasterServiceTest
     [Fact]
     public async Task SingleEventsAreUpcast()
     {
-        var (upcasterService, eventRepositoryMock) = GetServices(new[] { new SingleEventUpcast() });
+        var (upcasterService, eventRepositoryMock) = GetServices([new SingleEventUpcast()]);
 
         await upcasterService.Run();
 
@@ -72,7 +72,7 @@ public class EventUpcasterServiceTest
     [Fact]
     public async Task MultipleEventsAreUpcast()
     {
-        var (upcasterService, eventRepositoryMock) = GetServices(new[] { new MultiEventUpcast() });
+        var (upcasterService, eventRepositoryMock) = GetServices([new MultiEventUpcast()]);
 
         await upcasterService.Run();
 
@@ -93,7 +93,7 @@ public class EventUpcasterServiceTest
             .Append(GetRawTestEvent2Envelope(4));
 
         var (upcasterService, eventRepositoryMock) =
-            GetServices(new IUpcaster[] { new ChainedEventUpcast2(), new ChainedEventUpcast() }, events);
+            GetServices([new ChainedEventUpcast2(), new ChainedEventUpcast()], events);
 
         await upcasterService.Run();
 
@@ -130,7 +130,8 @@ public class EventUpcasterServiceTest
     [Fact]
     public async Task VersionIsSetCorrectly()
     {
-        var (upcasterService, eventRepositoryMock) = GetServices(new[] { new MultiEventUpcast() }, new[] { GetRawTestEvent1Envelope(1) });
+        var (upcasterService, eventRepositoryMock) = GetServices([new MultiEventUpcast()], [GetRawTestEvent1Envelope(1)
+        ]);
 
         await upcasterService.Run();
 
@@ -146,16 +147,18 @@ public class EventUpcasterServiceTest
     }
 }
 
+// ReSharper disable once NotAccessedPositionalProperty.Global
 record TestEvent1(string Property1) : Event;
 
+// ReSharper disable once NotAccessedPositionalProperty.Global
 record TestEvent2(string Property2) : Event;
 
-class NoopUpcast : IUpcaster
+internal class NoopUpcast : IUpcaster
 {
     public IEnumerable<JObject>? Upcast(JObject eventJson) => null;
 }
 
-class SingleEventUpcast : IUpcaster
+internal class SingleEventUpcast : IUpcaster
 {
     public IEnumerable<JObject>? Upcast(JObject eventJson)
     {
@@ -166,11 +169,11 @@ class SingleEventUpcast : IUpcaster
         var clone = (JObject)eventJson.DeepClone();
         clone["Property1"] = "Upcast";
 
-        return new[] { clone };
+        return [clone];
     }
 }
 
-class MultiEventUpcast : IUpcaster
+internal class MultiEventUpcast : IUpcaster
 {
     public IEnumerable<JObject>? Upcast(JObject eventJson)
     {
@@ -178,11 +181,11 @@ class MultiEventUpcast : IUpcaster
 
         if (type != typeof(TestEvent1).AssemblyQualifiedName) return null;
 
-        return new[] { eventJson, eventJson, eventJson };
+        return [eventJson, eventJson, eventJson];
     }
 }
 
-class ChainedEventUpcast : IUpcaster
+internal class ChainedEventUpcast : IUpcaster
 {
     public IEnumerable<JObject>? Upcast(JObject eventJson)
     {
@@ -195,12 +198,12 @@ class ChainedEventUpcast : IUpcaster
         clone.Remove("Property1");
         clone["$type"] = typeof(TestEvent2).AssemblyQualifiedName;
 
-        return new[] { clone };
+        return [clone];
     }
 }
 
 [DependsOn(typeof(ChainedEventUpcast))]
-class ChainedEventUpcast2 : IUpcaster
+internal class ChainedEventUpcast2 : IUpcaster
 {
     public IEnumerable<JObject>? Upcast(JObject eventJson)
     {
@@ -211,6 +214,6 @@ class ChainedEventUpcast2 : IUpcaster
         var clone = (JObject)eventJson.DeepClone();
         clone["Property2"] = "Upcast-" + clone["Property2"]!.ToObject<string>();
 
-        return new[] { clone };
+        return [clone];
     }
 }

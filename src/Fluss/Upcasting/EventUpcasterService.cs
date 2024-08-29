@@ -8,30 +8,24 @@ public interface AwaitableService
     public Task WaitForCompletionAsync();
 }
 
-public class EventUpcasterService : AwaitableService
+public class EventUpcasterService(
+    IEnumerable<IUpcaster> upcasters,
+    UpcasterSorter sorter,
+    IEventRepository eventRepository,
+    ILogger<EventUpcasterService> logger)
+    : AwaitableService
 {
-    private List<IUpcaster> _sortedUpcasters;
-    private IEventRepository _eventRepository;
-    private ILogger<EventUpcasterService> _logger;
+    private readonly List<IUpcaster> _sortedUpcasters = sorter.SortByDependencies(upcasters);
 
-    private CancellationTokenSource _onCompletedSource;
-
-    public EventUpcasterService(IEnumerable<IUpcaster> upcasters, UpcasterSorter sorter, IEventRepository eventRepository, ILogger<EventUpcasterService> logger)
-    {
-        _sortedUpcasters = sorter.SortByDependencies(upcasters);
-        _eventRepository = eventRepository;
-        _logger = logger;
-
-        _onCompletedSource = new CancellationTokenSource();
-    }
+    private readonly CancellationTokenSource _onCompletedSource = new();
 
     public async ValueTask Run()
     {
-        var events = await _eventRepository.GetRawEvents();
+        var events = await eventRepository.GetRawEvents();
 
         foreach (var upcaster in _sortedUpcasters)
         {
-            _logger.LogInformation("Running Upcaster {UpcasterName}", upcaster.GetType().Name);
+            logger.LogInformation("Running Upcaster {UpcasterName}", upcaster.GetType().Name);
 
             var upcastedEvents = new List<RawEventEnvelope>();
 
@@ -45,7 +39,7 @@ public class EventUpcasterService : AwaitableService
                 }
 
                 var envelopes = upcastResult.Select((json, i) => new RawEventEnvelope { RawEvent = json, At = @event.At, By = @event.By, Version = upcastedEvents.Count + i }).ToList();
-                await _eventRepository.ReplaceEvent(upcastedEvents.Count, envelopes);
+                await eventRepository.ReplaceEvent(upcastedEvents.Count, envelopes);
 
                 upcastedEvents.AddRange(envelopes);
             }

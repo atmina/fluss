@@ -4,63 +4,56 @@ using Fluss.ReadModel;
 
 namespace Fluss;
 
-public class UnitOfWorkRecordingProxy : IUnitOfWork
+public class UnitOfWorkRecordingProxy(IUnitOfWork impl) : IUnitOfWork
 {
-    private readonly IUnitOfWork _impl;
-
-    public UnitOfWorkRecordingProxy(IUnitOfWork impl)
-    {
-        _impl = impl;
-    }
-
     public ValueTask<long> ConsistentVersion()
     {
-        return _impl.ConsistentVersion();
+        return impl.ConsistentVersion();
     }
 
-    public IReadOnlyCollection<EventListener> ReadModels => _impl.ReadModels;
-    public ConcurrentQueue<EventEnvelope> PublishedEventEnvelopes => _impl.PublishedEventEnvelopes;
+    public IReadOnlyCollection<EventListener> ReadModels => impl.ReadModels;
+    public ConcurrentQueue<EventEnvelope> PublishedEventEnvelopes => impl.PublishedEventEnvelopes;
 
-    public List<EventListener> RecordedListeners { get; } = new List<EventListener>();
+    public List<EventListener> RecordedListeners { get; } = [];
 
-    public ValueTask<IReadModel> GetReadModel(Type tReadModel, object key, long? at = null)
+    public ValueTask<IReadModel> GetReadModel(Type tReadModel, object? key, long? at = null)
     {
-        return _impl.GetReadModel(tReadModel, key, at);
+        return impl.GetReadModel(tReadModel, key, at);
     }
 
     public ValueTask<TReadModel> GetReadModel<TReadModel>(long? at = null) where TReadModel : EventListener, IRootEventListener, IReadModel, new()
     {
-        return Record(_impl.GetReadModel<TReadModel>(at));
+        return Record(impl.GetReadModel<TReadModel>(at));
     }
 
     public ValueTask<TReadModel> GetReadModel<TReadModel, TKey>(TKey key, long? at = null) where TReadModel : EventListener, IEventListenerWithKey<TKey>, IReadModel, new()
     {
-        return Record(_impl.GetReadModel<TReadModel, TKey>(key, at));
+        return Record(impl.GetReadModel<TReadModel, TKey>(key, at));
     }
 
     public ValueTask<TReadModel> UnsafeGetReadModelWithoutAuthorization<TReadModel>(long? at = null) where TReadModel : EventListener, IRootEventListener, IReadModel, new()
     {
-        return Record(_impl.UnsafeGetReadModelWithoutAuthorization<TReadModel>(at));
+        return Record(impl.UnsafeGetReadModelWithoutAuthorization<TReadModel>(at));
     }
 
     public ValueTask<TReadModel> UnsafeGetReadModelWithoutAuthorization<TReadModel, TKey>(TKey key, long? at = null) where TReadModel : EventListener, IEventListenerWithKey<TKey>, IReadModel, new()
     {
-        return Record(_impl.UnsafeGetReadModelWithoutAuthorization<TReadModel, TKey>(key, at));
+        return Record(impl.UnsafeGetReadModelWithoutAuthorization<TReadModel, TKey>(key, at));
     }
 
     public ValueTask<IReadOnlyList<TReadModel>> GetMultipleReadModels<TReadModel, TKey>(IEnumerable<TKey> keys, long? at = null) where TReadModel : EventListener, IReadModel, IEventListenerWithKey<TKey>, new() where TKey : notnull
     {
-        return Record(_impl.GetMultipleReadModels<TReadModel, TKey>(keys, at));
+        return Record(impl.GetMultipleReadModels<TReadModel, TKey>(keys, at));
     }
 
     public ValueTask<IReadOnlyList<TReadModel>> UnsafeGetMultipleReadModelsWithoutAuthorization<TReadModel, TKey>(IEnumerable<TKey> keys, long? at = null) where TReadModel : EventListener, IReadModel, IEventListenerWithKey<TKey>, new() where TKey : notnull
     {
-        return Record(_impl.UnsafeGetMultipleReadModelsWithoutAuthorization<TReadModel, TKey>(keys, at));
+        return Record(impl.UnsafeGetMultipleReadModelsWithoutAuthorization<TReadModel, TKey>(keys, at));
     }
 
     public IUnitOfWork WithPrefilledVersion(long? version)
     {
-        return _impl.WithPrefilledVersion(version);
+        return impl.WithPrefilledVersion(version);
     }
 
     private async ValueTask<TReadModel> Record<TReadModel>(ValueTask<TReadModel> readModel) where TReadModel : EventListener

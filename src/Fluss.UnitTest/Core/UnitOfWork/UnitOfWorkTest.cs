@@ -11,40 +11,34 @@ namespace Fluss.UnitTest.Core.UnitOfWork;
 public partial class UnitOfWorkTest
 {
     private readonly InMemoryEventRepository _eventRepository;
-    private readonly EventListenerFactory _eventListenerFactory;
-    private readonly Guid _userId;
     private readonly List<Policy> _policies;
     private readonly Fluss.UnitOfWork _unitOfWork;
     private readonly UnitOfWorkFactory _unitOfWorkFactory;
 
-    private readonly Mock<IRootValidator> _validator;
-
     public UnitOfWorkTest()
     {
         _eventRepository = new InMemoryEventRepository();
-        _eventListenerFactory = new EventListenerFactory(_eventRepository);
-        _userId = Guid.NewGuid();
-        _policies = new List<Policy>();
+        _policies = [];
 
-        _validator = new Mock<IRootValidator>(MockBehavior.Strict);
-        _validator.Setup(v => v.ValidateEvent(It.IsAny<EventEnvelope>(), It.IsAny<IReadOnlyList<EventEnvelope>?>()))
+        Mock<IRootValidator> validator = new(MockBehavior.Strict);
+        validator.Setup(v => v.ValidateEvent(It.IsAny<EventEnvelope>(), It.IsAny<IReadOnlyList<EventEnvelope>?>()))
             .Returns<EventEnvelope, IReadOnlyList<EventEnvelope>?>((_, _) => Task.CompletedTask);
-        _validator.Setup(v => v.ValidateAggregate(It.IsAny<AggregateRoot>(), It.IsAny<Fluss.UnitOfWork>()))
+        validator.Setup(v => v.ValidateAggregate(It.IsAny<AggregateRoot>(), It.IsAny<Fluss.UnitOfWork>()))
             .Returns<AggregateRoot, Fluss.UnitOfWork>((_, _) => Task.CompletedTask);
 
         _unitOfWork = new Fluss.UnitOfWork(
             _eventRepository,
-            _eventListenerFactory,
+            new EventListenerFactory(_eventRepository),
             _policies,
-            new UserIdProvider(_ => _userId, null!),
-            _validator.Object
+            new UserIdProvider(_ => Guid.NewGuid(), null!),
+            validator.Object
         );
 
-        _eventRepository.Publish(new[] {
+        _eventRepository.Publish([
             new EventEnvelope { Event = new TestEvent(1), Version = 0 },
             new EventEnvelope { Event = new TestEvent(2), Version = 1 },
             new EventEnvelope { Event = new TestEvent(1), Version = 2 },
-        });
+        ]).AsTask().Wait();
 
         _unitOfWorkFactory = new UnitOfWorkFactory(
             new ServiceCollection()
@@ -157,7 +151,7 @@ public partial class UnitOfWorkTest
     {
         _policies.Add(new AllowAllPolicy());
 
-        var readModels = await _unitOfWork.GetMultipleReadModels<TestReadModel, int>(new[] { 1, 2 });
+        var readModels = await _unitOfWork.GetMultipleReadModels<TestReadModel, int>([1, 2]);
         Assert.Equal(2, readModels[0].GotEvents);
         Assert.Equal(1, readModels[1].GotEvents);
         Assert.Equal(2, readModels.Count);
@@ -171,14 +165,14 @@ public partial class UnitOfWorkTest
     [Fact]
     public async Task ReturnsNothingWhenMultipleReadModelNotAuthorized()
     {
-        var readModels = await _unitOfWork.GetMultipleReadModels<TestReadModel, int>(new[] { 1, 2 });
+        var readModels = await _unitOfWork.GetMultipleReadModels<TestReadModel, int>([1, 2]);
         Assert.Equal(0, readModels.Count(rm => rm != null));
     }
 
     [Fact]
     public async Task CanGetMultipleReadModelsUnsafe()
     {
-        var readModels = await _unitOfWork.UnsafeGetMultipleReadModelsWithoutAuthorization<TestReadModel, int>(new[] { 1, 2 });
+        var readModels = await _unitOfWork.UnsafeGetMultipleReadModelsWithoutAuthorization<TestReadModel, int>([1, 2]);
         Assert.Equal(2, readModels[0].GotEvents);
         Assert.Equal(1, readModels[1].GotEvents);
         Assert.Equal(2, readModels.Count);
@@ -223,7 +217,7 @@ public partial class UnitOfWorkTest
             return envelope.Event switch
             {
                 TestEvent => this with { GotEvents = GotEvents + 1 },
-                _ => this
+                _ => this,
             };
         }
     }
@@ -236,7 +230,7 @@ public partial class UnitOfWorkTest
             return envelope.Event switch
             {
                 TestEvent testEvent when testEvent.Id == Id => this with { GotEvents = GotEvents + 1 },
-                _ => this
+                _ => this,
             };
         }
     }
@@ -253,7 +247,7 @@ public partial class UnitOfWorkTest
             return envelope.Event switch
             {
                 TestEvent testEvent when testEvent.Id == Id => this with { Exists = true },
-                _ => this
+                _ => this,
             };
         }
     }

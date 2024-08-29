@@ -1,7 +1,6 @@
 using System.Collections.ObjectModel;
 using System.Data;
 using System.Diagnostics;
-using EventSourcing.PostgreSQL;
 using Fluss.Events;
 using Fluss.Exceptions;
 using Newtonsoft.Json;
@@ -13,13 +12,10 @@ namespace Fluss.PostgreSQL;
 
 public partial class PostgreSQLEventRepository : IBaseEventRepository
 {
-    private readonly PostgreSQLConfig config;
     private readonly NpgsqlDataSource dataSource;
 
     public PostgreSQLEventRepository(PostgreSQLConfig config)
     {
-        this.config = config;
-
         var dataSourceBuilder = new NpgsqlDataSourceBuilder(config.ConnectionString);
         dataSourceBuilder.UseJsonNet(settings: new JsonSerializerSettings
         {
@@ -28,7 +24,7 @@ public partial class PostgreSQLEventRepository : IBaseEventRepository
             MetadataPropertyHandling =
                     MetadataPropertyHandling.ReadAhead // While this is marked as a performance hit, profiling approves
         });
-        this.dataSource = dataSourceBuilder.Build();
+        dataSource = dataSourceBuilder.Build();
     }
 
     private async ValueTask Publish<TEnvelope>(IEnumerable<TEnvelope> envelopes, Func<TEnvelope, object> eventExtractor,
@@ -45,7 +41,7 @@ public partial class PostgreSQLEventRepository : IBaseEventRepository
 
         await using var writer =
             connection.BeginBinaryImport(
-                @"COPY ""Events"" (""Version"", ""At"", ""By"", ""Event"") FROM STDIN (FORMAT BINARY)");
+                """COPY "Events" ("Version", "At", "By", "Event") FROM STDIN (FORMAT BINARY)""");
 
         activity?.AddEvent(new ActivityEvent("Got Writer"));
 
@@ -131,7 +127,7 @@ public partial class PostgreSQLEventRepository : IBaseEventRepository
                     Version = reader.GetInt64(0),
                     At = reader.GetDateTime(1),
                     By = reader.IsDBNull(2) ? null : reader.GetGuid(2),
-                    Event = reader.GetFieldValue<Event>(3)
+                    Event = reader.GetFieldValue<Event>(3),
                 });
             }
 
@@ -177,7 +173,7 @@ public partial class PostgreSQLEventRepository : IBaseEventRepository
         {
             // Deferring constraints to allow updating the primary key and shifting the versions
             await using var deferConstraintsCommand =
-                new NpgsqlCommand(@"SET CONSTRAINTS ""PK_Events"" DEFERRED;", connection);
+                new NpgsqlCommand("""SET CONSTRAINTS "PK_Events" DEFERRED;""", connection);
             await deferConstraintsCommand.ExecuteNonQueryAsync();
 
             await using var versionUpdateCommand =
@@ -216,10 +212,10 @@ public partial class PostgreSQLEventRepository : IBaseEventRepository
 
     public void Dispose()
     {
-        if (!_cancellationTokenSource.IsCancellationRequested)
-        {
-            _cancellationTokenSource.Cancel();
-            _cancellationTokenSource.Dispose();
-        }
+        GC.SuppressFinalize(this);
+        if (_cancellationTokenSource.IsCancellationRequested) return;
+
+        _cancellationTokenSource.Cancel();
+        _cancellationTokenSource.Dispose();
     }
 }

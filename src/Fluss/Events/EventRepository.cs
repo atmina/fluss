@@ -12,9 +12,7 @@ public interface IEventRepository
     ValueTask<long> GetLatestVersion();
 }
 
-public interface IBaseEventRepository : IEventRepository
-{
-}
+public interface IBaseEventRepository : IEventRepository;
 
 public abstract class EventRepositoryPipeline : IEventRepository
 {

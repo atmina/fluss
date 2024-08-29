@@ -1,7 +1,5 @@
-using System.Collections.Concurrent;
 using Fluss.Aggregates;
 using Fluss.Events;
-using Fluss.ReadModel;
 
 namespace Fluss;
 

@@ -9,15 +9,9 @@ public interface IArbitraryUserUnitOfWorkCache
     IUnitOfWork GetUserUnitOfWork(Guid userId);
 }
 
-public class ArbitraryUserUnitOfWorkCache : IArbitraryUserUnitOfWorkCache
+public class ArbitraryUserUnitOfWorkCache(IServiceProvider serviceProvider) : IArbitraryUserUnitOfWorkCache
 {
-    private readonly IServiceProvider _serviceProvider;
     private readonly ConcurrentDictionary<Guid, IServiceProvider> _cache = new();
-
-    public ArbitraryUserUnitOfWorkCache(IServiceProvider serviceProvider)
-    {
-        _serviceProvider = serviceProvider;
-    }
 
     public UnitOfWorkFactory GetUserUnitOfWorkFactory(Guid userId)
     {
@@ -45,7 +39,7 @@ public class ArbitraryUserUnitOfWorkCache : IArbitraryUserUnitOfWorkCache
         foreach (var type in constructorArgumentTypes)
         {
             if (type == typeof(UserIdProvider)) continue;
-            collection.AddSingleton(type, _serviceProvider.GetRequiredService(type));
+            collection.AddSingleton(type, serviceProvider.GetRequiredService(type));
         }
 
         collection.ProvideUserIdFrom(_ => providedId);

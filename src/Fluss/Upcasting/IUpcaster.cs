@@ -8,10 +8,8 @@ public interface IUpcaster
     public IEnumerable<JObject>? Upcast(JObject eventJson);
 }
 
-public class DependsOnAttribute : Attribute
+[AttributeUsage(AttributeTargets.Class)]
+public class DependsOnAttribute(params Type[] upcasters) : Attribute
 {
-    public ImmutableHashSet<Type> Dependencies { get; private set; }
-
-    public DependsOnAttribute(params Type[] upcasters) =>
-        Dependencies = ImmutableHashSet<Type>.Empty.Union(upcasters);
+    public ImmutableHashSet<Type> Dependencies { get; private set; } = ImmutableHashSet<Type>.Empty.Union(upcasters);
 }

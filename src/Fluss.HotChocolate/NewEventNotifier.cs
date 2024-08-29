@@ -1,17 +1,16 @@
 using Fluss.Events;
-using Fluss.Extensions;
 
 namespace Fluss.HotChocolate;
 
 public class NewEventNotifier
 {
     private long _knownVersion;
-    private readonly List<(long startedAtVersion, SemaphoreSlim semaphoreSlim)> _listeners = new();
+    private readonly List<(long startedAtVersion, SemaphoreSlim semaphoreSlim)> _listeners = [];
     private readonly SemaphoreSlim _newEventAvailable = new(0);
 
     public NewEventNotifier(IBaseEventRepository eventRepository)
     {
-        _knownVersion = eventRepository.GetLatestVersion().GetResult();
+        _knownVersion = eventRepository.GetLatestVersion().AsTask().Result;
         eventRepository.NewEvents += EventRepositoryOnNewEvents;
 
         _ = Task.Run(async () =>
@@ -41,6 +40,7 @@ public class NewEventNotifier
                     }
                 }
             }
+            // ReSharper disable once FunctionNeverReturns
         });
     }
 

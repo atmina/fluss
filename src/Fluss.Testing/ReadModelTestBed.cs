@@ -1,5 +1,4 @@
 using Fluss.Events;
-using Fluss.Extensions;
 using Fluss.ReadModel;
 using Xunit;
 
@@ -10,7 +9,7 @@ public class ReadModelTestBed : EventTestBed
     public ReadModelTestBed ResultsIn<TReadModel>(TReadModel readModel) where TReadModel : RootReadModel, new()
     {
         var eventSourced = EventListenerFactory
-            .UpdateTo(new TReadModel(), EventRepository.GetLatestVersion().GetResult()).GetResult();
+            .UpdateTo(new TReadModel(), EventRepository.GetLatestVersion().AsTask().Result).AsTask().Result;
 
         Assert.Equal(readModel with { Tag = eventSourced.Tag }, eventSourced);
 
@@ -23,7 +22,7 @@ public class ReadModelTestBed : EventTestBed
         where TReadModel : ReadModelWithKey<TKey>, new()
     {
         var eventSourced = EventListenerFactory
-            .UpdateTo(new TReadModel { Id = readModel.Id }, EventRepository.GetLatestVersion().GetResult()).GetResult();
+            .UpdateTo(new TReadModel { Id = readModel.Id }, EventRepository.GetLatestVersion().AsTask().Result).AsTask().Result;
 
         Assert.Equal(readModel with { Tag = eventSourced.Tag }, eventSourced);
 
@@ -38,7 +37,7 @@ public class ReadModelTestBed : EventTestBed
         {
             At = DateTimeOffset.Now,
             Event = new CanaryEvent(),
-            Version = EventRepository.GetLatestVersion().GetResult() + 1
+            Version = EventRepository.GetLatestVersion().AsTask().Result + 1,
         }), "Read model should not react to arbitrary events");
     }
 

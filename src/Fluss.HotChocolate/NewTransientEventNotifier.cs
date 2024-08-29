@@ -1,10 +1,11 @@
 using Fluss.Events.TransientEvents;
+// ReSharper disable LoopCanBeConvertedToQuery
 
 namespace Fluss.HotChocolate;
 
 public class NewTransientEventNotifier
 {
-    private readonly List<(long startedAtVersion, TaskCompletionSource<IEnumerable<TransientEventEnvelope>> task)> _listeners = new();
+    private readonly List<(long startedAtVersion, TaskCompletionSource<IEnumerable<TransientEventEnvelope>> task)> _listeners = [];
     private readonly TransientEventAwareEventRepository _transientEventRepository;
 
     private readonly SemaphoreSlim _newEventAvailable = new(0);
@@ -48,6 +49,7 @@ public class NewTransientEventNotifier
                     }
                 }
             }
+            // ReSharper disable once FunctionNeverReturns
         });
     }
 

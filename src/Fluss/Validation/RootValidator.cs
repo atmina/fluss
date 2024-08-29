@@ -29,13 +29,14 @@ public class RootValidator : IRootValidator
         foreach (var validator in validators)
         {
             var aggregateType = validator.GetType().GetInterface(typeof(AggregateValidator<>).Name)!.GetGenericArguments()[0];
-            if (!_aggregateValidators.ContainsKey(aggregateType))
+            if (!_aggregateValidators.TryGetValue(aggregateType, out List<(AggregateValidator validator, MethodInfo handler)>? value))
             {
-                _aggregateValidators[aggregateType] = new List<(AggregateValidator, MethodInfo)>();
+                value = new List<(AggregateValidator, MethodInfo)>();
+                _aggregateValidators[aggregateType] = value;
             }
 
             var method = validator.GetType().GetMethod(nameof(AggregateValidator<AggregateRoot>.ValidateAsync))!;
-            _aggregateValidators[aggregateType].Add((validator, method));
+            value.Add((validator, method));
         }
     }
 
@@ -74,7 +75,7 @@ public class RootValidator : IRootValidator
         try
         {
             var invocations = validators.Select(v =>
-                v.handler.Invoke(v.validator, new object?[] { envelope.Event, versionedUnitOfWork }));
+                v.handler.Invoke(v.validator, [envelope.Event, versionedUnitOfWork]));
 
             await Task.WhenAll(invocations.Cast<ValueTask>().Select(async x => await x));
         }
@@ -97,7 +98,7 @@ public class RootValidator : IRootValidator
 
         try
         {
-            var invocations = validator.Select(v => v.handler.Invoke(v.validator, new object?[] { aggregate, unitOfWork }));
+            var invocations = validator.Select(v => v.handler.Invoke(v.validator, [aggregate, unitOfWork]));
             await Task.WhenAll(invocations.Cast<ValueTask>().Select(async x => await x));
         }
         catch (TargetInvocationException targetInvocationException)

@@ -13,18 +13,18 @@ public partial class UnitOfWorkTest
 
         await Assert.ThrowsAsync<UnauthorizedAccessException>(async () =>
         {
-            await _unitOfWork.GetReadModel<UnitOfWorkTest.TestReadModel, int>(1);
+            await _unitOfWork.GetReadModel<TestReadModel, int>(1);
         });
 
         await _unitOfWork.Publish(new AllowEvent());
-        await _unitOfWork.GetReadModel<UnitOfWorkTest.TestReadModel, int>(1);
+        await _unitOfWork.GetReadModel<TestReadModel, int>(1);
     }
 
     private record AllowEvent : Event;
 
     private record HasAllowEventReadModel : RootReadModel
     {
-        public bool HasAllowEvent { get; init; } = false;
+        public bool HasAllowEvent { get; private init; }
 
         protected override EventListener When(EventEnvelope envelope)
         {
@@ -34,7 +34,7 @@ public partial class UnitOfWorkTest
                 _ => this
             };
         }
-    };
+    }
 
     private class AllowReadAfterEventPolicy : Policy
     {
@@ -58,7 +58,5 @@ public partial class UnitOfWorkTest
         Assert.False(await emptyPolicy.AuthenticateReadModel(null!, null!));
     }
 
-    private class EmptyPolicy : Policy
-    {
-    }
+    private class EmptyPolicy : Policy;
 }

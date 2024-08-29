@@ -1,6 +1,5 @@
 using Fluss.Authentication;
 using Fluss.Events;
-using Fluss.Extensions;
 using Fluss.ReadModel;
 using Xunit;
 
@@ -28,7 +27,7 @@ public class PolicyTestBed<TPolicy> : EventTestBed where TPolicy : Policy, new()
     {
         foreach (var @event in events)
         {
-            Assert.True(_policy.AuthenticateEvent(GetEnvelope(@event), _authContext).GetResult(), $"Event should be allowed {@event}");
+            Assert.True(_policy.AuthenticateEvent(GetEnvelope(@event), _authContext).AsTask().Result, $"Event should be allowed {@event}");
         }
 
         AssertPolicyDoesNoAllowCanary();
@@ -40,7 +39,7 @@ public class PolicyTestBed<TPolicy> : EventTestBed where TPolicy : Policy, new()
     {
         foreach (var @event in events)
         {
-            Assert.False(_policy.AuthenticateEvent(GetEnvelope(@event), _authContext).GetResult(), $"Event should not be allowed {@event}");
+            Assert.False(_policy.AuthenticateEvent(GetEnvelope(@event), _authContext).AsTask().Result, $"Event should not be allowed {@event}");
         }
 
         AssertPolicyDoesNoAllowCanary();
@@ -54,8 +53,8 @@ public class PolicyTestBed<TPolicy> : EventTestBed where TPolicy : Policy, new()
         {
             At = DateTimeOffset.Now,
             Event = new CanaryEvent(),
-            Version = EventRepository.GetLatestVersion().GetResult() + 1
-        }, _authContext).GetResult(), "Policy should not allow any event");
+            Version = EventRepository.GetLatestVersion().AsTask().Result + 1,
+        }, _authContext).AsTask().Result, "Policy should not allow any event");
     }
 
     public override PolicyTestBed<TPolicy> WithEvents(params Event[] events)
@@ -77,19 +76,12 @@ public class PolicyTestBed<TPolicy> : EventTestBed where TPolicy : Policy, new()
             At = DateTimeOffset.Now,
             By = _userId,
             Event = @event,
-            Version = EventRepository.GetLatestVersion().GetResult()
+            Version = EventRepository.GetLatestVersion().AsTask().Result,
         };
     }
 
-    private class AuthContextMock : IAuthContext
+    private class AuthContextMock(PolicyTestBed<TPolicy> policyTestBed) : IAuthContext
     {
-        private readonly PolicyTestBed<TPolicy> _policyTestBed;
-
-        public AuthContextMock(PolicyTestBed<TPolicy> policyTestBed)
-        {
-            _policyTestBed = policyTestBed;
-        }
-
         public async ValueTask<T> CacheAndGet<T>(string key, Func<Task<T>> func)
         {
             return await func();
@@ -97,12 +89,12 @@ public class PolicyTestBed<TPolicy> : EventTestBed where TPolicy : Policy, new()
 
         public async ValueTask<TReadModel> GetReadModel<TReadModel>() where TReadModel : EventListener, IRootEventListener, IReadModel, new()
         {
-            return await _policyTestBed.EventListenerFactory.UpdateTo(new TReadModel(), await _policyTestBed.EventRepository.GetLatestVersion());
+            return await policyTestBed.EventListenerFactory.UpdateTo(new TReadModel(), await policyTestBed.EventRepository.GetLatestVersion());
         }
 
         public async ValueTask<TReadModel> GetReadModel<TReadModel, TKey>(TKey key) where TReadModel : EventListener, IEventListenerWithKey<TKey>, IReadModel, new()
         {
-            return await _policyTestBed.EventListenerFactory.UpdateTo(new TReadModel { Id = key }, await _policyTestBed.EventRepository.GetLatestVersion());
+            return await policyTestBed.EventListenerFactory.UpdateTo(new TReadModel { Id = key }, await policyTestBed.EventRepository.GetLatestVersion());
         }
 
         public async ValueTask<IReadOnlyList<TReadModel>> GetMultipleReadModels<TReadModel, TKey>(IEnumerable<TKey> keys) where TReadModel : EventListener, IReadModel, IEventListenerWithKey<TKey>, new() where TKey : notnull
@@ -110,6 +102,6 @@ public class PolicyTestBed<TPolicy> : EventTestBed where TPolicy : Policy, new()
             return await Task.WhenAll(keys.Select(async k => await GetReadModel<TReadModel, TKey>(k)));
         }
 
-        public Guid UserId => _policyTestBed._userId;
+        public Guid UserId => policyTestBed._userId;
     }
 }

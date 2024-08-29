@@ -1,12 +1,12 @@
 using System.Collections.Concurrent;
 using Fluss.Aggregates;
 using Fluss.Events;
+// ReSharper disable LoopCanBeConvertedToQuery
 
 namespace Fluss;
 
 public partial class UnitOfWork
 {
-    private readonly List<AggregateRoot> _aggregateRoots = new();
     public ConcurrentQueue<EventEnvelope> PublishedEventEnvelopes { get; } = new();
 
     public async ValueTask<TAggregate> GetAggregate<TAggregate>() where TAggregate : AggregateRoot, new()
@@ -24,8 +24,6 @@ public partial class UnitOfWork
         {
             aggregate = (TAggregate)aggregate.WhenInt(publishedEventEnvelope);
         }
-
-        _aggregateRoots.Add(aggregate);
 
         return aggregate;
     }
@@ -46,8 +44,6 @@ public partial class UnitOfWork
         {
             aggregate = (TAggregate)aggregate.WhenInt(publishedEventEnvelope);
         }
-
-        _aggregateRoots.Add(aggregate);
 
         return aggregate;
     }
@@ -82,9 +78,7 @@ public partial class UnitOfWork
         // It's possible that the given aggregate does not have all necessary events applied yet.
         aggregate = await UpdateAndApplyPublished(aggregate, null);
 
-        var result = aggregate.WhenInt(envelope) as T;
-
-        if (result == null || result == aggregate) return;
+        if (aggregate.WhenInt(envelope) is not T result || result == aggregate) return;
 
         await _validator.ValidateAggregate(result, this);
     }

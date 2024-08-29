@@ -41,7 +41,7 @@ public partial class PostgreSQLEventRepository : IDisposable
             NotifyNewEvents();
         };
 
-        await using var listen = new NpgsqlCommand(@"LISTEN new_event", listenConnection);
+        await using var listen = new NpgsqlCommand("LISTEN new_event", listenConnection);
         await listen.ExecuteNonQueryAsync(_cancellationTokenSource.Token);
 
         while (!_cancellationTokenSource.Token.IsCancellationRequested)
@@ -49,7 +49,7 @@ public partial class PostgreSQLEventRepository : IDisposable
             await listenConnection.WaitAsync(_cancellationTokenSource.Token);
         }
 
-        await using var unlisten = new NpgsqlCommand(@"UNLISTEN new_event", listenConnection);
+        await using var unlisten = new NpgsqlCommand("UNLISTEN new_event", listenConnection);
         await unlisten.ExecuteNonQueryAsync(new CancellationToken());
     }
 

@@ -21,23 +21,15 @@ public class UnitOfWorkParameterExpressionBuilder : IParameterExpressionBuilder
 
     private static readonly MethodInfo ServiceUnitOfWorkMethod =
         typeof(IPureResolverContext).GetMethods().First(
-            method => method.Name == nameof(IPureResolverContext.Service) &&
-                      method.IsGenericMethod)
+            method => method is { Name: nameof(IPureResolverContext.Service), IsGenericMethod: true })
             .MakeGenericMethod(typeof(UnitOfWork));
-
-    private static readonly MethodInfo GetValueOrDefaultMethod =
-        typeof(CollectionExtensions).GetMethods().First(m => m.Name == nameof(CollectionExtensions.GetValueOrDefault) && m.GetParameters().Length == 2);
 
     private static readonly MethodInfo WithPrefilledVersionMethod =
         typeof(UnitOfWork).GetMethods(BindingFlags.Instance | BindingFlags.Public)
             .First(m => m.Name == nameof(UnitOfWork.WithPrefilledVersion));
 
-    private static readonly PropertyInfo ContextData =
-        typeof(IHasContextData).GetProperty(
-            nameof(IHasContextData.ContextData))!;
-
     public bool CanHandle(ParameterInfo parameter) => typeof(UnitOfWork) == parameter.ParameterType
-        || typeof(IUnitOfWork) == parameter.ParameterType;
+                                                      || typeof(IUnitOfWork) == parameter.ParameterType;
 
     /*
      * Produces something like this: context.GetOrSetGlobalState(

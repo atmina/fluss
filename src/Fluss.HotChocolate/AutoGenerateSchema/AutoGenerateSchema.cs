@@ -1,6 +1,5 @@
 using System.ComponentModel;
 using System.Reflection;
-using HotChocolate.Data.Filters;
 using HotChocolate.Execution.Configuration;
 using HotChocolate.Language;
 using Microsoft.Extensions.DependencyInjection;
@@ -45,20 +44,16 @@ public static class AutoGenerateSchema
         }
 
         throw new ArgumentException(
-            $"Could not find Type converter for strongly typed IDs with backing type {backingType!.Name}");
+            $"Could not find Type converter for strongly typed IDs with backing type {backingType.Name}");
     }
 }
 
-public abstract class StronglyTypedIdType<TId, TScalarType, TCLRType, TNodeType> : ScalarType<TId, TNodeType>
-    where TId : struct where TScalarType : ScalarType<TCLRType, TNodeType> where TNodeType : IValueNode
+public abstract class StronglyTypedIdType<TId, TScalarType, TCLRType, TNodeType>(TScalarType scalarType)
+    : ScalarType<TId, TNodeType>(typeof(TId).Name)
+    where TId : struct
+    where TScalarType : ScalarType<TCLRType, TNodeType>
+    where TNodeType : IValueNode
 {
-    private readonly TScalarType scalarType;
-
-    protected StronglyTypedIdType(TScalarType scalarType) : base(typeof(TId).Name)
-    {
-        this.scalarType = scalarType;
-    }
-
     protected override TId ParseLiteral(TNodeType valueSyntax)
     {
         var guid = (TCLRType)scalarType.ParseLiteral(valueSyntax)!;
@@ -98,58 +93,9 @@ public abstract class StronglyTypedIdType<TId, TScalarType, TCLRType, TNodeType>
     }
 }
 
-public class StronglyTypedGuidIdType<TId> : StronglyTypedIdType<TId, UuidType, Guid, StringValueNode> where TId : struct
-{
-    public StronglyTypedGuidIdType() : base(new UuidType('D')) { }
-}
+public class StronglyTypedGuidIdType<TId>()
+    : StronglyTypedIdType<TId, UuidType, Guid, StringValueNode>(new UuidType('D'))
+    where TId : struct;
 
-public class StronglyTypedLongIdType<TId> : StronglyTypedIdType<TId, LongType, long, IntValueNode> where TId : struct
-{
-    public StronglyTypedLongIdType() : base(new LongType()) { }
-}
-
-public class StronglyTypedIdFilterConventionExtension<TAssemblyReference> : FilterConventionExtension
-{
-    protected override void Configure(IFilterConventionDescriptor descriptor)
-    {
-        base.Configure(descriptor);
-
-        var typesToGenerateFor = typeof(TAssemblyReference).Assembly.GetTypes().Where(t =>
-            t.IsValueType && t.CustomAttributes.Any(a =>
-                a.AttributeType == typeof(TypeConverterAttribute)));
-
-
-        foreach (var type in typesToGenerateFor)
-        {
-            var filterInputType = typeof(StronglyTypedGuidIdFilterInput<>).MakeGenericType(type);
-            var nullableType = typeof(Nullable<>).MakeGenericType(type);
-            descriptor.BindRuntimeType(type, filterInputType);
-            descriptor.BindRuntimeType(nullableType, filterInputType);
-        }
-    }
-}
-
-public class StronglyTypedGuidIdFilterInput<TId> : StringOperationFilterInputType
-{
-    /*public override bool TrySerialize(object? runtimeValue, out object? resultValue) {
-        if (runtimeValue is TId id) {
-            resultValue = id.ToString();
-            return true;
-        }
-
-        resultValue = null;
-        return false;
-    }
-
-    public override bool TryDeserialize(object? resultValue, out object? runtimeValue) {
-        var canParseGuid = Guid.TryParse(resultValue?.ToString(), out var parsedGuid);
-        if (!canParseGuid) {
-            runtimeValue = null;
-            return false;
-        }
-
-        var tId = Activator.CreateInstance(typeof(TId), parsedGuid);
-        runtimeValue = tId;
-        return true;
-    }*/
-}
+public class StronglyTypedLongIdType<TId>() : StronglyTypedIdType<TId, LongType, long, IntValueNode>(new LongType())
+    where TId : struct;

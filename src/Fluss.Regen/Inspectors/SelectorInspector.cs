@@ -33,7 +33,6 @@ public sealed class SelectorInspector : ISyntaxInspector
                     {
                         syntaxInfo = new SelectorInfo(
                             attributeSyntax,
-                            attributeSymbol,
                             methodSymbol,
                             methodSyntax);
                         return true;

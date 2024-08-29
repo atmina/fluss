@@ -53,7 +53,7 @@ public record EventListenerVersionTag
     /// Last Event that was consumed by this EventListener
     public long LastSeen = -1;
     /// Last Event that mutated this EventListener
-    public long LastAccepted = -1;
+    public readonly long LastAccepted = -1;
     /// Last TransientEvent that was consumed by this EventListener
     public long LastSeenTransient = -1;
 
@@ -70,22 +70,16 @@ public record EventListenerVersionTag
     }
 }
 
-public interface IRootEventListener
-{
-}
+public interface IRootEventListener;
 
 public interface IEventListenerWithKey
 {
-    public object Id { get; init; }
+    public object Id { get; }
 }
 
 public interface IEventListenerWithKey<TKey> : IEventListenerWithKey
 {
     public new TKey Id { get; init; }
 
-    object IEventListenerWithKey.Id
-    {
-        get => Id!;
-        init => Id = (TKey)value;
-    }
+    object IEventListenerWithKey.Id => Id!;
 }

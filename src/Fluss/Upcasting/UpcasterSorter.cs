@@ -2,15 +2,11 @@ using System.Reflection;
 
 namespace Fluss.Upcasting;
 
-public class UpcasterSortException : Exception
-{
-    public UpcasterSortException() : base(
-        $"Failed to sort Upcasters in {UpcasterSorter.MaxIterations} iterations. Ensure the following:\n" +
-        " - There are no cyclic dependencies\n" +
-        $" - All dependencies implement {nameof(IUpcaster)}\n" +
-        " - All upcasters are placed in the same Assembly")
-    { }
-}
+public class UpcasterSortException() : Exception(
+    $"Failed to sort Upcasters in {UpcasterSorter.MaxIterations} iterations. Ensure the following:\n" +
+    " - There are no cyclic dependencies\n" +
+    $" - All dependencies implement {nameof(IUpcaster)}\n" +
+    " - All upcasters are placed in the same Assembly");
 
 public class UpcasterSorter
 {
@@ -20,13 +16,13 @@ public class UpcasterSorter
     {
         var remaining = upcasters.ToHashSet();
 
-        var result = remaining.Where(t => GetDependencies(t).Count() == 0).ToList();
+        var result = remaining.Where(t => !GetDependencies(t).Any()).ToList();
         var includedTypes = result.Select(u => u.GetType()).ToHashSet();
         remaining.ExceptWith(result);
 
         var remainingIterations = MaxIterations;
 
-        while (remaining.Any())
+        while (remaining.Count != 0)
         {
             // This approach is not the most performant admittedly but it works :)
             var next = remaining.Where(t => GetDependencies(t).All(d => includedTypes.Contains(d))).ToList();

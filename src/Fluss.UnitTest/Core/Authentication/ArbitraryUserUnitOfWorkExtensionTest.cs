@@ -55,7 +55,7 @@ public class ArbitraryUserUnitOfWorkExtensionTest
         Assert.Equal(guid, events[0].ToArray()[0].By);
     }
 
-    private class TestEvent : Event { }
+    private class TestEvent : Event;
 
     private class AllowAllPolicy : Policy
     {

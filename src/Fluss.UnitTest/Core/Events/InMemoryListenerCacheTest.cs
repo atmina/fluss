@@ -13,14 +13,15 @@ public class InMemoryListenerCacheTest
         _baseEventListenerFactory = new Mock<IEventListenerFactory>();
         _listenerCache = new InMemoryEventListenerCache
         {
-            Next = _baseEventListenerFactory.Object
+            Next = _baseEventListenerFactory.Object,
         };
     }
+
+    // ReSharper disable ReturnValueOfPureMethodIsNotUsed
 
     [Fact]
     public async Task PassesUpdatesToNext()
     {
-        // ReSharper disable once ReturnValueOfPureMethodIsNotUsed
         _baseEventListenerFactory.Setup(f => f.UpdateTo(It.IsAny<TestEventListener>(), 100))
             .Returns(ValueTask.FromResult(new TestEventListener()));
 
@@ -38,7 +39,6 @@ public class InMemoryListenerCacheTest
     [Fact]
     public async Task ReturnsCachedEventListener()
     {
-        // ReSharper disable once ReturnValueOfPureMethodIsNotUsed
         _baseEventListenerFactory.Setup(f => f.UpdateTo(It.IsAny<TestEventListener>(), 100))
             .Returns(ValueTask.FromResult(new TestEventListener { Tag = new EventListenerVersionTag(100) }));
 
@@ -57,7 +57,6 @@ public class InMemoryListenerCacheTest
     [Fact]
     public async Task ReturnsCachedKeyedEventListener()
     {
-        // ReSharper disable once ReturnValueOfPureMethodIsNotUsed
         _baseEventListenerFactory.Setup(f => f.UpdateTo(It.IsAny<KeyedTestEventListener>(), 100))
             .Returns(ValueTask.FromResult(new KeyedTestEventListener { Id = 1, Tag = new EventListenerVersionTag(100) }));
 
@@ -76,7 +75,6 @@ public class InMemoryListenerCacheTest
     [Fact]
     public async Task ForwardsIfCacheContainsNewer()
     {
-        // ReSharper disable once ReturnValueOfPureMethodIsNotUsed
         _baseEventListenerFactory.Setup(f => f.UpdateTo(It.IsAny<TestEventListener>(), 100))
             .Returns(ValueTask.FromResult(new TestEventListener { Tag = new EventListenerVersionTag(100) }));
         _baseEventListenerFactory.Setup(f => f.UpdateTo(It.IsAny<TestEventListener>(), 90))
@@ -104,7 +102,6 @@ public class InMemoryListenerCacheTest
     [Fact]
     public async Task UpdatesStoreWithNewerVersion()
     {
-        // ReSharper disable once ReturnValueOfPureMethodIsNotUsed
         var testEventListener = new TestEventListener();
         var otherTestEventList = new TestEventListener();
 
@@ -130,8 +127,6 @@ public class InMemoryListenerCacheTest
     [Fact]
     public async Task ForwardsAgainIfCleaned()
     {
-        // ReSharper disable once ReturnValueOfPureMethodIsNotUsed
-
         _baseEventListenerFactory.Setup(f => f.UpdateTo(It.IsAny<TestEventListener>(), 100))
             .Returns(ValueTask.FromResult(new TestEventListener { Tag = new EventListenerVersionTag(100) }));
 
