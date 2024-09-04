@@ -12,6 +12,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Fluss.Testing", "Fluss.Test
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Fluss.Regen", "Fluss.Regen\Fluss.Regen.csproj", "{6E250321-6993-4B94-8600-85E15BF713FA}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Benchmark", "Benchmark\Benchmark.csproj", "{970AB461-4D44-4B99-AACA-7DAA569D4C34}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -42,5 +44,9 @@ Global
 		{6E250321-6993-4B94-8600-85E15BF713FA}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{6E250321-6993-4B94-8600-85E15BF713FA}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{6E250321-6993-4B94-8600-85E15BF713FA}.Release|Any CPU.Build.0 = Release|Any CPU
+		{970AB461-4D44-4B99-AACA-7DAA569D4C34}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{970AB461-4D44-4B99-AACA-7DAA569D4C34}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{970AB461-4D44-4B99-AACA-7DAA569D4C34}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{970AB461-4D44-4B99-AACA-7DAA569D4C34}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 EndGlobal

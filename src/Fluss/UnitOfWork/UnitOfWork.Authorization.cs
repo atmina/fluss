@@ -1,9 +1,6 @@
 using Fluss.Authentication;
 using Fluss.Events;
 using Fluss.ReadModel;
-#if !DEBUG
-using Fluss.Extensions;
-#endif
 
 namespace Fluss;
 
@@ -21,7 +18,7 @@ await Task.WhenAll(_policies.Select(async policy => (policy, await policy.Authen
 
         return accepted.Count > 0;
 #else
-        return await _policies.Select(p => p.AuthenticateEvent(envelope, ac)).AnyAsync();
+        return await AnyAsync(_policies.Select(p => p.AuthenticateEvent(envelope, ac)));
 #endif
     }
 
@@ -37,7 +34,19 @@ await Task.WhenAll(_policies.Select(async policy => (policy, await policy.Authen
 
         return accepted.Count > 0;
 #else
-        return await _policies.Select(p => p.AuthenticateReadModel(eventListener, ac)).AnyAsync();
+        return await AnyAsync(_policies.Select(p => p.AuthenticateReadModel(eventListener, ac)));
 #endif
+    }
+
+    private static async ValueTask<bool> AnyAsync(IEnumerable<ValueTask<bool>> valueTasks)
+    {
+        foreach (var valueTask in valueTasks)
+        {
+            if (await valueTask)
+            {
+                return true;
+            }
+        }
+        return false;
     }
 }
