@@ -12,7 +12,6 @@ public class UnitOfWorkRecordingProxy(IUnitOfWork impl) : IUnitOfWork
     }
 
     public IReadOnlyCollection<EventListener> ReadModels => impl.ReadModels;
-    public ConcurrentQueue<EventEnvelope> PublishedEventEnvelopes => impl.PublishedEventEnvelopes;
 
     public List<EventListener> RecordedListeners { get; } = [];
 
@@ -79,7 +78,7 @@ public class UnitOfWorkRecordingProxy(IUnitOfWork impl) : IUnitOfWork
             eventListenerTypeWithKeyAndVersions.Add(new EventListenerTypeWithKeyAndVersion(
                 recordedListener.GetType(),
                 recordedListener is IEventListenerWithKey keyListener ? keyListener.Id : null,
-                recordedListener.Tag.LastAccepted
+                recordedListener.LastAcceptedEvent
                 ));
         }
 
@@ -94,10 +93,17 @@ public class UnitOfWorkRecordingProxy(IUnitOfWork impl) : IUnitOfWork
 
             if (readModel is EventListener eventListener)
             {
-                return eventListener.Tag.LastAccepted <= Version;
+                return eventListener.LastAcceptedEvent <= Version;
             }
 
             return false;
         }
+    }
+
+    public void Dispose()
+    {
+        impl.Dispose();
+
+        GC.SuppressFinalize(this);
     }
 }

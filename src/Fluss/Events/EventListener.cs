@@ -4,16 +4,22 @@ namespace Fluss.Events;
 
 public abstract record EventListener
 {
-    internal EventListenerVersionTag Tag = new(-1);
+    /// Last Event that was consumed by this EventListener
+    internal long LastSeenEvent = -1;
+    /// Last Event that mutated this EventListener
+    internal long LastAcceptedEvent = -1;
+    /// Last TransientEvent that was consumed by this EventListener
+    internal long LastSeenTransientEvent = -1;
+
     protected abstract EventListener When(EventEnvelope envelope);
 
     internal EventListener WhenInt(EventEnvelope envelope)
     {
 #if DEBUG
-        if (envelope.Version != Tag.LastSeen + 1 && envelope is not TransientEventEnvelope)
+        if (envelope.Version != LastSeenEvent + 1 && envelope is not TransientEventEnvelope)
         {
             throw new InvalidOperationException(
-                $"Event envelope version {envelope.Version} is not the next expected version {Tag.LastSeen + 1}.");
+                $"Event envelope version {envelope.Version} is not the next expected version {LastSeenEvent + 1}.");
         }
 #endif
 
@@ -23,28 +29,23 @@ public abstract record EventListener
 
         if (envelope.Event is TransientEvent)
         {
-            if (newEventListener.Tag.HasTaint())
-            {
-                newEventListener.Tag.LastSeenTransient = envelope.Version;
-            }
-            else
-            {
-                newEventListener = newEventListener with { Tag = Tag with { LastSeenTransient = envelope.Version } };
-            }
-
+            newEventListener.LastSeenTransientEvent = envelope.Version;
             return newEventListener;
         }
 
         if (changed)
         {
-            newEventListener = newEventListener with { Tag = new EventListenerVersionTag(envelope.Version) };
-        }
-        else
-        {
-            newEventListener.Tag.LastSeen = envelope.Version;
+            newEventListener.LastAcceptedEvent = envelope.Version;
         }
 
+        newEventListener.LastSeenEvent = envelope.Version;
+
         return newEventListener;
+    }
+
+    internal bool HasTaint()
+    {
+        return LastSeenTransientEvent > -1;
     }
 }
 

@@ -16,3 +16,5 @@ msbuild.wrn
 .idea
 
 *.received.*
+
+*.user

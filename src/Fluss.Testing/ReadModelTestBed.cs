@@ -11,7 +11,7 @@ public class ReadModelTestBed : EventTestBed
         var eventSourced = EventListenerFactory
             .UpdateTo(new TReadModel(), EventRepository.GetLatestVersion().AsTask().Result).AsTask().Result;
 
-        Assert.Equal(readModel with { Tag = eventSourced.Tag }, eventSourced);
+        Assert.Equal(readModel, eventSourced);
 
         AssertReadModelDoesNotReactToCanary(eventSourced);
 
@@ -24,7 +24,7 @@ public class ReadModelTestBed : EventTestBed
         var eventSourced = EventListenerFactory
             .UpdateTo(new TReadModel { Id = readModel.Id }, EventRepository.GetLatestVersion().AsTask().Result).AsTask().Result;
 
-        Assert.Equal(readModel with { Tag = eventSourced.Tag }, eventSourced);
+        Assert.Equal(readModel, eventSourced);
 
         AssertReadModelDoesNotReactToCanary(eventSourced);
 

@@ -39,7 +39,7 @@ public class TransientEventAwareEventListenerFactoryTest
 
         var updatedReadModel = await _transientFactory.UpdateTo(readModel, -1);
 
-        Assert.Equal(0, updatedReadModel.Tag.LastSeenTransient);
+        Assert.Equal(0, updatedReadModel.LastSeenTransientEvent);
     }
 }
 

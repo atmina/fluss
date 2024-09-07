@@ -27,7 +27,7 @@ public partial class PostgreSQLEventRepository : IBaseEventRepository
         dataSource = dataSourceBuilder.Build();
     }
 
-    private async ValueTask Publish<TEnvelope>(IEnumerable<TEnvelope> envelopes, Func<TEnvelope, object> eventExtractor,
+    private async ValueTask Publish<TEnvelope>(IReadOnlyList<TEnvelope> envelopes, Func<TEnvelope, object> eventExtractor,
         NpgsqlConnection? conn = null) where TEnvelope : Envelope
     {
         using var activity = ActivitySource.Source.StartActivity();
@@ -81,7 +81,7 @@ public partial class PostgreSQLEventRepository : IBaseEventRepository
         NotifyNewEvents();
     }
 
-    public async ValueTask Publish(IEnumerable<EventEnvelope> envelopes)
+    public async ValueTask Publish(IReadOnlyList<EventEnvelope> envelopes)
     {
         await Publish(envelopes, e => e.Event);
     }

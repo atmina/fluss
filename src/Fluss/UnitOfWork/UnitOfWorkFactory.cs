@@ -23,7 +23,7 @@ public class UnitOfWorkFactory(IServiceProvider serviceProvider)
         await RetryPolicy
             .ExecuteAsync(async () =>
             {
-                var unitOfWork = serviceProvider.GetRequiredService<UnitOfWork>();
+                using var unitOfWork = serviceProvider.GetRequiredService<UnitOfWork>();
                 await action(unitOfWork);
                 await unitOfWork.CommitInternal();
             });
@@ -36,7 +36,7 @@ public class UnitOfWorkFactory(IServiceProvider serviceProvider)
         return await RetryPolicy
             .ExecuteAsync(async () =>
             {
-                var unitOfWork = serviceProvider.GetRequiredService<UnitOfWork>();
+                using var unitOfWork = serviceProvider.GetRequiredService<UnitOfWork>();
                 var result = await action(unitOfWork);
                 await unitOfWork.CommitInternal();
                 return result;

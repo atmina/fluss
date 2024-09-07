@@ -8,45 +8,49 @@ public partial class UnitOfWork
 {
     private async ValueTask<bool> AuthorizeUsage(EventEnvelope envelope)
     {
-        var ac = new AuthContext(this, CurrentUserId());
-#if DEBUG
-        var all =
-await Task.WhenAll(_policies.Select(async policy => (policy, await policy.AuthenticateEvent(envelope, ac))).ToList());
+        EnsureInstantiated();
 
-        var rejected = all.Where(a => !a.Item2).ToList();
-        var accepted = all.Where(a => a.Item2).ToList();
+        var ac = AuthContext.Get(this, CurrentUserId());
 
-        return accepted.Count > 0;
-#else
-        return await AnyAsync(_policies.Select(p => p.AuthenticateEvent(envelope, ac)));
-#endif
+        try
+        {
+            foreach (var policy in _policies!)
+            {
+                if (await policy.AuthenticateEvent(envelope, ac))
+                {
+                    return true;
+                }
+            }
+
+            return false;
+        }
+        finally
+        {
+            ac.Return();
+        }
     }
 
     private async ValueTask<bool> AuthorizeUsage(IReadModel eventListener)
     {
-        var ac = new AuthContext(this, CurrentUserId());
-#if DEBUG
-        var all =
-await Task.WhenAll(_policies.Select(async policy => (policy, await policy.AuthenticateReadModel(eventListener, ac))).ToList());
+        EnsureInstantiated();
 
-        var rejected = all.Where(a => !a.Item2).ToList();
-        var accepted = all.Where(a => a.Item2).ToList();
+        var ac = AuthContext.Get(this, CurrentUserId());
 
-        return accepted.Count > 0;
-#else
-        return await AnyAsync(_policies.Select(p => p.AuthenticateReadModel(eventListener, ac)));
-#endif
-    }
-
-    private static async ValueTask<bool> AnyAsync(IEnumerable<ValueTask<bool>> valueTasks)
-    {
-        foreach (var valueTask in valueTasks)
+        try
         {
-            if (await valueTask)
+            foreach (var policy in _policies!)
             {
-                return true;
+                if (await policy.AuthenticateReadModel(eventListener, ac))
+                {
+                    return true;
+                }
             }
+
+            return false;
         }
-        return false;
+        finally
+        {
+            ac.Return();
+        }
     }
 }

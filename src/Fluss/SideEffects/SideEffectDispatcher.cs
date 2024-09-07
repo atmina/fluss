@@ -46,7 +46,7 @@ public sealed class SideEffectDispatcher : IHostedService
         await _dispatchLock.WaitAsync();
 
         var latestVersion = await _transientEventRepository.GetLatestVersion();
-        var newEvents = await _transientEventRepository.GetEvents(_persistedVersion, latestVersion).ToFlatEventList();
+        using var newEvents = await _transientEventRepository.GetEvents(_persistedVersion, latestVersion).ToFlatEventList();
 
         try
         {
@@ -63,7 +63,7 @@ public sealed class SideEffectDispatcher : IHostedService
     private async void HandleNewTransientEvents(object? sender, EventArgs eventArgs)
     {
         // We want to fetch the events before hitting the lock to avoid missing events.
-        var currentEvents = _transientEventRepository.GetCurrentTransientEvents().ToFlatEventList();
+        using var currentEvents = _transientEventRepository.GetCurrentTransientEvents().ToFlatEventList();
         await _dispatchLock.WaitAsync();
 
         var newEvents = currentEvents.Where(e => e.Version > _transientVersion);

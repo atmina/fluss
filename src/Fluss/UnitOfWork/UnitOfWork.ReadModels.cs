@@ -1,4 +1,5 @@
 using System.Collections.Concurrent;
+using Collections.Pooled;
 using Fluss.Events;
 using Fluss.ReadModel;
 
@@ -6,7 +7,7 @@ namespace Fluss;
 
 public partial class UnitOfWork
 {
-    private readonly ConcurrentBag<EventListener> _readModels = [];
+    private readonly PooledList<EventListener> _readModels = new();
     public IReadOnlyCollection<EventListener> ReadModels => _readModels;
 
     public async ValueTask<IReadModel> GetReadModel(Type tReadModel, object? key, long? at = null)
@@ -38,7 +39,7 @@ public partial class UnitOfWork
 
         if (at is null)
         {
-            _readModels.Add(eventListener);
+            RegisterReadModel(eventListener);
         }
 
         return readModel;
@@ -59,7 +60,7 @@ public partial class UnitOfWork
 
         if (at is null)
         {
-            _readModels.Add(readModel);
+            RegisterReadModel(readModel);
         }
 
         return readModel;
@@ -72,7 +73,7 @@ public partial class UnitOfWork
 
         if (at is null)
         {
-            _readModels.Add(readModel);
+            RegisterReadModel(readModel);
         }
 
         return readModel;
@@ -93,7 +94,7 @@ public partial class UnitOfWork
 
         if (at is null)
         {
-            _readModels.Add(readModel);
+            RegisterReadModel(readModel);
         }
 
         return readModel;
@@ -107,7 +108,7 @@ public partial class UnitOfWork
 
         if (at is null)
         {
-            _readModels.Add(readModel);
+            RegisterReadModel(readModel);
         }
 
         return readModel;
@@ -157,5 +158,13 @@ public partial class UnitOfWork
         });
 
         return keysList.Select(k => dictionary[k]).ToList();
+    }
+
+    private void RegisterReadModel(EventListener eventListener)
+    {
+        lock (_readModels)
+        {
+            _readModels.Add(eventListener);
+        }
     }
 }

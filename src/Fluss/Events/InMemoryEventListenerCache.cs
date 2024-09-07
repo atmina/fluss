@@ -10,13 +10,13 @@ public class InMemoryEventListenerCache : EventListenerFactoryPipeline
     {
         var cached = Retrieve(eventListener, to);
 
-        if (cached.Tag.LastSeen == to)
+        if (cached.LastSeenEvent == to)
         {
             return cached;
         }
 
         var newEventListener = await Next.UpdateTo(cached, to);
-        if (!newEventListener.Tag.HasTaint())
+        if (!newEventListener.HasTaint())
         {
             Store(newEventListener);
         }
@@ -35,12 +35,12 @@ public class InMemoryEventListenerCache : EventListenerFactoryPipeline
         }
 
         var cachedEntry = (TEventListener)cached;
-        if (cachedEntry.Tag.LastAccepted > before)
+        if (cachedEntry.LastAcceptedEvent > before)
         {
             return eventListener;
         }
 
-        return CloneTag(cachedEntry);
+        return cachedEntry;
     }
 
     private void Store<TEventListener>(TEventListener newEventListener) where TEventListener : EventListener
@@ -54,27 +54,19 @@ public class InMemoryEventListenerCache : EventListenerFactoryPipeline
         }
 
         var cachedEntry = (TEventListener)cached;
-        if (newEventListener.Tag.LastSeen <= cachedEntry.Tag.LastSeen)
+        if (newEventListener.LastSeenEvent <= cachedEntry.LastSeenEvent)
         {
             return;
         }
 
-        _cache.Set(key, CloneTag(newEventListener), new MemoryCacheEntryOptions { Size = 1 });
-    }
-
-    private TEventListener CloneTag<TEventListener>(TEventListener eventListener)
-        where TEventListener : EventListener
-    {
-        return eventListener with { Tag = eventListener.Tag with { } };
+        _cache.Set(key, newEventListener, new MemoryCacheEntryOptions { Size = 1 });
     }
 
     private object GetKey(EventListener eventListener)
     {
-        if (eventListener.GetType().GetInterfaces().Any(x =>
-                x.IsGenericType &&
-                x.GetGenericTypeDefinition() == typeof(IEventListenerWithKey<>)))
+        if (eventListener is IEventListenerWithKey eventListenerWithKey)
         {
-            return (eventListener.GetType(), eventListener.GetType().GetProperty("Id")?.GetValue(eventListener));
+            return (eventListener.GetType(), eventListenerWithKey.Id);
         }
 
         return eventListener.GetType();

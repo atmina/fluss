@@ -1,34 +1,58 @@
+using Collections.Pooled;
 using Fluss.Authentication;
 using Fluss.Events;
 using Fluss.Validation;
+using Microsoft.Extensions.ObjectPool;
 
 namespace Fluss;
 
 public partial class UnitOfWork : IWriteUnitOfWork
 {
-    private readonly IEventListenerFactory _eventListenerFactory;
-    private readonly IEventRepository _eventRepository;
-    private readonly IEnumerable<Policy> _policies;
-    private readonly IRootValidator _validator;
-    private readonly UserIdProvider _userIdProvider;
+    private class UnitOfWorkObjectPolicy : IPooledObjectPolicy<UnitOfWork>
+    {
+        public UnitOfWork Create() => new();
+        public bool Return(UnitOfWork obj) => true;
+    }
+
+    private static readonly ObjectPool<UnitOfWork> Pool = new DefaultObjectPool<UnitOfWork>(new UnitOfWorkObjectPolicy());
+
+    private IEventListenerFactory? _eventListenerFactory;
+    private IEventRepository? _eventRepository;
+    private readonly PooledList<Policy> _policies = new();
+    private IRootValidator? _validator;
+    private UserIdProvider? _userIdProvider;
     private long? _consistentVersion;
+    private bool _isInstantiated;
 
-    private Task<long>? _latestVersionLoader;
+    private UnitOfWork()
+    {
+    }
 
-    public UnitOfWork(IEventRepository eventRepository, IEventListenerFactory eventListenerFactory,
+    public static UnitOfWork Create(IEventRepository eventRepository, IEventListenerFactory eventListenerFactory,
         IEnumerable<Policy> policies, UserIdProvider userIdProvider, IRootValidator validator)
     {
-        using var activity = FlussActivitySource.Source.StartActivity();
+        var unitOfWork = Pool.Get();
+        unitOfWork._eventRepository = eventRepository;
+        unitOfWork._eventListenerFactory = eventListenerFactory;
+        unitOfWork._policies.AddRange(policies);
+        unitOfWork._userIdProvider = userIdProvider;
+        unitOfWork._validator = validator;
+        unitOfWork._isInstantiated = true;
+        return unitOfWork;
+    }
 
-        _eventRepository = eventRepository;
-        _eventListenerFactory = eventListenerFactory;
-        _policies = policies;
-        _userIdProvider = userIdProvider;
-        _validator = validator;
+    private void EnsureInstantiated()
+    {
+        if (!_isInstantiated)
+        {
+            throw new InvalidOperationException("UnitOfWork is not properly instantiated.");
+        }
     }
 
     public async ValueTask<long> ConsistentVersion()
     {
+        EnsureInstantiated();
+
         if (_consistentVersion.HasValue)
         {
             return _consistentVersion.Value;
@@ -42,26 +66,25 @@ public partial class UnitOfWork : IWriteUnitOfWork
             {
                 return _consistentVersion.Value;
             }
-
-            _latestVersionLoader ??= Task.Run(async () =>
-            {
-                var version = await _eventRepository.GetLatestVersion();
-                _consistentVersion = version;
-                return version;
-            });
         }
 
-        return await _latestVersionLoader;
+        var version = await _eventRepository!.GetLatestVersion();
+
+        lock (this)
+        {
+            _consistentVersion ??= version;
+        }
+
+        return _consistentVersion.Value;
     }
 
     public IUnitOfWork WithPrefilledVersion(long? version)
     {
+        EnsureInstantiated();
+
         lock (this)
         {
-            if (!_consistentVersion.HasValue && _latestVersionLoader == null)
-            {
-                _consistentVersion = version;
-            }
+            _consistentVersion ??= version;
         }
 
         return this;
@@ -69,6 +92,23 @@ public partial class UnitOfWork : IWriteUnitOfWork
 
     private Guid CurrentUserId()
     {
-        return _userIdProvider.Get();
+        EnsureInstantiated();
+        return _userIdProvider!.Get();
+    }
+
+    public void Dispose()
+    {
+        _eventListenerFactory = null;
+        _eventRepository = null;
+        _policies.Clear();
+        _validator = null;
+        _userIdProvider = null;
+        _consistentVersion = null;
+        _readModels.Clear();
+        _isInstantiated = false;
+
+        Pool.Return(this);
+
+        GC.SuppressFinalize(this);
     }
 }

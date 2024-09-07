@@ -4,11 +4,10 @@ using Fluss.ReadModel;
 
 namespace Fluss;
 
-public interface IUnitOfWork
+public interface IUnitOfWork : IDisposable
 {
     ValueTask<long> ConsistentVersion();
     IReadOnlyCollection<EventListener> ReadModels { get; }
-    ConcurrentQueue<EventEnvelope> PublishedEventEnvelopes { get; }
 
     ValueTask<IReadModel> GetReadModel(Type tReadModel, object? key, long? at = null);
 

@@ -7,7 +7,7 @@ public sealed class EventListenerFactory(IEventRepository eventRepository) : IEv
 {
     public async ValueTask<TEventListener> UpdateTo<TEventListener>(TEventListener eventListener, long to) where TEventListener : EventListener
     {
-        var events = await eventRepository.GetEvents(eventListener.Tag.LastSeen, to);
+        var events = await eventRepository.GetEvents(eventListener.LastSeenEvent, to);
 
         return UpdateWithEvents(eventListener, events);
     }

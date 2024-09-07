@@ -16,12 +16,12 @@ public class AggregateTestBed<TAggregate, TKey> : EventTestBed where TAggregate 
     public AggregateTestBed()
     {
         var validator = new Mock<IRootValidator>();
-        validator.Setup(v => v.ValidateEvent(It.IsAny<EventEnvelope>(), It.IsAny<IReadOnlyList<EventEnvelope>?>()))
+        validator.Setup(v => v.ValidateEvent(It.IsAny<IUnitOfWork>(), It.IsAny<EventEnvelope>()))
             .Returns<EventEnvelope, IReadOnlyList<EventEnvelope>?>((_, _) => Task.CompletedTask);
         validator.Setup(v => v.ValidateAggregate(It.IsAny<AggregateRoot>(), It.IsAny<UnitOfWork>()))
             .Returns<AggregateRoot, UnitOfWork>((_, _) => Task.CompletedTask);
 
-        _unitOfWork = new UnitOfWork(EventRepository, EventListenerFactory, [new AllowAllPolicy()],
+        _unitOfWork = UnitOfWork.Create(EventRepository, EventListenerFactory, [new AllowAllPolicy()],
             new UserIdProvider(_ => Guid.Empty, null!), validator.Object);
     }
 

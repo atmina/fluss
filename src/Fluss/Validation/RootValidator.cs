@@ -1,4 +1,5 @@
 using System.Reflection;
+using Collections.Pooled;
 using Fluss.Aggregates;
 using Fluss.Authentication;
 using Fluss.Events;
@@ -7,7 +8,7 @@ namespace Fluss.Validation;
 
 public interface IRootValidator
 {
-    public Task ValidateEvent(EventEnvelope envelope, IReadOnlyList<EventEnvelope>? PreviousEnvelopes = null);
+    public Task ValidateEvent(IUnitOfWork unitOfWork, EventEnvelope envelope);
     public Task ValidateAggregate(AggregateRoot aggregate, UnitOfWork unitOfWork);
 }
 
@@ -56,18 +57,8 @@ public class RootValidator : IRootValidator
         }
     }
 
-    public async Task ValidateEvent(EventEnvelope envelope, IReadOnlyList<EventEnvelope>? previousEnvelopes = null)
+    public async Task ValidateEvent(IUnitOfWork unitOfWork, EventEnvelope envelope)
     {
-        var unitOfWork = _arbitraryUserUnitOfWorkCache.GetUserUnitOfWork(envelope.By ?? SystemUser.SystemUserGuid);
-
-        var willBePublishedEnvelopes = previousEnvelopes ?? new List<EventEnvelope>();
-
-        var versionedUnitOfWork = unitOfWork.WithPrefilledVersion(envelope.Version - willBePublishedEnvelopes.Count - 1);
-        foreach (var willBePublishedEnvelope in willBePublishedEnvelopes)
-        {
-            versionedUnitOfWork.PublishedEventEnvelopes.Enqueue(willBePublishedEnvelope);
-        }
-
         var type = envelope.Event.GetType();
 
         if (!_eventValidators.TryGetValue(type, out var validators)) return;
@@ -75,7 +66,7 @@ public class RootValidator : IRootValidator
         try
         {
             var invocations = validators.Select(v =>
-                v.handler.Invoke(v.validator, [envelope.Event, versionedUnitOfWork]));
+                v.handler.Invoke(v.validator, [envelope.Event, unitOfWork]));
 
             await Task.WhenAll(invocations.Cast<ValueTask>().Select(async x => await x));
         }

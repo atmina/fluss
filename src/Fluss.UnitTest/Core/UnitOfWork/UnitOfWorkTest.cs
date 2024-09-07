@@ -12,27 +12,19 @@ public partial class UnitOfWorkTest
 {
     private readonly InMemoryEventRepository _eventRepository;
     private readonly List<Policy> _policies;
-    private readonly Fluss.UnitOfWork _unitOfWork;
     private readonly UnitOfWorkFactory _unitOfWorkFactory;
+    private Mock<IRootValidator> _validator;
 
     public UnitOfWorkTest()
     {
         _eventRepository = new InMemoryEventRepository();
         _policies = [];
 
-        Mock<IRootValidator> validator = new(MockBehavior.Strict);
-        validator.Setup(v => v.ValidateEvent(It.IsAny<EventEnvelope>(), It.IsAny<IReadOnlyList<EventEnvelope>?>()))
-            .Returns<EventEnvelope, IReadOnlyList<EventEnvelope>?>((_, _) => Task.CompletedTask);
-        validator.Setup(v => v.ValidateAggregate(It.IsAny<AggregateRoot>(), It.IsAny<Fluss.UnitOfWork>()))
+        _validator = new(MockBehavior.Strict);
+        _validator.Setup(v => v.ValidateEvent(It.IsAny<IUnitOfWork>(), It.IsAny<EventEnvelope>()))
+            .Returns<IUnitOfWork, EventEnvelope>((_, _) => Task.CompletedTask);
+        _validator.Setup(v => v.ValidateAggregate(It.IsAny<AggregateRoot>(), It.IsAny<Fluss.UnitOfWork>()))
             .Returns<AggregateRoot, Fluss.UnitOfWork>((_, _) => Task.CompletedTask);
-
-        _unitOfWork = new Fluss.UnitOfWork(
-            _eventRepository,
-            new EventListenerFactory(_eventRepository),
-            _policies,
-            new UserIdProvider(_ => Guid.NewGuid(), null!),
-            validator.Object
-        );
 
         _eventRepository.Publish([
             new EventEnvelope { Event = new TestEvent(1), Version = 0 },
@@ -42,23 +34,34 @@ public partial class UnitOfWorkTest
 
         _unitOfWorkFactory = new UnitOfWorkFactory(
             new ServiceCollection()
-                .AddScoped(_ => _unitOfWork)
+                .AddScoped(_ => GetUnitOfWork())
                 .BuildServiceProvider());
+    }
+
+    private Fluss.UnitOfWork GetUnitOfWork()
+    {
+        return Fluss.UnitOfWork.Create(
+            _eventRepository,
+            new EventListenerFactory(_eventRepository),
+            _policies,
+            new UserIdProvider(_ => Guid.NewGuid(), null!),
+            _validator.Object
+        );
     }
 
     [Fact]
     public async Task CanGetConsistentVersion()
     {
-        Assert.Equal(2, await _unitOfWork.ConsistentVersion());
+        Assert.Equal(2, await GetUnitOfWork().ConsistentVersion());
     }
 
     [Fact]
     public async Task CanGetAggregate()
     {
-        var existingAggregate = await _unitOfWork.GetAggregate<TestAggregate, int>(1);
+        var existingAggregate = await GetUnitOfWork().GetAggregate<TestAggregate, int>(1);
         Assert.True(existingAggregate.Exists);
 
-        var notExistingAggregate = await _unitOfWork.GetAggregate<TestAggregate, int>(100);
+        var notExistingAggregate = await GetUnitOfWork().GetAggregate<TestAggregate, int>(100);
         Assert.False(notExistingAggregate.Exists);
     }
 
@@ -66,9 +69,10 @@ public partial class UnitOfWorkTest
     public async Task CanPublish()
     {
         _policies.Add(new AllowAllPolicy());
-        var notExistingAggregate = await _unitOfWork.GetAggregate<TestAggregate, int>(100);
+        var unitOfWork = GetUnitOfWork();
+        var notExistingAggregate = await unitOfWork.GetAggregate<TestAggregate, int>(100);
         await notExistingAggregate.Create();
-        await _unitOfWork.CommitInternal();
+        await unitOfWork.CommitInternal();
 
         var latestVersion = await _eventRepository.GetLatestVersion();
         var newEvent = await _eventRepository.GetEvents(latestVersion - 1, latestVersion).ToFlatEventList();
@@ -80,9 +84,9 @@ public partial class UnitOfWorkTest
     {
         await Assert.ThrowsAsync<UnauthorizedAccessException>(async () =>
         {
-            var notExistingAggregate = await _unitOfWork.GetAggregate<TestAggregate, int>(100);
+            var notExistingAggregate = await GetUnitOfWork().GetAggregate<TestAggregate, int>(100);
             await notExistingAggregate.Create();
-            await _unitOfWork.CommitInternal();
+            await GetUnitOfWork().CommitInternal();
         });
     }
 
@@ -90,9 +94,10 @@ public partial class UnitOfWorkTest
     public async Task CanGetAggregateTwice()
     {
         _policies.Add(new AllowAllPolicy());
-        var notExistingAggregate = await _unitOfWork.GetAggregate<TestAggregate, int>(100);
+        var unitOfWork = GetUnitOfWork();
+        var notExistingAggregate = await unitOfWork.GetAggregate<TestAggregate, int>(100);
         await notExistingAggregate.Create();
-        var existingAggregate = await _unitOfWork.GetAggregate<TestAggregate, int>(100);
+        var existingAggregate = await unitOfWork.GetAggregate<TestAggregate, int>(100);
         Assert.True(existingAggregate.Exists);
     }
 
@@ -101,14 +106,14 @@ public partial class UnitOfWorkTest
     {
         _policies.Add(new AllowAllPolicy());
 
-        var rootReadModel = await _unitOfWork.GetReadModel<TestRootReadModel>();
+        var rootReadModel = await GetUnitOfWork().GetReadModel<TestRootReadModel>();
         Assert.Equal(3, rootReadModel.GotEvents);
     }
 
     [Fact]
     public async Task CanGetRootReadModelUnsafe()
     {
-        var rootReadModel = await _unitOfWork.UnsafeGetReadModelWithoutAuthorization<TestRootReadModel>();
+        var rootReadModel = await GetUnitOfWork().UnsafeGetReadModelWithoutAuthorization<TestRootReadModel>();
         Assert.Equal(3, rootReadModel.GotEvents);
     }
 
@@ -117,7 +122,7 @@ public partial class UnitOfWorkTest
     {
         await Assert.ThrowsAsync<UnauthorizedAccessException>(async () =>
         {
-            await _unitOfWork.GetReadModel<TestRootReadModel>();
+            await GetUnitOfWork().GetReadModel<TestRootReadModel>();
         });
     }
 
@@ -126,14 +131,14 @@ public partial class UnitOfWorkTest
     {
         _policies.Add(new AllowAllPolicy());
 
-        var readModel = await _unitOfWork.GetReadModel<TestReadModel, int>(1);
+        var readModel = await GetUnitOfWork().GetReadModel<TestReadModel, int>(1);
         Assert.Equal(2, readModel.GotEvents);
     }
 
     [Fact]
     public async Task CanGetReadModelUnsafe()
     {
-        var readModel = await _unitOfWork.UnsafeGetReadModelWithoutAuthorization<TestReadModel, int>(1);
+        var readModel = await GetUnitOfWork().UnsafeGetReadModelWithoutAuthorization<TestReadModel, int>(1);
         Assert.Equal(2, readModel.GotEvents);
     }
 
@@ -142,7 +147,7 @@ public partial class UnitOfWorkTest
     {
         await Assert.ThrowsAsync<UnauthorizedAccessException>(async () =>
         {
-            await _unitOfWork.GetReadModel<TestReadModel, int>(1);
+            await GetUnitOfWork().GetReadModel<TestReadModel, int>(1);
         });
     }
 
@@ -151,28 +156,30 @@ public partial class UnitOfWorkTest
     {
         _policies.Add(new AllowAllPolicy());
 
-        var readModels = await _unitOfWork.GetMultipleReadModels<TestReadModel, int>([1, 2]);
+
+        var unitOfWork = GetUnitOfWork();
+        var readModels = await unitOfWork.GetMultipleReadModels<TestReadModel, int>([1, 2]);
         Assert.Equal(2, readModels[0].GotEvents);
         Assert.Equal(1, readModels[1].GotEvents);
         Assert.Equal(2, readModels.Count);
 
-        Assert.Equal(2, _unitOfWork.ReadModels.Count);
-        Assert.Contains(_unitOfWork.ReadModels, rm => rm == readModels[0]);
-        Assert.Contains(_unitOfWork.ReadModels, rm => rm == readModels[1]);
+        Assert.Equal(2, unitOfWork.ReadModels.Count);
+        Assert.Contains(unitOfWork.ReadModels, rm => rm == readModels[0]);
+        Assert.Contains(unitOfWork.ReadModels, rm => rm == readModels[1]);
     }
 
 
     [Fact]
     public async Task ReturnsNothingWhenMultipleReadModelNotAuthorized()
     {
-        var readModels = await _unitOfWork.GetMultipleReadModels<TestReadModel, int>([1, 2]);
+        var readModels = await GetUnitOfWork().GetMultipleReadModels<TestReadModel, int>([1, 2]);
         Assert.Equal(0, readModels.Count(rm => rm != null));
     }
 
     [Fact]
     public async Task CanGetMultipleReadModelsUnsafe()
     {
-        var readModels = await _unitOfWork.UnsafeGetMultipleReadModelsWithoutAuthorization<TestReadModel, int>([1, 2]);
+        var readModels = await GetUnitOfWork().UnsafeGetMultipleReadModelsWithoutAuthorization<TestReadModel, int>([1, 2]);
         Assert.Equal(2, readModels[0].GotEvents);
         Assert.Equal(1, readModels[1].GotEvents);
         Assert.Equal(2, readModels.Count);

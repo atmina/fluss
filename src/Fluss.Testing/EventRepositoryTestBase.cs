@@ -37,8 +37,8 @@ public abstract class EventRepositoryTestBase<T> where T : IBaseEventRepository
     public async Task ReturnsMultiplePublishedEvents()
     {
         var envelopes = GetMockEnvelopes(0, 1).ToList();
-        await Repository.Publish(envelopes.Take(1));
-        await Repository.Publish(envelopes.Skip(1));
+        await Repository.Publish(envelopes.Take(1).ToList());
+        await Repository.Publish(envelopes.Skip(1).ToList());
 
         var gottenEnvelopes = await Repository.GetEvents(-1, 1).ToFlatEventList();
 

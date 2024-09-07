@@ -5,7 +5,7 @@ namespace Fluss.Events;
 public interface IEventRepository
 {
     event EventHandler NewEvents;
-    ValueTask Publish(IEnumerable<EventEnvelope> events);
+    ValueTask Publish(IReadOnlyList<EventEnvelope> events);
     ValueTask<ReadOnlyCollection<ReadOnlyMemory<EventEnvelope>>> GetEvents(long fromExclusive, long toInclusive);
     ValueTask<IEnumerable<RawEventEnvelope>> GetRawEvents();
     ValueTask ReplaceEvent(long version, IEnumerable<RawEventEnvelope> newEvents);
@@ -45,7 +45,7 @@ public abstract class EventRepositoryPipeline : IEventRepository
         remove => Next.NewEvents -= value;
     }
 
-    public virtual ValueTask Publish(IEnumerable<EventEnvelope> events)
+    public virtual ValueTask Publish(IReadOnlyList<EventEnvelope> events)
     {
         return Next.Publish(events);
     }

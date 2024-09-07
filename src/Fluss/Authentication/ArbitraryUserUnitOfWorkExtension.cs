@@ -1,4 +1,6 @@
 using System.Collections.Concurrent;
+using Fluss.Events;
+using Fluss.Validation;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace Fluss.Authentication;
@@ -27,23 +29,25 @@ public class ArbitraryUserUnitOfWorkCache(IServiceProvider serviceProvider) : IA
 
     private IServiceProvider GetCachedServiceProvider(Guid userId)
     {
-        return _cache.GetOrAdd(userId, CreateUserServiceProvider);
+        return _cache.TryGetValue(userId, out var value) ? value : _cache.GetOrAdd(userId, CreateUserServiceProvider);
     }
 
     private IServiceProvider CreateUserServiceProvider(Guid providedId)
     {
         var collection = new ServiceCollection();
-        var constructorArgumentTypes = typeof(UnitOfWork).GetConstructors().Single().GetParameters()
-            .Select(p => p.ParameterType);
 
-        foreach (var type in constructorArgumentTypes)
-        {
-            if (type == typeof(UserIdProvider)) continue;
-            collection.AddSingleton(type, serviceProvider.GetRequiredService(type));
-        }
+        collection.AddSingleton<IEventRepository>(_ => serviceProvider.GetRequiredService<IEventRepository>());
+        collection.AddSingleton<IEventListenerFactory>(_ => serviceProvider.GetRequiredService<IEventListenerFactory>());
+        collection.AddSingleton<IEnumerable<Policy>>(_ => serviceProvider.GetRequiredService<IEnumerable<Policy>>());
+        collection.AddSingleton<IRootValidator>(_ => serviceProvider.GetRequiredService<IRootValidator>());
 
         collection.ProvideUserIdFrom(_ => providedId);
-        collection.AddTransient<UnitOfWork>();
+        collection.AddTransient<UnitOfWork>(sp => UnitOfWork.Create(
+            sp.GetRequiredService<IEventRepository>(),
+            sp.GetRequiredService<IEventListenerFactory>(),
+            sp.GetServices<Policy>(),
+            sp.GetRequiredService<UserIdProvider>(),
+            sp.GetRequiredService<IRootValidator>()));
         collection.AddTransient<IUnitOfWork>(sp => sp.GetRequiredService<UnitOfWork>());
         collection.AddTransient<UnitOfWorkFactory>();
 
