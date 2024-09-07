@@ -38,7 +38,12 @@ public static class ServiceCollectionExtensions
                 return eventListenerFactory;
             })
             .AddSingleton<IArbitraryUserUnitOfWorkCache, ArbitraryUserUnitOfWorkCache>()
-            .AddTransient<UnitOfWork>()
+            .AddTransient<UnitOfWork>(sp => UnitOfWork.Create(
+                sp.GetRequiredService<IEventRepository>(),
+                sp.GetRequiredService<IEventListenerFactory>(),
+                sp.GetServices<Policy>(),
+                sp.GetRequiredService<UserIdProvider>(),
+                sp.GetRequiredService<IRootValidator>()))
             .AddTransient<IUnitOfWork>(sp => sp.GetRequiredService<UnitOfWork>())
             .AddTransient<UnitOfWorkFactory>()
             .AddSingleton<IRootValidator, RootValidator>()

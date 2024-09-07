@@ -1,3 +1,4 @@
+using System.Runtime.InteropServices;
 using Newtonsoft.Json.Linq;
 
 namespace Fluss.Events;
@@ -10,7 +11,7 @@ public abstract record Envelope
     public Guid? By { get; init; }
 }
 
-public record RawEventEnvelope : Envelope
+public sealed record RawEventEnvelope : Envelope
 {
     public required JObject RawEvent { get; init; }
 }

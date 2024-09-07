@@ -1,4 +1,5 @@
 using System.Collections.Concurrent;
+using Collections.Pooled;
 using Fluss.Aggregates;
 using Fluss.Events;
 // ReSharper disable LoopCanBeConvertedToQuery
@@ -7,16 +8,17 @@ namespace Fluss;
 
 public partial class UnitOfWork
 {
-    public ConcurrentQueue<EventEnvelope> PublishedEventEnvelopes { get; } = new();
+    internal readonly PooledList<EventEnvelope> PublishedEventEnvelopes = [];
 
     public async ValueTask<TAggregate> GetAggregate<TAggregate>() where TAggregate : AggregateRoot, new()
     {
+        EnsureInstantiated();
         using var activity = FlussActivitySource.Source.StartActivity();
         activity?.SetTag("EventSourcing.Aggregate", typeof(TAggregate).FullName);
 
         var aggregate = new TAggregate();
 
-        aggregate = await _eventListenerFactory.UpdateTo(aggregate, await ConsistentVersion());
+        aggregate = await _eventListenerFactory!.UpdateTo(aggregate, await ConsistentVersion());
 
         aggregate = aggregate with { UnitOfWork = this };
 
@@ -31,12 +33,13 @@ public partial class UnitOfWork
     public async ValueTask<TAggregate> GetAggregate<TAggregate, TKey>(TKey key)
         where TAggregate : AggregateRoot<TKey>, new()
     {
+        EnsureInstantiated();
         using var activity = FlussActivitySource.Source.StartActivity();
         activity?.SetTag("EventSourcing.Aggregate", typeof(TAggregate).FullName);
 
         var aggregate = new TAggregate { Id = key };
 
-        aggregate = await _eventListenerFactory.UpdateTo(aggregate, await ConsistentVersion());
+        aggregate = await _eventListenerFactory!.UpdateTo(aggregate, await ConsistentVersion());
 
         aggregate = aggregate with { UnitOfWork = this };
 
@@ -57,7 +60,7 @@ public partial class UnitOfWork
             At = DateTimeOffset.UtcNow,
             By = CurrentUserId(),
             Event = @event,
-            Version = await ConsistentVersion() + PublishedEventEnvelopes.Count + 1
+            Version = (_consistentVersion ?? await ConsistentVersion()) + PublishedEventEnvelopes.Count + 1
         };
 
         if (!await AuthorizeUsage(eventEnvelope))
@@ -66,13 +69,23 @@ public partial class UnitOfWork
                 $"Cannot add event {eventEnvelope.Event.GetType()} as the current user.");
         }
 
+        await ValidateEvent(eventEnvelope);
         await ValidateEventResult(eventEnvelope, aggregate);
 
-        PublishedEventEnvelopes.Enqueue(eventEnvelope);
+        PublishedEventEnvelopes.Add(eventEnvelope);
+    }
+
+    private async Task ValidateEvent(EventEnvelope eventEnvelope)
+    {
+        EnsureInstantiated();
+
+        await _validator!.ValidateEvent(this, eventEnvelope);
     }
 
     private async ValueTask ValidateEventResult<T>(EventEnvelope envelope, T? aggregate) where T : AggregateRoot
     {
+        EnsureInstantiated();
+
         if (aggregate is null) return;
 
         // It's possible that the given aggregate does not have all necessary events applied yet.
@@ -80,21 +93,15 @@ public partial class UnitOfWork
 
         if (aggregate.WhenInt(envelope) is not T result || result == aggregate) return;
 
-        await _validator.ValidateAggregate(result, this);
+        await _validator!.ValidateAggregate(result, this);
     }
 
     internal async ValueTask CommitInternal()
     {
         using var activity = FlussActivitySource.Source.StartActivity();
 
-        var validatedEnvelopes = new List<EventEnvelope>();
-        foreach (var envelope in PublishedEventEnvelopes)
-        {
-            await _validator.ValidateEvent(envelope, validatedEnvelopes);
-            validatedEnvelopes.Add(envelope);
-        }
-
-        await _eventRepository.Publish(PublishedEventEnvelopes);
+        EnsureInstantiated();
+        await _eventRepository!.Publish(PublishedEventEnvelopes);
         _consistentVersion += PublishedEventEnvelopes.Count;
         PublishedEventEnvelopes.Clear();
     }
@@ -102,11 +109,13 @@ public partial class UnitOfWork
     private async ValueTask<TEventListener> UpdateAndApplyPublished<TEventListener>(TEventListener eventListener, long? at)
         where TEventListener : EventListener
     {
-        eventListener = await _eventListenerFactory.UpdateTo(eventListener, at ?? await ConsistentVersion());
+        EnsureInstantiated();
+
+        eventListener = await _eventListenerFactory!.UpdateTo(eventListener, at ?? await ConsistentVersion());
 
         foreach (var publishedEventEnvelope in PublishedEventEnvelopes)
         {
-            if (eventListener.Tag.LastSeen < publishedEventEnvelope.Version)
+            if (eventListener.LastSeenEvent < publishedEventEnvelope.Version)
             {
                 eventListener = (TEventListener)eventListener.WhenInt(publishedEventEnvelope);
             }

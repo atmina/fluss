@@ -1,43 +1,75 @@
 using System.Collections.ObjectModel;
 using System.Reflection;
+using Collections.Pooled;
 
 namespace Fluss.Events.TransientEvents;
 
-public sealed class TransientEventAwareEventRepository : EventRepositoryPipeline
+public sealed class TransientEventAwareEventRepository : EventRepositoryPipeline, IDisposable
 {
     private readonly List<TransientEventEnvelope> _transientEvents = [];
     private long _transientEventVersion;
-    private bool _cleanTaskIsRunning;
-    private bool _anotherCleanTaskRequired;
+    private readonly Timer _timer;
+    private readonly object _lock = new();
+    private static readonly TimeSpan CleanInterval = TimeSpan.FromMilliseconds(100);
 
     public event EventHandler? NewTransientEvents;
 
+    public TransientEventAwareEventRepository()
+    {
+        _timer = new Timer(CleanEvents, null, CleanInterval, CleanInterval);
+    }
+
     public ReadOnlyCollection<ReadOnlyMemory<EventEnvelope>> GetCurrentTransientEvents()
     {
-        lock (this)
+        lock (_lock)
         {
-            var result = _transientEvents.ToPagedMemory();
-            CleanEvents();
-            return result;
+            return _transientEvents.ToPagedMemory();
         }
     }
 
-    public override async ValueTask Publish(IEnumerable<EventEnvelope> events)
+    public override async ValueTask Publish(IReadOnlyList<EventEnvelope> events)
     {
-        var eventEnvelopes = events.ToList();
-        if (eventEnvelopes.Count == 0) return;
+        if (events.Count == 0) return;
 
-        var transientEventEnvelopes = eventEnvelopes.Where(e => e.Event is TransientEvent);
+        using var transientEventEnvelopes = new PooledList<EventEnvelope>();
+
+        foreach (var eventEnvelope in events)
+        {
+            if (eventEnvelope.Event is TransientEvent)
+            {
+                transientEventEnvelopes.Add(eventEnvelope);
+            }
+        }
+
+        if (transientEventEnvelopes.Count == 0)
+        {
+            await base.Publish(events);
+            return;
+        }
 
         // Reset version of persisted events to ensure cache functionality using the first Version received as baseline
         // We can safely fall back to -1 here, since the value will not be used as no events are being published
-        var firstPersistedVersion = eventEnvelopes.FirstOrDefault()?.Version ?? -1;
+        var firstPersistedVersion = events.Count > 0 ? events[0].Version : -1;
 
-        var persistedEventEnvelopes = eventEnvelopes
-            .Where(e => e.Event is not TransientEvent)
-            .Select((e, i) => e with { Version = firstPersistedVersion + i });
+        var regularEventEnvelopes = new List<EventEnvelope>();
 
-        await base.Publish(persistedEventEnvelopes);
+        foreach (var eventEnvelope in events)
+        {
+            if (eventEnvelope.Event is TransientEvent) continue;
+
+            var rightVersion = firstPersistedVersion + regularEventEnvelopes.Count;
+
+            if (eventEnvelope.Version != rightVersion)
+            {
+                regularEventEnvelopes.Add(eventEnvelope with { Version = rightVersion });
+            }
+            else
+            {
+                regularEventEnvelopes.Add(eventEnvelope);
+            }
+        }
+
+        await base.Publish(regularEventEnvelopes.ToArray());
         PublishTransientEvents(transientEventEnvelopes);
     }
 
@@ -48,7 +80,7 @@ public sealed class TransientEventAwareEventRepository : EventRepositoryPipeline
 
         var now = DateTimeOffset.Now;
 
-        lock (this)
+        lock (_lock)
         {
             var newEvents = eventList.Select(e =>
             {
@@ -77,44 +109,18 @@ public sealed class TransientEventAwareEventRepository : EventRepositoryPipeline
     //   cancelled after 100ms will the transient events be cleared. This does not invalidate expired events as close
     //   to their expiration time as possible however this is the lesser worry compared to not all listeners getting
     //   all events before they are cleaned up.
-    private void CleanEvents()
+    private void CleanEvents(object? _)
     {
-        lock (this)
-        {
-            if (_cleanTaskIsRunning)
-            {
-                _anotherCleanTaskRequired = true;
-                return;
-            }
+        var cleanUntil = DateTimeOffset.Now - CleanInterval;
 
-            // Starting the clean task after the lock
-            _cleanTaskIsRunning = true;
+        lock (_lock)
+        {
+            _transientEvents.RemoveAll(e => e.ExpiresAt < cleanUntil);
         }
+    }
 
-        var now = DateTimeOffset.Now;
-
-        // ReSharper disable once AsyncVoidLambda
-        new Task(async () =>
-        {
-            while (true)
-            {
-                await Task.Delay(100);
-
-                lock (this)
-                {
-                    if (_anotherCleanTaskRequired)
-                    {
-                        _anotherCleanTaskRequired = false;
-                        now = DateTimeOffset.Now;
-                    }
-                    else
-                    {
-                        _transientEvents.RemoveAll(e => e.ExpiresAt < now);
-                        _cleanTaskIsRunning = false;
-                        return;
-                    }
-                }
-            }
-        }).Start();
+    public void Dispose()
+    {
+        _timer.Dispose();
     }
 }

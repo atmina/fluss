@@ -29,7 +29,7 @@ public class RootValidatorTests
             [new EventValidatorAlwaysValid()]
         );
 
-        await validator.ValidateEvent(new EventEnvelope { Event = new TestEvent() });
+        await validator.ValidateEvent(_unitOfWorkMock.Object, new EventEnvelope { Event = new TestEvent() });
     }
 
     [Fact]
@@ -43,7 +43,7 @@ public class RootValidatorTests
 
         await Assert.ThrowsAsync<Exception>(async () =>
         {
-            await validator.ValidateEvent(new EventEnvelope { Event = new TestEvent() });
+            await validator.ValidateEvent(_unitOfWorkMock.Object, new EventEnvelope { Event = new TestEvent() });
         });
     }
 
@@ -56,7 +56,7 @@ public class RootValidatorTests
             [new EventValidatorAlwaysValid()]
         );
 
-        await validator.ValidateAggregate(new TestAggregate(), new Fluss.UnitOfWork(null!, null!, null!, null!, null!));
+        await validator.ValidateAggregate(new TestAggregate(), Fluss.UnitOfWork.Create(null!, null!, [], null!, null!));
     }
 
     [Fact]
@@ -70,7 +70,7 @@ public class RootValidatorTests
 
         await Assert.ThrowsAsync<Exception>(async () =>
         {
-            await validator.ValidateAggregate(new TestAggregate(), new Fluss.UnitOfWork(null!, null!, null!, null!, null!));
+            await validator.ValidateAggregate(new TestAggregate(), Fluss.UnitOfWork.Create(null!, null!, [], null!, null!));
         });
     }
 

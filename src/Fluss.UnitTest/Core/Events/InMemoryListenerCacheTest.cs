@@ -40,7 +40,7 @@ public class InMemoryListenerCacheTest
     public async Task ReturnsCachedEventListener()
     {
         _baseEventListenerFactory.Setup(f => f.UpdateTo(It.IsAny<TestEventListener>(), 100))
-            .Returns(ValueTask.FromResult(new TestEventListener { Tag = new EventListenerVersionTag(100) }));
+            .Returns(ValueTask.FromResult(new TestEventListener { LastAcceptedEvent = 100, LastSeenEvent = 100, LastSeenTransientEvent = -1 }));
 
         _ = await _listenerCache.UpdateTo(new TestEventListener(), 100);
         _ = await _listenerCache.UpdateTo(new TestEventListener(), 100);
@@ -58,7 +58,7 @@ public class InMemoryListenerCacheTest
     public async Task ReturnsCachedKeyedEventListener()
     {
         _baseEventListenerFactory.Setup(f => f.UpdateTo(It.IsAny<KeyedTestEventListener>(), 100))
-            .Returns(ValueTask.FromResult(new KeyedTestEventListener { Id = 1, Tag = new EventListenerVersionTag(100) }));
+            .Returns(ValueTask.FromResult(new KeyedTestEventListener { Id = 1, LastAcceptedEvent = 100, LastSeenEvent = 100, LastSeenTransientEvent = -1 }));
 
         await _listenerCache.UpdateTo(new KeyedTestEventListener { Id = 1 }, 100);
         await _listenerCache.UpdateTo(new KeyedTestEventListener { Id = 1 }, 100);
@@ -76,9 +76,9 @@ public class InMemoryListenerCacheTest
     public async Task ForwardsIfCacheContainsNewer()
     {
         _baseEventListenerFactory.Setup(f => f.UpdateTo(It.IsAny<TestEventListener>(), 100))
-            .Returns(ValueTask.FromResult(new TestEventListener { Tag = new EventListenerVersionTag(100) }));
+            .Returns(ValueTask.FromResult(new TestEventListener { LastAcceptedEvent = 100, LastSeenEvent = 100, LastSeenTransientEvent = -1 }));
         _baseEventListenerFactory.Setup(f => f.UpdateTo(It.IsAny<TestEventListener>(), 90))
-            .Returns(ValueTask.FromResult(new TestEventListener { Tag = new EventListenerVersionTag(90) }));
+            .Returns(ValueTask.FromResult(new TestEventListener { LastAcceptedEvent = 90, LastSeenEvent = 90, LastSeenTransientEvent = -1 }));
 
         await _listenerCache.UpdateTo(new TestEventListener(), 100);
         await _listenerCache.UpdateTo(new TestEventListener(), 90);
@@ -106,9 +106,9 @@ public class InMemoryListenerCacheTest
         var otherTestEventList = new TestEventListener();
 
         _baseEventListenerFactory.Setup(f => f.UpdateTo(It.IsAny<TestEventListener>(), 100))
-            .Returns(ValueTask.FromResult(new TestEventListener { Tag = new EventListenerVersionTag(100) }));
+            .Returns(ValueTask.FromResult(new TestEventListener { LastAcceptedEvent = 100, LastSeenEvent = 100, LastSeenTransientEvent = -1 }));
         _baseEventListenerFactory.Setup(f => f.UpdateTo(It.IsAny<TestEventListener>(), 110))
-            .Returns(ValueTask.FromResult(new TestEventListener { Tag = new EventListenerVersionTag(110) }));
+            .Returns(ValueTask.FromResult(new TestEventListener { LastAcceptedEvent = 110, LastSeenEvent = 110, LastSeenTransientEvent = -1 }));
 
         await _listenerCache.UpdateTo(testEventListener, 100);
 
@@ -128,7 +128,7 @@ public class InMemoryListenerCacheTest
     public async Task ForwardsAgainIfCleaned()
     {
         _baseEventListenerFactory.Setup(f => f.UpdateTo(It.IsAny<TestEventListener>(), 100))
-            .Returns(ValueTask.FromResult(new TestEventListener { Tag = new EventListenerVersionTag(100) }));
+            .Returns(ValueTask.FromResult(new TestEventListener { LastAcceptedEvent = 100, LastSeenEvent = 100, LastSeenTransientEvent = -1 }));
 
         await _listenerCache.UpdateTo(new TestEventListener(), 100);
         _listenerCache.Clean();

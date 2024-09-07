@@ -1,26 +1,26 @@
 using System.Collections.ObjectModel;
+using Collections.Pooled;
 
 namespace Fluss.Events;
 
 public static class EventMemoryArrayExtensions
 {
-    public static ReadOnlyCollection<ReadOnlyMemory<EventEnvelope>> ToPagedMemory<T>(this List<T> envelopes) where T : EventEnvelope
+    private static readonly ReadOnlyCollection<ReadOnlyMemory<EventEnvelope>> EmptyPagedMemory = new([]);
+    public static ReadOnlyCollection<ReadOnlyMemory<EventEnvelope>> ToPagedMemory(this IReadOnlyList<EventEnvelope> envelopes)
     {
-        if (envelopes is List<EventEnvelope> casted)
+        if (envelopes.Count == 0)
         {
-            return new[] {
-                casted.ToArray().AsMemory().AsReadOnly()
-            }.AsReadOnly();
+            return EmptyPagedMemory.AsReadOnly();
         }
 
         return new[] {
-            envelopes.Cast<EventEnvelope>().ToArray().AsMemory().AsReadOnly()
+            envelopes.ToArray().AsMemory().AsReadOnly()
         }.AsReadOnly();
     }
 
-    public static IReadOnlyList<EventEnvelope> ToFlatEventList(this ReadOnlyCollection<ReadOnlyMemory<EventEnvelope>> pagedMemory)
+    public static PooledList<EventEnvelope> ToFlatEventList(this ReadOnlyCollection<ReadOnlyMemory<EventEnvelope>> pagedMemory)
     {
-        var result = new List<EventEnvelope>();
+        var result = new PooledList<EventEnvelope>();
 
         foreach (var memory in pagedMemory)
         {
@@ -30,7 +30,7 @@ public static class EventMemoryArrayExtensions
         return result;
     }
 
-    public static async ValueTask<IReadOnlyList<EventEnvelope>> ToFlatEventList(this ValueTask<ReadOnlyCollection<ReadOnlyMemory<EventEnvelope>>> pagedMemory)
+    public static async ValueTask<PooledList<EventEnvelope>> ToFlatEventList(this ValueTask<ReadOnlyCollection<ReadOnlyMemory<EventEnvelope>>> pagedMemory)
     {
         return (await pagedMemory).ToFlatEventList();
     }

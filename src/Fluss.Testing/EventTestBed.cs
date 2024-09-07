@@ -22,7 +22,7 @@ public abstract class EventTestBed
             At = DateTimeOffset.Now,
             By = null,
             Event = @event
-        })).AsTask().Wait();
+        }).ToList()).AsTask().Wait();
 
         return this;
     }

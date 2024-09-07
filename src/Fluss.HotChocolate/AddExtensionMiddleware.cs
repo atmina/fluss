@@ -142,8 +142,8 @@ unitOfWork).Create();
 
         var cancellationTokenSource = new CancellationTokenSource();
 
-        var latestPersistedEventVersion = currentEventListener.Min(el => el.Tag.LastSeen);
-        var latestTransientEventVersion = currentEventListener.Min(el => el.Tag.LastSeenTransient);
+        var latestPersistedEventVersion = currentEventListener.Min(el => el.LastSeenEvent);
+        var latestTransientEventVersion = currentEventListener.Min(el => el.LastSeenTransientEvent);
 
         var persistedEventTask = Task.Run(async () =>
         {
@@ -156,7 +156,7 @@ unitOfWork).Create();
                     var eventListener = currentEventListener[index];
                     var updatedEventListener = await eventListenerFactory.UpdateTo(eventListener, latestPersistedEventVersion);
 
-                    if (updatedEventListener.Tag.LastAccepted > eventListener.Tag.LastAccepted)
+                    if (updatedEventListener.LastAcceptedEvent > eventListener.LastAcceptedEvent)
                     {
                         return;
                     }

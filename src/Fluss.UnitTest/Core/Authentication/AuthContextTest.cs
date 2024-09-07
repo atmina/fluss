@@ -13,7 +13,7 @@ public class AuthContextTest
     public AuthContextTest()
     {
         _unitOfWork = new Mock<IUnitOfWork>();
-        _authContext = new AuthContext(_unitOfWork.Object, Guid.NewGuid());
+        _authContext = AuthContext.Get(_unitOfWork.Object, Guid.NewGuid());
     }
 
     [Fact]

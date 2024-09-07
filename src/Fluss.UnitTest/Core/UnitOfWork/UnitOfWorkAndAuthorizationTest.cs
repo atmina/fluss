@@ -11,13 +11,14 @@ public partial class UnitOfWorkTest
     {
         _policies.Add(new AllowReadAfterEventPolicy());
 
+        var unitOfWork = GetUnitOfWork();
         await Assert.ThrowsAsync<UnauthorizedAccessException>(async () =>
         {
-            await _unitOfWork.GetReadModel<TestReadModel, int>(1);
+            await unitOfWork.GetReadModel<TestReadModel, int>(1);
         });
 
-        await _unitOfWork.Publish(new AllowEvent());
-        await _unitOfWork.GetReadModel<TestReadModel, int>(1);
+        await unitOfWork.Publish(new AllowEvent());
+        await unitOfWork.GetReadModel<TestReadModel, int>(1);
     }
 
     private record AllowEvent : Event;

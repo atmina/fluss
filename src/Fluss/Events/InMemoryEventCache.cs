@@ -70,18 +70,17 @@ public class InMemoryEventCache(long cacheSizePerItem = 10_000) : EventRepositor
         }
     }
 
-    public override async ValueTask Publish(IEnumerable<EventEnvelope> events)
+    public override async ValueTask Publish(IReadOnlyList<EventEnvelope> events)
     {
         using var activity = FlussActivitySource.Source.StartActivity();
         activity?.SetTag("EventSourcing.EventRepository", nameof(InMemoryEventCache));
 
-        var eventEnvelopes = events.ToList();
-        await base.Publish(eventEnvelopes);
+        await base.Publish(events);
 
         await _loadLock.WaitAsync();
         try
         {
-            AddEvents(new[] { eventEnvelopes.ToArray().AsMemory().AsReadOnly() }.AsReadOnly());
+            AddEvents(events.ToPagedMemory());
         }
         finally
         {

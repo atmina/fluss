@@ -1,15 +1,16 @@
 using System.Collections.ObjectModel;
+using Collections.Pooled;
 using Fluss.Exceptions;
 using Newtonsoft.Json;
 
 namespace Fluss.Events;
 
-public class InMemoryEventRepository : IBaseEventRepository
+public class InMemoryEventRepository : IBaseEventRepository, IDisposable
 {
-    private readonly List<EventEnvelope> _events = [];
+    private readonly PooledList<EventEnvelope> _events = [];
     public event EventHandler? NewEvents;
 
-    public ValueTask Publish(IEnumerable<EventEnvelope> eventEnvelopes)
+    public ValueTask Publish(IReadOnlyList<EventEnvelope> eventEnvelopes)
     {
         foreach (var eventEnvelope in eventEnvelopes)
         {
@@ -97,5 +98,12 @@ public class InMemoryEventRepository : IBaseEventRepository
         {
             NewEvents?.Invoke(this, EventArgs.Empty);
         });
+    }
+
+    public void Dispose()
+    {
+        GC.SuppressFinalize(this);
+
+        _events.Dispose();
     }
 }
