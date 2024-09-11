@@ -11,7 +11,7 @@
         <PackageReference Include="FluentMigrator.Runner" Version="5.2.0" />
         <PackageReference Include="FluentMigrator.Runner.Postgres" Version="5.2.0" />
         <PackageReference Include="Microsoft.Extensions.Hosting.Abstractions" Version="8.0.0" />
-        <PackageReference Include="Npgsql" Version="8.0.3" />
+        <PackageReference Include="Npgsql" Version="8.0.4" />
         <PackageReference Include="Npgsql.Json.NET" Version="8.0.3" />
     </ItemGroup>
 
