@@ -4,6 +4,10 @@ updates:
     directory: "/src"
     schedule:
       interval: "weekly"
+    groups:
+      hot-chocolate:
+        patterns:
+          - "HotChocolate*"
   - package-ecosystem: "github-actions"
     directory: "/"
     schedule:
