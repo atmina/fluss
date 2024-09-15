@@ -1,24 +1,17 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
     <PropertyGroup>
-        <TargetFramework>net8.0</TargetFramework>
+        <TargetFrameworks>net8.0;net9.0</TargetFrameworks>
         <ImplicitUsings>enable</ImplicitUsings>
         <Nullable>enable</Nullable>
         <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
     </PropertyGroup>
 
     <ItemGroup>
-        <PackageReference Include="FluentMigrator.Runner" Version="5.2.0" />
         <PackageReference Include="FluentMigrator.Runner.Postgres" Version="5.2.0" />
         <PackageReference Include="Microsoft.Extensions.Hosting.Abstractions" Version="8.0.0" />
         <PackageReference Include="Npgsql" Version="8.0.4" />
-        <PackageReference Include="Npgsql.Json.NET" Version="8.0.3" />
-    </ItemGroup>
-
-    <ItemGroup>
-        <Reference Include="OpenTelemetry.Api">
-            <HintPath>..\..\..\..\..\.nuget\packages\opentelemetry.api\1.6.0\lib\net6.0\OpenTelemetry.Api.dll</HintPath>
-        </Reference>
+        <PackageReference Include="Npgsql.Json.NET" Version="8.0.4" />
     </ItemGroup>
 
     <ItemGroup>
