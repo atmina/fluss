@@ -1,22 +1,13 @@
-using System.Reflection;
+using System.Diagnostics.CodeAnalysis;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace Fluss.Authentication;
 
 public static class ServiceCollectionExtensions
 {
-    public static IServiceCollection AddPoliciesFrom(this IServiceCollection services, Assembly assembly)
+    public static IServiceCollection AddPolicy<[DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicConstructors)] TPolicy>(this IServiceCollection services) where TPolicy : class, Policy
     {
-        var policyTypes = assembly.GetTypes().Where(x => x.IsAssignableTo(typeof(Policy)));
-
-        foreach (var policyType in policyTypes)
-        {
-            services
-                .AddSingleton(policyType)
-                .AddSingleton(sp => (Policy)sp.GetRequiredService(policyType));
-        }
-
-        return services;
+        return services.AddSingleton<Policy, TPolicy>();
     }
 
     public static IServiceCollection ProvideUserIdFrom(this IServiceCollection services,

@@ -1,4 +1,5 @@
 using System.Collections.Concurrent;
+using System.Diagnostics.CodeAnalysis;
 using Collections.Pooled;
 using Fluss.Events;
 using Fluss.ReadModel;
@@ -10,7 +11,7 @@ public partial class UnitOfWork
     private readonly PooledList<EventListener> _readModels = new();
     public IReadOnlyCollection<EventListener> ReadModels => _readModels;
 
-    public async ValueTask<IReadModel> GetReadModel(Type tReadModel, object? key, long? at = null)
+    public async ValueTask<IReadModel> GetReadModel([DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicParameterlessConstructor)] Type tReadModel, object? key, long? at = null)
     {
         using var activity = FlussActivitySource.Source.StartActivity();
         activity?.SetTag("EventSourcing.ReadModel", tReadModel.FullName);
@@ -22,7 +23,7 @@ public partial class UnitOfWork
 
         if (eventListener is IEventListenerWithKey eventListenerWithKey)
         {
-            eventListenerWithKey.GetType().GetProperty("Id")?.SetValue(eventListenerWithKey, key);
+            typeof(IEventListenerWithKey).GetProperty("Id")?.SetValue(eventListenerWithKey, key);
         }
 
         eventListener = await UpdateAndApplyPublished(eventListener, at);

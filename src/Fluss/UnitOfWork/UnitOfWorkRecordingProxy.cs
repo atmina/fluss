@@ -1,4 +1,5 @@
 ﻿using System.Collections.Concurrent;
+using System.Diagnostics.CodeAnalysis;
 using Fluss.Events;
 using Fluss.ReadModel;
 
@@ -15,7 +16,7 @@ public class UnitOfWorkRecordingProxy(IUnitOfWork impl) : IUnitOfWork
 
     public List<EventListener> RecordedListeners { get; } = [];
 
-    public ValueTask<IReadModel> GetReadModel(Type tReadModel, object? key, long? at = null)
+    public ValueTask<IReadModel> GetReadModel([DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicParameterlessConstructor)] Type tReadModel, object? key, long? at = null)
     {
         return impl.GetReadModel(tReadModel, key, at);
     }
@@ -85,7 +86,7 @@ public class UnitOfWorkRecordingProxy(IUnitOfWork impl) : IUnitOfWork
         return eventListenerTypeWithKeyAndVersions;
     }
 
-    public record EventListenerTypeWithKeyAndVersion(Type Type, object? Key, long Version)
+    public record EventListenerTypeWithKeyAndVersion([property: DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicParameterlessConstructor)] Type Type, object? Key, long Version)
     {
         public async ValueTask<bool> IsStillUpToDate(IUnitOfWork unitOfWork, long? at = null)
         {

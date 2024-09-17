@@ -1,4 +1,5 @@
 using System.Collections.Concurrent;
+using System.Diagnostics.CodeAnalysis;
 using Fluss.Events;
 using Fluss.ReadModel;
 
@@ -9,7 +10,7 @@ public interface IUnitOfWork : IDisposable
     ValueTask<long> ConsistentVersion();
     IReadOnlyCollection<EventListener> ReadModels { get; }
 
-    ValueTask<IReadModel> GetReadModel(Type tReadModel, object? key, long? at = null);
+    ValueTask<IReadModel> GetReadModel([DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicParameterlessConstructor)] Type tReadModel, object? key, long? at = null);
 
     ValueTask<TReadModel> GetReadModel<TReadModel>(long? at = null)
         where TReadModel : EventListener, IRootEventListener, IReadModel, new();

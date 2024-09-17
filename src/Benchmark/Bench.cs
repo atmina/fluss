@@ -20,7 +20,7 @@ public class Bench
     {
         var sc = new ServiceCollection();
         sc.AddEventSourcing();
-        sc.AddPoliciesFrom(typeof(Bench).Assembly);
+        sc.AddPolicy<AllowAllPolicy>();
 
         _sp = sc.BuildServiceProvider();
     }
@@ -56,7 +56,7 @@ public class Bench
     {
         var sc = new ServiceCollection();
         sc.AddEventSourcing();
-        sc.AddPoliciesFrom(typeof(Bench).Assembly);
+        sc.AddPolicy<AllowAllPolicy>();
 
         _sp = sc.BuildServiceProvider();
 
