@@ -1,3 +1,4 @@
+using System.Diagnostics.CodeAnalysis;
 using Fluss.Events.TransientEvents;
 
 namespace Fluss.Events;
@@ -73,11 +74,13 @@ public record EventListenerVersionTag
 
 public interface IRootEventListener;
 
+[DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicProperties)]
 public interface IEventListenerWithKey
 {
     public object Id { get; }
 }
 
+[DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicProperties)]
 public interface IEventListenerWithKey<TKey> : IEventListenerWithKey
 {
     public new TKey Id { get; init; }

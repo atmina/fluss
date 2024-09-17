@@ -40,15 +40,15 @@ namespace Fluss
             return (int)result;
         }
         private record CacheEntryValue(object? Value, global::System.Collections.Generic.IReadOnlyList<global::Fluss.UnitOfWorkRecordingProxy.EventListenerTypeWithKeyAndVersion>? EventListeners);
-private static async ValueTask<bool> MatchesEventListenerState(IUnitOfWork unitOfWork, CacheEntryValue value) {
-    foreach (var eventListenerData in value.EventListeners ?? global::System.Array.Empty<global::Fluss.UnitOfWorkRecordingProxy.EventListenerTypeWithKeyAndVersion>()) {
-        if (!(await eventListenerData.IsStillUpToDate(unitOfWork))) {
-            return false;
+
+        private static async global::System.Threading.Tasks.ValueTask<bool> MatchesEventListenerState(global::Fluss.IUnitOfWork unitOfWork, CacheEntryValue value) {
+            foreach (var eventListenerData in value.EventListeners ?? global::System.Array.Empty<global::Fluss.UnitOfWorkRecordingProxy.EventListenerTypeWithKeyAndVersion>()) {
+                if (!await eventListenerData.IsStillUpToDate(unitOfWork)) {
+                    return false;
+                }
+            }
+            return true;
         }
-    }
-    
-    return true;
-}
     }
 }
 

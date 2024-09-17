@@ -1,28 +1,17 @@
-using System.Reflection;
+using System.Diagnostics.CodeAnalysis;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace Fluss.Validation;
 
 public static class ValidationServiceCollectionExtension
 {
-    public static IServiceCollection AddValidationFrom(this IServiceCollection services, Assembly sourceAssembly)
+    public static IServiceCollection AddAggregateValidator<[DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicConstructors)] TAggregateValidator>(this IServiceCollection services) where TAggregateValidator : class, AggregateValidator
     {
-        var aggregateValidatorType = typeof(AggregateValidator);
-        var aggregateValidators =
-            sourceAssembly.GetTypes().Where(t => t.IsAssignableTo(aggregateValidatorType)).ToList();
-        foreach (var aggregateValidator in aggregateValidators)
-        {
-            services.AddSingleton(aggregateValidatorType, aggregateValidator);
-        }
+        return services.AddSingleton<AggregateValidator, TAggregateValidator>();
+    }
 
-        var eventValidatorType = typeof(EventValidator);
-        var eventValidators =
-            sourceAssembly.GetTypes().Where(t => t.IsAssignableTo(eventValidatorType)).ToList();
-        foreach (var eventValidator in eventValidators)
-        {
-            services.AddSingleton(eventValidatorType, eventValidator);
-        }
-
-        return services;
+    public static IServiceCollection AddEventValidator<[DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicConstructors)] TEventValidator>(this IServiceCollection services) where TEventValidator : class, EventValidator
+    {
+        return services.AddSingleton<EventValidator, TEventValidator>();
     }
 }

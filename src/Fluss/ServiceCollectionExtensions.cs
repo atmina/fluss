@@ -1,3 +1,4 @@
+using System.Diagnostics.CodeAnalysis;
 using System.Reflection;
 using System.Runtime.CompilerServices;
 using Fluss.Authentication;
@@ -63,7 +64,7 @@ public static class ServiceCollectionExtensions
         return services;
     }
 
-    public static IServiceCollection AddEventRepositoryPipeline<TEventRepository>(this IServiceCollection services)
+    public static IServiceCollection AddEventRepositoryPipeline<[DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicConstructors)] TEventRepository>(this IServiceCollection services)
         where TEventRepository : EventRepositoryPipeline
     {
         return services
@@ -71,7 +72,7 @@ public static class ServiceCollectionExtensions
             .AddSingleton<EventRepositoryPipeline>(sp => sp.GetRequiredService<TEventRepository>());
     }
 
-    public static IServiceCollection AddBaseEventRepository<TBaseEventRepository>(this IServiceCollection services)
+    public static IServiceCollection AddBaseEventRepository<[DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicConstructors)] TBaseEventRepository>(this IServiceCollection services)
         where TBaseEventRepository : class, IBaseEventRepository
     {
         ArgumentNullException.ThrowIfNull(services);
@@ -93,16 +94,8 @@ public static class ServiceCollectionExtensions
             });
     }
 
-    public static IServiceCollection AddUpcasters(this IServiceCollection services, Assembly sourceAssembly)
+    public static IServiceCollection AddUpcaster<[DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicConstructors)] TUpcaster>(this IServiceCollection services) where TUpcaster : class, IUpcaster
     {
-        var upcasterType = typeof(IUpcaster);
-        var upcasters = sourceAssembly.GetTypes().Where(t => t.IsAssignableTo(upcasterType));
-
-        foreach (var upcaster in upcasters)
-        {
-            services.AddSingleton(upcasterType, upcaster);
-        }
-
-        return services;
+        return services.AddSingleton<IUpcaster, TUpcaster>();
     }
 }

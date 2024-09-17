@@ -6,6 +6,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using Fluss.Regen.Attributes;
 using Fluss.Regen.Generators;
+using Fluss.Regen.Helpers;
 using Fluss.Regen.Inspectors;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
@@ -19,7 +20,12 @@ public class SelectorGenerator : IIncrementalGenerator
 {
     private static readonly ISyntaxInspector[] Inspectors =
     [
+        new AggregateValidatorInspector(),
+        new EventValidatorInspector(),
+        new PolicyInspector(),
         new SelectorInspector(),
+        new SideEffectInspector(),
+        new UpcasterInspector(),
     ];
 
     public void Initialize(IncrementalGeneratorInitializationContext context)
@@ -39,7 +45,7 @@ public class SelectorGenerator : IIncrementalGenerator
 
         context.RegisterSourceOutput(
             valueProvider,
-            static (context, source) => Execute(context, source.Right));
+            static (context, source) => Execute(context, source.Left, source.Right));
     }
 
     private static bool IsRelevant(SyntaxNode node)
@@ -71,8 +77,8 @@ public class SelectorGenerator : IIncrementalGenerator
         return null;
     }
 
-    private static void Execute(
-        SourceProductionContext context,
+    private static void Execute(SourceProductionContext context,
+        Compilation compilation,
         ImmutableArray<ISyntaxInfo> syntaxInfos)
     {
         if (syntaxInfos.IsEmpty)
@@ -82,6 +88,7 @@ public class SelectorGenerator : IIncrementalGenerator
 
         var syntaxInfoList = syntaxInfos.ToList();
         WriteSelectorMethods(context, syntaxInfoList);
+        WriteRegistration(context, compilation, syntaxInfoList);
     }
 
     private static void WriteSelectorMethods(SourceProductionContext context, List<ISyntaxInfo> syntaxInfos)
@@ -171,6 +178,64 @@ public class SelectorGenerator : IIncrementalGenerator
         generator.WriteEndNamespace();
 
         context.AddSource("Selectors.g.cs", generator.ToSourceText());
+    }
+
+    private static void WriteRegistration(
+        SourceProductionContext context,
+        Compilation compilation,
+        List<ISyntaxInfo> syntaxInfos)
+    {
+        if (syntaxInfos.Count == 0)
+        {
+            return;
+        }
+
+        var moduleName = (compilation.AssemblyName ?? "Assembly").Split(".").Last() + "ESComponents";
+
+        using var generator = new RegistrationSyntaxGenerator(moduleName, "Microsoft.Extensions.DependencyInjection");
+
+        generator.WriteHeader();
+        generator.WriteBeginNamespace();
+        generator.WriteBeginClass();
+        generator.WriteBeginRegistrationMethod();
+
+        var foundInfo = false;
+
+        foreach (var syntaxInfo in syntaxInfos)
+        {
+            switch (syntaxInfo)
+            {
+                case AggregateValidatorInfo aggregateValidatorInfo:
+                    generator.WriteAggregateValidatorRegistration(aggregateValidatorInfo.Type.ToFullyQualified());
+                    foundInfo = true;
+                    break;
+                case EventValidatorInfo eventValidatorInfo:
+                    generator.WriteEventValidatorRegistration(eventValidatorInfo.Type.ToFullyQualified());
+                    foundInfo = true;
+                    break;
+                case PolicyInfo policyInfo:
+                    generator.WritePolicyRegistration(policyInfo.Type.ToFullyQualified());
+                    foundInfo = true;
+                    break;
+                case SideEffectInfo sideEffectInfo:
+                    generator.WriteSideEffectRegistration(sideEffectInfo.Type.ToFullyQualified());
+                    foundInfo = true;
+                    break;
+                case UpcasterInfo upcasterInfo:
+                    generator.WriteUpcasterRegistration(upcasterInfo.Type.ToFullyQualified());
+                    foundInfo = true;
+                    break;
+            }
+        }
+
+        generator.WriteEndRegistrationMethod();
+        generator.WriteEndClass();
+        generator.WriteEndNamespace();
+
+        if (foundInfo)
+        {
+            context.AddSource("Registration.g.cs", generator.ToSourceText());
+        }
     }
 
     private static ITypeSymbol ExtractValueType(ITypeSymbol returnType)

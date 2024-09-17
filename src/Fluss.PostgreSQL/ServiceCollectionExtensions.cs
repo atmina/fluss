@@ -10,16 +10,9 @@ namespace Fluss.PostgreSQL;
 public static class ServiceCollectionExtensions
 {
     public static IServiceCollection AddPostgresEventSourcingRepository(this IServiceCollection services,
-        string connectionString, Assembly? upcasterSourceAssembly = null)
+        string connectionString)
     {
         ArgumentNullException.ThrowIfNull(services);
-
-        if (upcasterSourceAssembly is not null)
-        {
-            services
-                .AddUpcasters(upcasterSourceAssembly)
-                .AddHostedService<Upcaster>();
-        }
 
         return services
             .AddBaseEventRepository<PostgreSQLEventRepository>()
@@ -31,7 +24,8 @@ public static class ServiceCollectionExtensions
             .AddLogging(lb => lb.AddFluentMigratorConsole())
             .AddSingleton(new PostgreSQLConfig(connectionString))
             .AddSingleton<Migrator>()
-            .AddHostedService(sp => sp.GetRequiredService<Migrator>());
+            .AddHostedService(sp => sp.GetRequiredService<Migrator>())
+            .AddHostedService<Upcaster>();
     }
 }
 

@@ -1,19 +1,12 @@
-using System.Reflection;
+using System.Diagnostics.CodeAnalysis;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace Fluss.SideEffects;
 
 public static class SideEffectsServiceCollectionExtension
 {
-    public static IServiceCollection RegisterSideEffects(this IServiceCollection services, Assembly assembly)
+    public static IServiceCollection AddSideEffect<[DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicConstructors)] TSideEffect>(this IServiceCollection services) where TSideEffect : class, SideEffect
     {
-        var implementingClasses = assembly.GetTypes().Where(t => t.IsAssignableTo(typeof(SideEffect))).ToList();
-
-        foreach (var @class in implementingClasses)
-        {
-            services.AddSingleton(typeof(SideEffect), @class);
-        }
-
-        return services;
+        return services.AddSingleton<SideEffect, TSideEffect>();
     }
 }

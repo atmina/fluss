@@ -62,5 +62,4 @@ public sealed class SelectorInfo(
             return hashCode;
         }
     }
-
 }
