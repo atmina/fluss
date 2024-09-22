@@ -17,7 +17,7 @@ public class AggregateTestBed<TAggregate, TKey> : EventTestBed where TAggregate 
     {
         var validator = new Mock<IRootValidator>();
         validator.Setup(v => v.ValidateEvent(It.IsAny<IUnitOfWork>(), It.IsAny<EventEnvelope>()))
-            .Returns<EventEnvelope, IReadOnlyList<EventEnvelope>?>((_, _) => Task.CompletedTask);
+            .Returns<IUnitOfWork, EventEnvelope>((_, _) => Task.CompletedTask);
         validator.Setup(v => v.ValidateAggregate(It.IsAny<AggregateRoot>(), It.IsAny<UnitOfWork>()))
             .Returns<AggregateRoot, UnitOfWork>((_, _) => Task.CompletedTask);
 

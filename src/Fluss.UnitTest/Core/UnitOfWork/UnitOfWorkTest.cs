@@ -66,6 +66,31 @@ public partial class UnitOfWorkTest
     }
 
     [Fact]
+    public async Task CanGetAggregateWithoutKey()
+    {
+        _policies.Add(new AllowAllPolicy());
+        var unitOfWork = GetUnitOfWork();
+
+        var aggregate = await unitOfWork.GetAggregate<TestRootAggregate>();
+
+        Assert.NotNull(aggregate);
+        Assert.IsType<TestRootAggregate>(aggregate);
+        Assert.Equal(3, aggregate.EventCount); // Assuming TestRootAggregate counts events
+    }
+
+    [Fact]
+    public async Task GetAggregateWithoutKey_AppliesPublishedEvents()
+    {
+        _policies.Add(new AllowAllPolicy());
+        var unitOfWork = GetUnitOfWork();
+
+        await unitOfWork.Publish(new TestEvent(3));
+        var aggregate = await unitOfWork.GetAggregate<TestRootAggregate>();
+
+        Assert.Equal(4, aggregate.EventCount); // 3 existing events + 1 published event
+    }
+
+    [Fact]
     public async Task CanPublish()
     {
         _policies.Add(new AllowAllPolicy());
@@ -143,6 +168,64 @@ public partial class UnitOfWorkTest
     }
 
     [Fact]
+    public async Task CanGetReadModelByType()
+    {
+        _policies.Add(new AllowAllPolicy());
+
+        var unitOfWork = GetUnitOfWork();
+        var readModel = await unitOfWork.GetReadModel(typeof(TestReadModel), 1);
+
+        Assert.IsType<TestReadModel>(readModel);
+    }
+
+    [Fact]
+    public async Task ThrowsWhenReadModelTypeIsNotEventListener()
+    {
+        _policies.Add(new AllowAllPolicy());
+
+        var unitOfWork = GetUnitOfWork();
+        await Assert.ThrowsAsync<InvalidOperationException>(async () =>
+        {
+            await unitOfWork.GetReadModel(typeof(object), null);
+        });
+    }
+
+    [Fact]
+    public async Task ThrowsWhenReadModelTypeIsNotReadModel()
+    {
+        _policies.Add(new AllowAllPolicy());
+
+        var unitOfWork = GetUnitOfWork();
+        await Assert.ThrowsAsync<InvalidOperationException>(async () =>
+        {
+            await unitOfWork.GetReadModel(typeof(TestAggregate), null);
+        });
+    }
+
+    [Fact]
+    public async Task SetsKeyForEventListenerWithKey()
+    {
+        _policies.Add(new AllowAllPolicy());
+
+        var unitOfWork = GetUnitOfWork();
+        var readModel = await unitOfWork.GetReadModel(typeof(TestReadModel), 1);
+
+        Assert.IsType<TestReadModel>(readModel);
+        Assert.Equal(1, ((TestReadModel)readModel).Id);
+    }
+
+    [Fact]
+    public async Task ThrowsWhenReadModelIsNotAuthorized_GetReadModelByType()
+    {
+        var unitOfWork = GetUnitOfWork();
+
+        await Assert.ThrowsAsync<UnauthorizedAccessException>(async () =>
+        {
+            await unitOfWork.GetReadModel(typeof(TestReadModel), 1);
+        });
+    }
+
+    [Fact]
     public async Task ThrowsWhenReadModelNotAuthorized()
     {
         await Assert.ThrowsAsync<UnauthorizedAccessException>(async () =>
@@ -216,6 +299,18 @@ public partial class UnitOfWorkTest
         Assert.Equal(42, value);
     }
 
+    [Fact]
+    public async Task ThrowsWhenTryingToUseAfterDispose()
+    {
+        var unitOfWork = GetUnitOfWork();
+        unitOfWork.Dispose();
+
+        await Assert.ThrowsAsync<InvalidOperationException>(async () =>
+        {
+            await unitOfWork.GetReadModel<TestRootReadModel>();
+        });
+    }
+
     private record TestRootReadModel : RootReadModel
     {
         public int GotEvents { get; private init; }
@@ -238,6 +333,21 @@ public partial class UnitOfWorkTest
             {
                 TestEvent testEvent when testEvent.Id == Id => this with { GotEvents = GotEvents + 1 },
                 _ => this,
+            };
+        }
+    }
+
+
+    private record TestRootAggregate : AggregateRoot
+    {
+        public int EventCount { get; private init; }
+
+        protected override TestRootAggregate When(EventEnvelope envelope)
+        {
+            return envelope.Event switch
+            {
+                TestEvent => this with { EventCount = EventCount + 1 },
+                _ => this
             };
         }
     }

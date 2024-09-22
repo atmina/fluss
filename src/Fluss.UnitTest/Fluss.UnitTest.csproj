@@ -1,7 +1,7 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
     <PropertyGroup>
-        <TargetFramework>net9.0</TargetFramework>
+        <TargetFrameworks>net9.0;net8.0</TargetFrameworks>
         <ImplicitUsings>enable</ImplicitUsings>
         <Nullable>enable</Nullable>
 
@@ -28,9 +28,15 @@
     </ItemGroup>
 
     <ItemGroup>
-        <ProjectReference Include="..\Fluss.Regen\Fluss.Regen.csproj"/>
+        <ProjectReference Include="..\Fluss.HotChocolate\Fluss.HotChocolate.csproj" />
         <ProjectReference Include="..\Fluss\Fluss.csproj"/>
+        <ProjectReference Include="..\Fluss.Regen\Fluss.Regen.csproj"/>
         <ProjectReference Include="..\Fluss.Testing\Fluss.Testing.csproj"/>
+        <ProjectReference Include="..\Fluss.PostgreSQL\Fluss.PostgreSQL.csproj"/>
+    </ItemGroup>
+
+    <ItemGroup>
+      <Folder Include="Regen\Snapshots\" />
     </ItemGroup>
 
 </Project>

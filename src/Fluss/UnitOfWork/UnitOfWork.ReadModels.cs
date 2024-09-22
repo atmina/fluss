@@ -21,17 +21,17 @@ public partial class UnitOfWork
             throw new InvalidOperationException("Type " + tReadModel.FullName + " is not a event listener.");
         }
 
+        if (eventListener is not IReadModel readModel)
+        {
+            throw new InvalidOperationException("Type " + tReadModel.FullName + " is not a read model.");
+        }
+
         if (eventListener is IEventListenerWithKey eventListenerWithKey)
         {
             typeof(IEventListenerWithKey).GetProperty("Id")?.SetValue(eventListenerWithKey, key);
         }
 
         eventListener = await UpdateAndApplyPublished(eventListener, at);
-
-        if (eventListener is not IReadModel readModel)
-        {
-            throw new InvalidOperationException("Type " + tReadModel.FullName + " is not a read model.");
-        }
 
         if (!await AuthorizeUsage(readModel))
         {

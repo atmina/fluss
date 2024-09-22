@@ -25,37 +25,16 @@ public class CodeWriter : TextWriter
 
     public override Encoding Encoding { get; } = Encoding.UTF8;
 
-    public static string Indent { get; } = new(' ', 4);
-
     public override void Write(char value) =>
         _writer.Write(value);
 
-    public void WriteStringValue(string value)
-    {
-        Write('"');
-        Write(value);
-        Write('"');
-    }
-
     public void WriteIndent()
     {
-        if (_indent > 0)
+        var spaces = _indent * 4;
+        for (var i = 0; i < spaces; i++)
         {
-            var spaces = _indent * 4;
-            for (var i = 0; i < spaces; i++)
-            {
-                Write(' ');
-            }
+            Write(' ');
         }
-    }
-
-    public string GetIndentString()
-    {
-        if (_indent > 0)
-        {
-            return new string(' ', _indent * 4);
-        }
-        return string.Empty;
     }
 
     public void WriteIndentedLine(string format, params object?[] args)
@@ -87,8 +66,6 @@ public class CodeWriter : TextWriter
             Write(format, args);
         }
     }
-
-    public void WriteSpace() => Write(' ');
 
     public IDisposable IncreaseIndent()
     {

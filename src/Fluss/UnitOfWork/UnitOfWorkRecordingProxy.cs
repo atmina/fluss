@@ -90,14 +90,9 @@ public class UnitOfWorkRecordingProxy(IUnitOfWork impl) : IUnitOfWork
     {
         public async ValueTask<bool> IsStillUpToDate(IUnitOfWork unitOfWork, long? at = null)
         {
-            var readModel = await unitOfWork.GetReadModel(Type, Key, at);
+            var readModel = (EventListener)await unitOfWork.GetReadModel(Type, Key, at);
 
-            if (readModel is EventListener eventListener)
-            {
-                return eventListener.LastAcceptedEvent <= Version;
-            }
-
-            return false;
+            return readModel.LastAcceptedEvent <= Version;
         }
     }
 
