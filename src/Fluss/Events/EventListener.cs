@@ -3,6 +3,7 @@ using Fluss.Events.TransientEvents;
 
 namespace Fluss.Events;
 
+
 public abstract record EventListener
 {
     /// Last Event that was consumed by this EventListener
@@ -50,34 +51,12 @@ public abstract record EventListener
     }
 }
 
-public record EventListenerVersionTag
-{
-    /// Last Event that was consumed by this EventListener
-    public long LastSeen = -1;
-    /// Last Event that mutated this EventListener
-    public readonly long LastAccepted = -1;
-    /// Last TransientEvent that was consumed by this EventListener
-    public long LastSeenTransient = -1;
-
-    public EventListenerVersionTag(long version, long lastSeenTransient = -1)
-    {
-        LastSeen = version;
-        LastAccepted = version;
-        LastSeenTransient = lastSeenTransient;
-    }
-
-    public bool HasTaint()
-    {
-        return LastSeenTransient > -1;
-    }
-}
-
 public interface IRootEventListener;
 
 [DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicProperties)]
 public interface IEventListenerWithKey
 {
-    public object Id { get; }
+    public object Id { get; init; }
 }
 
 [DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicProperties)]
@@ -85,5 +64,9 @@ public interface IEventListenerWithKey<TKey> : IEventListenerWithKey
 {
     public new TKey Id { get; init; }
 
-    object IEventListenerWithKey.Id => Id!;
+    object IEventListenerWithKey.Id
+    {
+        get => Id!;
+        init => Id = (TKey)value;
+    }
 }

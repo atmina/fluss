@@ -1,9 +1,12 @@
-using System.Reflection;
+using System.Runtime.CompilerServices;
 using FluentMigrator.Runner;
 using Fluss.Upcasting;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
+
+
+[assembly: InternalsVisibleTo("Fluss.UnitTest")]
 
 namespace Fluss.PostgreSQL;
 

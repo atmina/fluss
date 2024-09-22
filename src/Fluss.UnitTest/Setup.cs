@@ -1,4 +1,5 @@
 ﻿using System.Runtime.CompilerServices;
+using DiffEngine;
 
 namespace Fluss.UnitTest;
 
@@ -9,5 +10,7 @@ public static class Setup
     {
         VerifySourceGenerators.Initialize();
         UseSourceFileRelativeDirectory("Snapshots");
+        VerifierSettings.UniqueForRuntimeAndVersion();
+        DiffRunner.Disabled = true;
     }
 }
