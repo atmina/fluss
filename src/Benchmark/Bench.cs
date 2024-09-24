@@ -99,6 +99,49 @@ public class Bench
 
         return sum;
     }
+
+    [IterationSetup(Target = nameof(SuperHeavyParallelRead))]
+    public void SetupSuperHeavyParallelRead()
+    {
+        var sc = new ServiceCollection();
+        sc.AddEventSourcing();
+        sc.AddPolicy<AllowAllPolicy>();
+
+        _sp = sc.BuildServiceProvider();
+
+        _sp.GetSystemUserUnitOfWorkFactory().Commit(async unitOfWork =>
+        {
+            for (var i = 0; i < 200_000; i++)
+            {
+                await unitOfWork.Publish(new TestEvent(i));
+            }
+        }).AsTask().Wait();
+    }
+
+    [Benchmark]
+    public async Task<int> SuperHeavyParallelRead()
+    {
+        var sum = 0;
+
+        const int minKey = 0;
+        const int maxKey = 4000;
+        const int parallelCount = 100;
+        const int blockSize = (maxKey - minKey) / parallelCount;
+
+        var blocks = Enumerable.Range(0, parallelCount)
+            .Select(i => Enumerable.Range(i * blockSize + 1, blockSize));
+
+        var tasks = blocks.Select(async b =>
+        {
+            using var unitOfWork = _sp.GetSystemUserUnitOfWork();
+            var readModel1 = await unitOfWork.GetMultipleReadModels<EventsModEqualReadModel, int>(b);
+            sum += readModel1.Sum(e => e.GotEvents);
+        });
+
+        await Task.WhenAll(tasks);
+
+        return sum;
+    }
 }
 
 public class AllowAllPolicy : Policy
