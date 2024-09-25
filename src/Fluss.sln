@@ -14,6 +14,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Fluss.Regen", "Fluss.Regen\
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Benchmark", "Benchmark\Benchmark.csproj", "{970AB461-4D44-4B99-AACA-7DAA569D4C34}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Fluss.PostgreSQL.IntegrationTest", "Fluss.PostgreSQL.IntegrationTest\Fluss.PostgreSQL.IntegrationTest.csproj", "{3210592D-7B76-4D90-BAAC-7B9CBF7E580D}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -48,5 +50,9 @@ Global
 		{970AB461-4D44-4B99-AACA-7DAA569D4C34}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{970AB461-4D44-4B99-AACA-7DAA569D4C34}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{970AB461-4D44-4B99-AACA-7DAA569D4C34}.Release|Any CPU.Build.0 = Release|Any CPU
+		{3210592D-7B76-4D90-BAAC-7B9CBF7E580D}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{3210592D-7B76-4D90-BAAC-7B9CBF7E580D}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{3210592D-7B76-4D90-BAAC-7B9CBF7E580D}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{3210592D-7B76-4D90-BAAC-7B9CBF7E580D}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 EndGlobal
