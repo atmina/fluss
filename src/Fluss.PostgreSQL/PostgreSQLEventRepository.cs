@@ -191,11 +191,46 @@ public partial class PostgreSQLEventRepository : IBaseEventRepository
         await transaction.CommitAsync();
     }
 
+    private Task<long>? _latestVersionTask;
+    private readonly object _latestVersionLock = new();
     public async ValueTask<long> GetLatestVersion()
     {
         using var activity = ActivitySource.Source.StartActivity();
         activity?.SetTag("EventSourcing.EventRepository", nameof(PostgreSQLEventRepository));
 
+        var task = _latestVersionTask;
+
+        if (task == null)
+        {
+            lock (_latestVersionLock)
+            {
+                task = _latestVersionTask;
+                if (task == null)
+                {
+                    task = GetLatestVersionImpl();
+                    _latestVersionTask = task;
+                }
+            }
+        }
+
+        var num = await task;
+
+        if (_latestVersionTask == task)
+        {
+            lock (_latestVersionLock)
+            {
+                if (_latestVersionTask == task)
+                {
+                    _latestVersionTask = null;
+                }
+            }
+        }
+
+        return num;
+    }
+
+    private async Task<long> GetLatestVersionImpl()
+    {
         await using var connection = dataSource.OpenConnection();
 
         await using var cmd = new NpgsqlCommand("""SELECT MAX("Version") FROM "Events";""", connection);

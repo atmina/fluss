@@ -4,8 +4,10 @@ using BenchmarkDotNet.Jobs;
 using Fluss;
 using Fluss.Authentication;
 using Fluss.Events;
+using Fluss.PostgreSQL;
 using Fluss.ReadModel;
 using Microsoft.Extensions.DependencyInjection;
+using Npgsql;
 
 namespace Benchmark;
 
@@ -15,14 +17,30 @@ namespace Benchmark;
 [MemoryDiagnoser]
 public class Bench
 {
+    [Params("postgres", "in-memory")]
+    public string StorageType { get; set; }
+
     [IterationSetup]
     public void Setup()
     {
         var sc = new ServiceCollection();
         sc.AddEventSourcing();
+
+        if (StorageType == "postgres")
+        {
+            sc.AddPostgresEventSourcingRepository("Host=localhost;Port=5432;Database=fluss;Username=fluss;Password=fluss");
+        }
+
         sc.AddPolicy<AllowAllPolicy>();
 
         _sp = sc.BuildServiceProvider();
+
+        if (StorageType == "postgres")
+        {
+            var migrator = _sp.GetRequiredService<Migrator>();
+            migrator.StartAsync(default).Wait();
+            migrator.WaitForFinish().Wait();
+        }
     }
 
     ServiceProvider _sp = null!;
@@ -31,7 +49,9 @@ public class Bench
     public async Task<int> PublishEventsAndReadMixedReadWrite()
     {
         var sum = 0;
-        for (var j = 0; j < 1000; j++)
+
+        var limit = StorageType == "postgres" ? 4 : 1000;
+        for (var j = 0; j < limit; j++)
         {
             await _sp.GetSystemUserUnitOfWorkFactory().Commit(async unitOfWork =>
             {
@@ -51,11 +71,31 @@ public class Bench
         return sum;
     }
 
+    [IterationCleanup]
+    public void Cleanup()
+    {
+        if (StorageType == "postgres")
+        {
+            var conn = new NpgsqlConnection("Host=localhost;Port=5432;Database=fluss;Username=fluss;Password=fluss");
+            conn.Open();
+            using var cmd = conn.CreateCommand();
+            cmd.CommandText = @"DELETE FROM ""Events""";
+            cmd.ExecuteNonQuery();
+            conn.Close();
+        }
+    }
+
     [IterationSetup(Targets = [nameof(PublishEventsAndReadReadHeavySingleReadModel), nameof(PublishEventsAndReadReadHeavyMultipleReadModel)])]
     public void SetupHeavyRead()
     {
         var sc = new ServiceCollection();
         sc.AddEventSourcing();
+
+        if (StorageType == "postgres")
+        {
+            sc.AddPostgresEventSourcingRepository("Host=localhost;Port=5432;Database=fluss;Username=fluss;Password=fluss");
+        }
+
         sc.AddPolicy<AllowAllPolicy>();
 
         _sp = sc.BuildServiceProvider();
@@ -69,13 +109,14 @@ public class Bench
         }).AsTask().Wait();
     }
 
-
     [Benchmark]
     public async Task<int> PublishEventsAndReadReadHeavySingleReadModel()
     {
         var sum = 0;
 
-        for (var j = 0; j < 50000; j++)
+        var limit = StorageType == "postgres" ? 1000 : 50000;
+
+        for (var j = 0; j < limit; j++)
         {
             using var unitOfWork = _sp.GetSystemUserUnitOfWork();
             var readModel1 = await unitOfWork.GetReadModel<EventsModEqualReadModel, int>(3);
@@ -90,7 +131,8 @@ public class Bench
     {
         var sum = 0;
 
-        for (var j = 1; j < 5000; j++)
+        var limit = StorageType == "postgres" ? 400 : 5000;
+        for (var j = 1; j < limit; j++)
         {
             using var unitOfWork = _sp.GetSystemUserUnitOfWork();
             var readModel1 = await unitOfWork.GetReadModel<EventsModEqualReadModel, int>(j);
@@ -105,6 +147,12 @@ public class Bench
     {
         var sc = new ServiceCollection();
         sc.AddEventSourcing();
+
+        if (StorageType == "postgres")
+        {
+            sc.AddPostgresEventSourcingRepository("Host=localhost;Port=5432;Database=fluss;Username=fluss;Password=fluss");
+        }
+
         sc.AddPolicy<AllowAllPolicy>();
 
         _sp = sc.BuildServiceProvider();
@@ -124,9 +172,9 @@ public class Bench
         var sum = 0;
 
         const int minKey = 0;
-        const int maxKey = 4000;
+        var maxKey = StorageType == "postgres" ? 800 : 4000;
         const int parallelCount = 100;
-        const int blockSize = (maxKey - minKey) / parallelCount;
+        var blockSize = (maxKey - minKey) / parallelCount;
 
         var blocks = Enumerable.Range(0, parallelCount)
             .Select(i => Enumerable.Range(i * blockSize + 1, blockSize));
