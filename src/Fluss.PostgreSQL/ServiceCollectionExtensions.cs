@@ -7,6 +7,7 @@ using Microsoft.Extensions.Logging;
 
 
 [assembly: InternalsVisibleTo("Fluss.UnitTest")]
+[assembly: InternalsVisibleTo("Fluss.PostgreSQL.IntegrationTest")]
 
 namespace Fluss.PostgreSQL;
 
@@ -28,7 +29,8 @@ public static class ServiceCollectionExtensions
             .AddSingleton(new PostgreSQLConfig(connectionString))
             .AddSingleton<Migrator>()
             .AddHostedService(sp => sp.GetRequiredService<Migrator>())
-            .AddHostedService<Upcaster>();
+            .AddSingleton<Upcaster>()
+            .AddHostedService(sp => sp.GetRequiredService<Upcaster>());
     }
 }
 

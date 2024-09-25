@@ -1,6 +1,7 @@
 using System.Collections.ObjectModel;
 using System.Data;
 using System.Diagnostics;
+using System.Text.Json;
 using Fluss.Events;
 using Fluss.Exceptions;
 using Newtonsoft.Json;
@@ -13,17 +14,17 @@ namespace Fluss.PostgreSQL;
 public partial class PostgreSQLEventRepository : IBaseEventRepository
 {
     private readonly NpgsqlDataSource dataSource;
+    internal static readonly JsonSerializerSettings JsonSerializerSettings = new()
+    {
+        TypeNameHandling = TypeNameHandling.All,
+        TypeNameAssemblyFormatHandling = TypeNameAssemblyFormatHandling.Full,
+        MetadataPropertyHandling = MetadataPropertyHandling.ReadAhead
+    };
 
     public PostgreSQLEventRepository(PostgreSQLConfig config)
     {
         var dataSourceBuilder = new NpgsqlDataSourceBuilder(config.ConnectionString);
-        dataSourceBuilder.UseJsonNet(settings: new JsonSerializerSettings
-        {
-            TypeNameHandling = TypeNameHandling.All,
-            TypeNameAssemblyFormatHandling = TypeNameAssemblyFormatHandling.Full,
-            MetadataPropertyHandling =
-                    MetadataPropertyHandling.ReadAhead // While this is marked as a performance hit, profiling approves
-        });
+        dataSourceBuilder.UseJsonNet(settings: JsonSerializerSettings);
         dataSource = dataSourceBuilder.Build();
     }
 
