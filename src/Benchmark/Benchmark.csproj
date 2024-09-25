@@ -14,6 +14,7 @@
     
     <ItemGroup>
         <ProjectReference Include="..\Fluss\Fluss.csproj" />
+        <ProjectReference Include="..\Fluss.PostgreSQL\Fluss.PostgreSQL.csproj" />
     </ItemGroup>
 
 </Project>

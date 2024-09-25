@@ -1,0 +1,9 @@
+﻿services:
+  db:
+    image: postgres:15
+    environment:
+      POSTGRES_USER: fluss
+      POSTGRES_PASSWORD: fluss
+      POSTGRES_DB: fluss
+    ports:
+      - "5432:5432"
