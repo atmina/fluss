@@ -1,3 +1,4 @@
+using System.Collections.Immutable;
 using Fluss.Aggregates;
 using Fluss.Authentication;
 using Fluss.Events;
@@ -251,6 +252,15 @@ public partial class UnitOfWorkTest
         Assert.Contains(unitOfWork.ReadModels, rm => rm == readModels[1]);
     }
 
+    [Fact]
+    public async Task ShortCircuitsReadingMultipleReadModelsOnEmptyKeys()
+    {
+        var unitOfWork = GetUnitOfWork();
+        var readModels = await unitOfWork.GetMultipleReadModels<TestReadModel, int>([]);
+
+        Assert.Empty(readModels);
+        Assert.Equal(ImmutableList<TestReadModel>.Empty, unitOfWork.ReadModels);
+    }
 
     [Fact]
     public async Task ReturnsNothingWhenMultipleReadModelNotAuthorized()
@@ -266,6 +276,16 @@ public partial class UnitOfWorkTest
         Assert.Equal(2, readModels[0].GotEvents);
         Assert.Equal(1, readModels[1].GotEvents);
         Assert.Equal(2, readModels.Count);
+    }
+
+    [Fact]
+    public async Task ShortCircuitsReadingMultipleReadModelsUnsafeOnEmptyKeys()
+    {
+        var unitOfWork = GetUnitOfWork();
+        var readModels = await unitOfWork.UnsafeGetMultipleReadModelsWithoutAuthorization<TestReadModel, int>([]);
+
+        Assert.Empty(readModels);
+        Assert.Equal(ImmutableList<TestReadModel>.Empty, unitOfWork.ReadModels);
     }
 
     [Fact]
