@@ -1,4 +1,5 @@
 using System.Collections.Concurrent;
+using System.Collections.Immutable;
 using System.Diagnostics.CodeAnalysis;
 using Collections.Pooled;
 using Fluss.Events;
@@ -122,9 +123,10 @@ public partial class UnitOfWork
         using var activity = FlussActivitySource.Source.StartActivity();
         activity?.SetTag("EventSourcing.ReadModel", typeof(TReadModel).FullName);
 
-        var dictionary = new ConcurrentDictionary<TKey, TReadModel?>();
-
         var keysList = keys.ToList();
+        if (keysList.Count == 0) return ImmutableList<TReadModel>.Empty;
+
+        var dictionary = new ConcurrentDictionary<TKey, TReadModel?>();
 
         await Parallel.ForEachAsync(keysList, async (key, _) =>
         {
@@ -149,9 +151,10 @@ public partial class UnitOfWork
         UnsafeGetMultipleReadModelsWithoutAuthorization<TReadModel, TKey>(IEnumerable<TKey> keys, long? at = null)
         where TKey : notnull where TReadModel : EventListener, IReadModel, IEventListenerWithKey<TKey>, new()
     {
-        var dictionary = new ConcurrentDictionary<TKey, TReadModel>();
-
         var keysList = keys.ToList();
+        if (keysList.Count == 0) return ImmutableList<TReadModel>.Empty;
+
+        var dictionary = new ConcurrentDictionary<TKey, TReadModel>();
 
         await Parallel.ForEachAsync(keysList, async (key, _) =>
         {
