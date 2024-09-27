@@ -1,11 +1,12 @@
 using System;
 using System.Text;
+using Fluss.Regen.Generators;
 using Fluss.Regen.Helpers;
 using Microsoft.CodeAnalysis.Text;
 
-namespace Fluss.Regen.Generators;
+namespace Fluss.Regen.FileBuilders;
 
-public sealed class RegistrationSyntaxGenerator : IDisposable
+public sealed class RegistrationFileBuilder : IDisposable
 {
     private readonly string _moduleName;
     private readonly string _ns;
@@ -13,7 +14,7 @@ public sealed class RegistrationSyntaxGenerator : IDisposable
     private CodeWriter _writer;
     private bool _disposed;
 
-    public RegistrationSyntaxGenerator(string moduleName, string ns)
+    public RegistrationFileBuilder(string moduleName, string ns)
     {
         _moduleName = moduleName;
         _ns = ns;

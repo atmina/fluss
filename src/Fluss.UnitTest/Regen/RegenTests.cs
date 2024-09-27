@@ -5,7 +5,7 @@ using Newtonsoft.Json.Linq;
 
 namespace Fluss.UnitTest.Regen;
 
-public class SelectorGeneratorTests
+public class RegenTests
 {
     [Fact]
     public Task GeneratesForAsyncSelector()
@@ -197,11 +197,11 @@ public class SelectorGeneratorTests
 
     private GeneratorDriverRunResult GenerateFor(string source)
     {
-        var generator = new SelectorGenerator();
+        var generator = new RepetitiveEventsourcingCodeGenerator();
 
         var driver = CSharpGeneratorDriver.Create(generator);
 
-        var compilation = CSharpCompilation.Create(nameof(SelectorGeneratorTests),
+        var compilation = CSharpCompilation.Create(nameof(RegenTests),
             [
                 CSharpSyntaxTree.ParseText(source)
             ],

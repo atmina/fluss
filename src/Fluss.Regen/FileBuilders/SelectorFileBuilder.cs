@@ -1,19 +1,20 @@
 using System;
 using System.Text;
 using System.Threading.Tasks;
+using Fluss.Regen.Generators;
 using Fluss.Regen.Helpers;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.Text;
 
-namespace Fluss.Regen.Generators;
+namespace Fluss.Regen.FileBuilders;
 
-public sealed class SelectorSyntaxGenerator : IDisposable
+public sealed class SelectorFileBuilder : IDisposable
 {
     private StringBuilder _sb;
     private CodeWriter _writer;
     private bool _disposed;
 
-    public SelectorSyntaxGenerator()
+    public SelectorFileBuilder()
     {
         _sb = StringBuilderPool.Get();
         _writer = new CodeWriter(_sb);
