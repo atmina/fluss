@@ -10,7 +10,13 @@
         <IsRoslynComponent>true</IsRoslynComponent>
 
         <RootNamespace>Fluss.Regen</RootNamespace>
+        <PackageReadmeFile>README.md</PackageReadmeFile>
         <PackageId>Fluss.Regen</PackageId>
+        <Authors>ATMINA Solutions GmbH</Authors>
+        <Description>Support package for Fluss to generate repetitive bits of code.</Description>
+        <RepositoryUrl>https://github.com/atmina/fluss</RepositoryUrl>
+        <RepositoryType>git</RepositoryType>
+        <PackageLicenseExpression>MIT</PackageLicenseExpression>
         <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
     </PropertyGroup>
 
@@ -24,5 +30,8 @@
         <PackageReference Include="Microsoft.Extensions.Caching.Memory" Version="8.0.0" />
     </ItemGroup>
 
+    <ItemGroup>
+        <None Include="./README.md" Pack="True" PackagePath="/" />
+    </ItemGroup>
 
 </Project>
