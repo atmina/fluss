@@ -4,6 +4,13 @@
         <TargetFrameworks>net8.0;net9.0</TargetFrameworks>
         <ImplicitUsings>enable</ImplicitUsings>
         <Nullable>enable</Nullable>
+        <PackageReadmeFile>README.md</PackageReadmeFile>
+        <PackageId>Fluss.Testing</PackageId>
+        <Authors>ATMINA Solutions GmbH</Authors>
+        <Description>Package for testing projects using Fluss.</Description>
+        <RepositoryUrl>https://github.com/atmina/fluss</RepositoryUrl>
+        <RepositoryType>git</RepositoryType>
+        <PackageLicenseExpression>MIT</PackageLicenseExpression>
         <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
     </PropertyGroup>
 
@@ -13,7 +20,12 @@
 
     <ItemGroup>
         <PackageReference Include="Moq" Version="4.20.72" />
-        <PackageReference Include="xunit" Version="2.9.0" />
+        <PackageReference Include="xunit.assert" Version="2.9.0" />
+        <PackageReference Include="xunit.extensibility.core" Version="2.9.0" />
+    </ItemGroup>
+
+    <ItemGroup>
+        <None Include="./README.md" Pack="True" PackagePath="/" />
     </ItemGroup>
 
 </Project>

@@ -4,8 +4,13 @@
         <TargetFrameworks>net8.0;net9.0</TargetFrameworks>
         <ImplicitUsings>enable</ImplicitUsings>
         <Nullable>enable</Nullable>
+        <PackageReadmeFile>README.md</PackageReadmeFile>
         <PackageId>Fluss</PackageId>
         <Authors>ATMINA Solutions GmbH</Authors>
+        <Description>Easily implement Event-Sourcing and CQS concepts with support packages for HotChocolate and storage adapters.</Description>
+        <RepositoryUrl>https://github.com/atmina/fluss</RepositoryUrl>
+        <RepositoryType>git</RepositoryType>
+        <PackageLicenseExpression>MIT</PackageLicenseExpression>
         <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
     </PropertyGroup>
 
@@ -22,4 +27,7 @@
         <PackageReference Include="Polly.Contrib.WaitAndRetry" Version="1.1.1"/>
     </ItemGroup>
 
+    <ItemGroup>
+        <None Include="./README.md" Pack="True" PackagePath="/" />
+    </ItemGroup>
 </Project>
