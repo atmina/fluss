@@ -1,13 +1,14 @@
-﻿using Microsoft.CodeAnalysis;
+﻿using Fluss.Regen.Inspectors;
+using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 
-namespace Fluss.Regen.Inspectors;
+namespace Fluss.Regen.Models;
 
 public sealed class SelectorInfo(
     AttributeSyntax attributeSyntax,
     IMethodSymbol methodSymbol,
     MethodDeclarationSyntax methodSyntax)
-    : ISyntaxInfo
+    : SyntaxInfo
 {
     private AttributeSyntax AttributeSyntax { get; } = attributeSyntax;
     public IMethodSymbol MethodSymbol { get; } = methodSymbol;
@@ -32,7 +33,7 @@ public sealed class SelectorInfo(
                MethodSyntax.Equals(other.MethodSyntax);
     }
 
-    public bool Equals(ISyntaxInfo other)
+    public override bool Equals(SyntaxInfo other)
     {
         if (ReferenceEquals(null, other))
         {
@@ -55,11 +56,6 @@ public sealed class SelectorInfo(
 
     public override int GetHashCode()
     {
-        unchecked
-        {
-            var hashCode = AttributeSyntax.GetHashCode();
-            hashCode = (hashCode * 397) ^ MethodSyntax.GetHashCode();
-            return hashCode;
-        }
+        return 31 * AttributeSyntax.GetHashCode() + MethodSyntax.GetHashCode();
     }
 }

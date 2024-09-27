@@ -1,10 +1,11 @@
 using System.Collections.Generic;
+using Fluss.Regen.Inspectors;
 
-namespace Fluss.Regen.Inspectors;
+namespace Fluss.Regen.Models;
 
-internal sealed class SyntaxInfoComparer : IEqualityComparer<ISyntaxInfo>
+internal sealed class SyntaxInfoComparer : IEqualityComparer<SyntaxInfo>
 {
-    public bool Equals(ISyntaxInfo? x, ISyntaxInfo? y)
+    public bool Equals(SyntaxInfo? x, SyntaxInfo? y)
     {
         if (ReferenceEquals(x, y))
         {
@@ -19,7 +20,7 @@ internal sealed class SyntaxInfoComparer : IEqualityComparer<ISyntaxInfo>
         return x.Equals(y);
     }
 
-    public int GetHashCode(ISyntaxInfo obj)
+    public int GetHashCode(SyntaxInfo obj)
         => obj.GetHashCode();
 
     public static SyntaxInfoComparer Default { get; } = new();
