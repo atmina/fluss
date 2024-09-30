@@ -190,7 +190,7 @@ public class SelectorGenerator : IIncrementalGenerator
             return;
         }
 
-        var moduleName = (compilation.AssemblyName ?? "Assembly").Split(".").Last() + "ESComponents";
+        var moduleName = (compilation.AssemblyName ?? "Assembly").Split('.').Last() + "ESComponents";
 
         using var generator = new RegistrationSyntaxGenerator(moduleName, "Microsoft.Extensions.DependencyInjection");
 
