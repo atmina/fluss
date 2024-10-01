@@ -7,9 +7,14 @@ using System;
 using System.Runtime.CompilerServices;
 
 namespace Microsoft.Extensions.DependencyInjection {
-    public static partial class SelectorGeneratorTestsESComponentsServiceCollectionExtensions {
-        public static global::Microsoft.Extensions.DependencyInjection.IServiceCollection AddSelectorGeneratorTestsESComponents(this global::Microsoft.Extensions.DependencyInjection.IServiceCollection sc) {
+    public static partial class SelectorGeneratorTestsESServiceCollectionExtensions {
+        public static global::Microsoft.Extensions.DependencyInjection.IServiceCollection AddSelectorGeneratorTestsESSideEffects(this global::Microsoft.Extensions.DependencyInjection.IServiceCollection sc) {
             global::Fluss.SideEffects.SideEffectsServiceCollectionExtension.AddSideEffect<global::TestNamespace.TestSideEffect>(sc);
+            return sc;
+        }
+
+        public static global::Microsoft.Extensions.DependencyInjection.IServiceCollection AddSelectorGeneratorTestsESComponents(this global::Microsoft.Extensions.DependencyInjection.IServiceCollection sc) {
+            AddSelectorGeneratorTestsESSideEffects(sc);
             return sc;
         }
     }

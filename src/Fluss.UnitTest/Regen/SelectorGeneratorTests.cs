@@ -1,4 +1,3 @@
-using Fluss.Events;
 using Fluss.Regen;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
