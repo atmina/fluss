@@ -39,7 +39,7 @@ public sealed class SelectorFileBuilder : IDisposable
 
     public void WriteEndNamespace()
     {
-        _writer.WriteIndentedLine("private record CacheEntryValue(object? Value, global::System.Collections.Generic.IReadOnlyList<global::Fluss.UnitOfWorkRecordingProxy.EventListenerTypeWithKeyAndVersion>? EventListeners);");
+        _writer.WriteIndentedLine("private record CacheEntryValue(object Value, global::System.Collections.Generic.IReadOnlyList<global::Fluss.UnitOfWorkRecordingProxy.EventListenerTypeWithKeyAndVersion>? EventListeners);");
         _writer.WriteLine();
         _writer.WriteIndented("private static async global::System.Threading.Tasks.ValueTask<bool> MatchesEventListenerState(global::Fluss.IUnitOfWork unitOfWork, CacheEntryValue value) ");
         using (_writer.WriteBraces())
@@ -64,23 +64,23 @@ public sealed class SelectorFileBuilder : IDisposable
         _writer.WriteLine();
     }
 
-    public void WriteMethodSignatureStart(string methodName, ITypeSymbol returnType, bool noParameters)
+    public void WriteMethodSignatureStart(string methodName, string returnType, bool noParameters)
     {
         _writer.WriteLine();
         _writer.WriteIndentedLine(
             "public static async global::{0}<{1}> Select{2}(this global::Fluss.IUnitOfWork unitOfWork{3}",
             typeof(ValueTask).FullName,
-            returnType.ToFullyQualified(),
+            returnType,
             methodName,
             noParameters ? "" : ", ");
         _writer.IncreaseIndent();
     }
 
-    public void WriteMethodSignatureParameter(ITypeSymbol parameterType, string parameterName, bool isLast)
+    public void WriteMethodSignatureParameter(string parameterType, string parameterName, bool isLast)
     {
         _writer.WriteIndentedLine(
             "{0} {1}{2}",
-            parameterType.ToFullyQualified(),
+            parameterType,
             parameterName,
             isLast ? "" : ","
             );
@@ -118,19 +118,19 @@ public sealed class SelectorFileBuilder : IDisposable
         _writer.WriteLine();
     }
 
-    public void WriteMethodCacheHit(ITypeSymbol returnType)
+    public void WriteMethodCacheHit(string returnType)
     {
         _writer.WriteIndented("if (_cache.TryGetValue(key, out var result) && result is CacheEntryValue entryValue && await MatchesEventListenerState(unitOfWork, entryValue)) ");
         using (_writer.WriteBraces())
         {
-            _writer.WriteIndentedLine("return ({0})entryValue.Value;", returnType.ToFullyQualified());
+            _writer.WriteIndentedLine("return ({0})entryValue.Value;", returnType);
         }
         _writer.WriteLine();
     }
 
     public void WriteMethodCall(string containingType, string methodName, bool isAsync)
     {
-        _writer.WriteIndentedLine("result = {0}global::{1}.{2}(", isAsync ? "await " : "", containingType, methodName);
+        _writer.WriteIndentedLine("result = {0}{1}.{2}(", isAsync ? "await " : "", containingType, methodName);
         _writer.IncreaseIndent();
     }
 
@@ -146,7 +146,7 @@ public sealed class SelectorFileBuilder : IDisposable
         _writer.WriteLine();
     }
 
-    public void WriteMethodCacheMiss(ITypeSymbol returnType)
+    public void WriteMethodCacheMiss(string returnType)
     {
         _writer.WriteIndented("using (var entry = _cache.CreateEntry(key)) ");
 
@@ -157,7 +157,7 @@ public sealed class SelectorFileBuilder : IDisposable
         }
 
         _writer.WriteLine();
-        _writer.WriteIndentedLine("return ({0})result;", returnType.ToFullyQualified());
+        _writer.WriteIndentedLine("return ({0})result;", returnType);
     }
 
     public void WriteMethodEnd()

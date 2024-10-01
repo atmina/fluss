@@ -12,7 +12,6 @@ public class RegenTests
     {
         var runResult = GenerateFor(
             """
-
             using Fluss.Regen;
             using System.Threading.Tasks;
 
@@ -195,7 +194,26 @@ public class RegenTests
         return Verify(runResult);
     }
 
-    private GeneratorDriverRunResult GenerateFor(string source)
+    [Fact]
+    public Task GeneratesNothingForUninterestingClasses()
+    {
+        var runResult = GenerateFor(
+            """
+            using Fluss;
+            using Fluss.Upcasting;
+            
+            namespace TestNamespace;
+
+            public class Uninteresting {
+            
+            }
+            """
+        );
+
+        return Verify(runResult);
+    }
+
+    public static GeneratorDriverRunResult GenerateFor(string source)
     {
         var generator = new RepetitiveEventsourcingCodeGenerator();
 

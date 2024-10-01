@@ -1,0 +1,14 @@
+﻿{
+  Diagnostics: [
+    {
+      Id: FLUSS0004,
+      Title: Reserved property name,
+      Severity: Error,
+      WarningLevel: 0,
+      Location: : (6,16)-(6,22),
+      MessageFormat: The property name 'Exists' is reserved for internal use in CRUD classes,
+      Message: The property name 'Exists' is reserved for internal use in CRUD classes,
+      Category: Fluss.Regen
+    }
+  ]
+}

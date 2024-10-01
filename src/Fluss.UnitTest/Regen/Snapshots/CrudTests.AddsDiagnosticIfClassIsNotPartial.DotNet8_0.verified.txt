@@ -1,0 +1,14 @@
+﻿{
+  Diagnostics: [
+    {
+      Id: FLUSS0001,
+      Title: Class must be partial,
+      Severity: Error,
+      WarningLevel: 0,
+      Location: : (4,0)-(6,1),
+      MessageFormat: Class '{0}' must be partial,
+      Message: Class 'TestCrud' must be partial,
+      Category: Fluss.Regen
+    }
+  ]
+}

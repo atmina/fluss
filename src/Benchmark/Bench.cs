@@ -18,7 +18,7 @@ namespace Benchmark;
 public class Bench
 {
     [Params("postgres", "in-memory")]
-    public string StorageType { get; set; }
+    public string StorageType { get; set; } = "in-memory";
 
     [IterationSetup]
     public void Setup()

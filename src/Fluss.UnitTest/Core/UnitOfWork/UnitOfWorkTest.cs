@@ -177,6 +177,7 @@ public partial class UnitOfWorkTest
         var readModel = await unitOfWork.GetReadModel(typeof(TestReadModel), 1);
 
         Assert.IsType<TestReadModel>(readModel);
+        Assert.Equal(2, ((TestReadModel)readModel).GotEvents);
     }
 
     [Fact]

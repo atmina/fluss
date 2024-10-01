@@ -121,6 +121,12 @@ public class CodeWriter : TextWriter
         }
     }
 
+    internal CommaSeparatedWriter CommaSeparatedIndented()
+    {
+        return new CommaSeparatedWriter(this);
+    }
+
+
     private sealed class Block : IDisposable
     {
         private readonly Action _decrease;
@@ -131,5 +137,33 @@ public class CodeWriter : TextWriter
         }
 
         public void Dispose() => _decrease();
+    }
+
+    public sealed class CommaSeparatedWriter : IDisposable
+    {
+        private readonly CodeWriter _writer;
+        private bool _first = true;
+        public CommaSeparatedWriter(CodeWriter writer)
+        {
+            _writer = writer;
+            _writer.IncreaseIndent();
+        }
+
+        public void Write(string value)
+        {
+            if (!_first)
+            {
+                _writer.Write(",");
+                _writer.WriteLine();
+            }
+            _first = false;
+            _writer.WriteIndented(value);
+        }
+
+        public void Dispose()
+        {
+            _writer.DecreaseIndent();
+            _writer.WriteLine();
+        }
     }
 }

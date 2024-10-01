@@ -1,0 +1,14 @@
+﻿{
+  Diagnostics: [
+    {
+      Id: FLUSS0002,
+      Title: ID property type must be supported,
+      Severity: Error,
+      WarningLevel: 0,
+      Location: : (6,18)-(6,20),
+      MessageFormat: The ID property '{0}' must be of type Guid or a struct that could be a strongly-typed ID,
+      Message: The ID property 'Id' must be of type Guid or a struct that could be a strongly-typed ID,
+      Category: Fluss.Regen
+    }
+  ]
+}

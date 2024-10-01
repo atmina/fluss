@@ -35,8 +35,4 @@
         <ProjectReference Include="..\Fluss.PostgreSQL\Fluss.PostgreSQL.csproj"/>
     </ItemGroup>
 
-    <ItemGroup>
-      <Folder Include="Regen\Snapshots\" />
-    </ItemGroup>
-
 </Project>
