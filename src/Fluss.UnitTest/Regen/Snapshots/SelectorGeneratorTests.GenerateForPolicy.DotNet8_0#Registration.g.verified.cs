@@ -7,7 +7,7 @@ using System;
 using System.Runtime.CompilerServices;
 
 namespace Microsoft.Extensions.DependencyInjection {
-    public static partial class SelectorGeneratorTestsESServiceCollectionExtensions {
+    public static partial class SelectorGeneratorTestsESComponentsServiceCollectionExtensions {
         public static global::Microsoft.Extensions.DependencyInjection.IServiceCollection AddSelectorGeneratorTestsESPolicies(this global::Microsoft.Extensions.DependencyInjection.IServiceCollection sc) {
             global::Fluss.Authentication.ServiceCollectionExtensions.AddPolicy<global::TestNamespace.TestPolicy>(sc);
             return sc;

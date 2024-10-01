@@ -41,7 +41,7 @@ public sealed class RegistrationSyntaxGenerator : IDisposable
 
     public void WriteBeginClass()
     {
-        _writer.WriteIndentedLine("public static partial class {0}ServiceCollectionExtensions {{", _moduleName);
+        _writer.WriteIndentedLine("public static partial class {0}ComponentsServiceCollectionExtensions {{", _moduleName);
         _writer.IncreaseIndent();
     }
 
@@ -99,7 +99,7 @@ public sealed class RegistrationSyntaxGenerator : IDisposable
     {
         _writer.WriteIndentedLine("Add{0}{1}(sc);", _moduleName, componentName);
     }
-    
+
     public override string ToString()
         => _sb.ToString();
 

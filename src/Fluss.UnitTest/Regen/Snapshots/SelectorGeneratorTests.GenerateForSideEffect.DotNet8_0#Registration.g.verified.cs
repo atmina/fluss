@@ -7,7 +7,7 @@ using System;
 using System.Runtime.CompilerServices;
 
 namespace Microsoft.Extensions.DependencyInjection {
-    public static partial class SelectorGeneratorTestsESServiceCollectionExtensions {
+    public static partial class SelectorGeneratorTestsESComponentsServiceCollectionExtensions {
         public static global::Microsoft.Extensions.DependencyInjection.IServiceCollection AddSelectorGeneratorTestsESSideEffects(this global::Microsoft.Extensions.DependencyInjection.IServiceCollection sc) {
             global::Fluss.SideEffects.SideEffectsServiceCollectionExtension.AddSideEffect<global::TestNamespace.TestSideEffect>(sc);
             return sc;

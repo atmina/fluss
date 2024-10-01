@@ -197,7 +197,7 @@ public class SelectorGenerator : IIncrementalGenerator
         generator.WriteHeader();
         generator.WriteBeginNamespace();
         generator.WriteBeginClass();
-        
+
         var foundInfo = false;
 
         var aggregateValidators = syntaxInfos.OfType<AggregateValidatorInfo>().ToImmutableHashSet();
@@ -205,7 +205,7 @@ public class SelectorGenerator : IIncrementalGenerator
         if (aggregateValidators.Any() || eventValidators.Any())
         {
             generator.WriteBeginRegistrationMethod("Validators");
-            
+
             foreach (var aggregateValidator in aggregateValidators)
             {
                 generator.WriteAggregateValidatorRegistration(aggregateValidator.Type.ToFullyQualified());
@@ -214,11 +214,11 @@ public class SelectorGenerator : IIncrementalGenerator
             {
                 generator.WriteEventValidatorRegistration(eventValidator.Type.ToFullyQualified());
             }
-            
+
             generator.WriteEndRegistrationMethod();
             foundInfo = true;
         }
-        
+
         var policies = syntaxInfos.OfType<PolicyInfo>().ToImmutableHashSet();
         if (policies.Any())
         {
@@ -230,7 +230,7 @@ public class SelectorGenerator : IIncrementalGenerator
             generator.WriteEndRegistrationMethod();
             foundInfo = true;
         }
-        
+
         var sideEffects = syntaxInfos.OfType<SideEffectInfo>().ToImmutableHashSet();
         if (sideEffects.Any())
         {
@@ -242,7 +242,7 @@ public class SelectorGenerator : IIncrementalGenerator
             generator.WriteEndRegistrationMethod();
             foundInfo = true;
         }
-        
+
         var upcasters = syntaxInfos.OfType<UpcasterInfo>().ToImmutableHashSet();
         if (upcasters.Any())
         {
@@ -254,7 +254,7 @@ public class SelectorGenerator : IIncrementalGenerator
             generator.WriteEndRegistrationMethod();
             foundInfo = true;
         }
-        
+
         generator.WriteBeginRegistrationMethod("Components");
         if (aggregateValidators.Any() || eventValidators.Any())
         {
