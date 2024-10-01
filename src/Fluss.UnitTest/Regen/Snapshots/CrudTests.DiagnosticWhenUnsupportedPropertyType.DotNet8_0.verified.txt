@@ -1,0 +1,14 @@
+﻿{
+  Diagnostics: [
+    {
+      Id: FLUSS0006,
+      Title: Unsupported property type,
+      Severity: Error,
+      WarningLevel: 0,
+      Location: : (7,21)-(7,25),
+      MessageFormat: Property '{0}' has an unsupported type '{1}' for CRUD operations,
+      Message: Property 'Test' has an unsupported type 'System.Collections.Generic.List<int>' for CRUD operations,
+      Category: Fluss.Regen
+    }
+  ]
+}

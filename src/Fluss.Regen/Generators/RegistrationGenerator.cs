@@ -17,15 +17,13 @@ public class RegistrationGenerator : ISyntaxGenerator
             return;
         }
 
-        var moduleName = (compilation.AssemblyName ?? "Assembly").Split('.').Last() + "ESComponents";
+        var moduleName = (compilation.AssemblyName ?? "Assembly").Split('.').Last() + "ES";
 
         using var generator = new RegistrationFileBuilder(moduleName, "Microsoft.Extensions.DependencyInjection");
 
         generator.WriteHeader();
         generator.WriteBeginNamespace();
         generator.WriteBeginClass();
-
-        var foundInfo = false;
 
         var aggregateValidators = syntaxInfos.OfType<AggregateValidatorInfo>().ToImmutableHashSet();
         var eventValidators = syntaxInfos.OfType<EventValidatorInfo>().ToImmutableHashSet();
@@ -43,7 +41,6 @@ public class RegistrationGenerator : ISyntaxGenerator
             }
 
             generator.WriteEndRegistrationMethod();
-            foundInfo = true;
         }
 
         var policies = syntaxInfos.OfType<PolicyInfo>().ToImmutableHashSet();
@@ -55,7 +52,6 @@ public class RegistrationGenerator : ISyntaxGenerator
                 generator.WritePolicyRegistration(policy.Type.ToFullyQualified());
             }
             generator.WriteEndRegistrationMethod();
-            foundInfo = true;
         }
 
         var sideEffects = syntaxInfos.OfType<SideEffectInfo>().ToImmutableHashSet();
@@ -67,7 +63,6 @@ public class RegistrationGenerator : ISyntaxGenerator
                 generator.WriteSideEffectRegistration(sideEffect.Type.ToFullyQualified());
             }
             generator.WriteEndRegistrationMethod();
-            foundInfo = true;
         }
 
         var upcasters = syntaxInfos.OfType<UpcasterInfo>().ToImmutableHashSet();
@@ -79,7 +74,6 @@ public class RegistrationGenerator : ISyntaxGenerator
                 generator.WriteUpcasterRegistration(upcaster.Type.ToFullyQualified());
             }
             generator.WriteEndRegistrationMethod();
-            foundInfo = true;
         }
 
         generator.WriteBeginRegistrationMethod("Components");
@@ -107,9 +101,6 @@ public class RegistrationGenerator : ISyntaxGenerator
         generator.WriteEndClass();
         generator.WriteEndNamespace();
 
-        if (foundInfo)
-        {
-            context.AddSource("Registration.g.cs", generator.ToSourceText());
-        }
+        context.AddSource("Registration.g.cs", generator.ToSourceText());
     }
 }

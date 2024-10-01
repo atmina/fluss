@@ -7,14 +7,14 @@ using System;
 using System.Runtime.CompilerServices;
 
 namespace Microsoft.Extensions.DependencyInjection {
-    public static partial class RegenTestsESComponentsComponentsServiceCollectionExtensions {
-        public static global::Microsoft.Extensions.DependencyInjection.IServiceCollection AddRegenTestsESComponentsSideEffects(this global::Microsoft.Extensions.DependencyInjection.IServiceCollection sc) {
+    public static partial class RegenTestsESComponentsServiceCollectionExtensions {
+        public static global::Microsoft.Extensions.DependencyInjection.IServiceCollection AddRegenTestsESSideEffects(this global::Microsoft.Extensions.DependencyInjection.IServiceCollection sc) {
             global::Fluss.SideEffects.SideEffectsServiceCollectionExtension.AddSideEffect<global::TestNamespace.TestSideEffect>(sc);
             return sc;
         }
 
-        public static global::Microsoft.Extensions.DependencyInjection.IServiceCollection AddRegenTestsESComponentsComponents(this global::Microsoft.Extensions.DependencyInjection.IServiceCollection sc) {
-            AddRegenTestsESComponentsSideEffects(sc);
+        public static global::Microsoft.Extensions.DependencyInjection.IServiceCollection AddRegenTestsESComponents(this global::Microsoft.Extensions.DependencyInjection.IServiceCollection sc) {
+            AddRegenTestsESSideEffects(sc);
             return sc;
         }
     }

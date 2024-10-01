@@ -1,0 +1,14 @@
+﻿{
+  Diagnostics: [
+    {
+      Id: FLUSS0003,
+      Title: Duplicate property name,
+      Severity: Error,
+      WarningLevel: 0,
+      Location: : (7,18)-(7,22),
+      MessageFormat: Duplicate property name '{0}' found in CRUD class '{1}',
+      Message: Duplicate property name 'Test' found in CRUD class 'TestCrud',
+      Category: Fluss.Regen
+    }
+  ]
+}

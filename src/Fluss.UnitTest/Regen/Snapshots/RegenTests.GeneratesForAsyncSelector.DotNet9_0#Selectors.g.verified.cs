@@ -27,7 +27,7 @@ namespace Fluss
                 return (int)entryValue.Value;
             }
 
-            result = await global::TestNamespace.Test.Add(
+            result = await TestNamespace.Test.Add(
                 a,
                 b
             ).ConfigureAwait(false);
@@ -55,7 +55,7 @@ namespace Fluss
                 return (int)entryValue.Value;
             }
 
-            result = await global::TestNamespace.Test.Add2(
+            result = await TestNamespace.Test.Add2(
                 a,
                 b
             ).ConfigureAwait(false);
@@ -67,7 +67,7 @@ namespace Fluss
 
             return (int)result;
         }
-        private record CacheEntryValue(object? Value, global::System.Collections.Generic.IReadOnlyList<global::Fluss.UnitOfWorkRecordingProxy.EventListenerTypeWithKeyAndVersion>? EventListeners);
+        private record CacheEntryValue(object Value, global::System.Collections.Generic.IReadOnlyList<global::Fluss.UnitOfWorkRecordingProxy.EventListenerTypeWithKeyAndVersion>? EventListeners);
 
         private static async global::System.Threading.Tasks.ValueTask<bool> MatchesEventListenerState(global::Fluss.IUnitOfWork unitOfWork, CacheEntryValue value) {
             foreach (var eventListenerData in value.EventListeners ?? global::System.Array.Empty<global::Fluss.UnitOfWorkRecordingProxy.EventListenerTypeWithKeyAndVersion>()) {

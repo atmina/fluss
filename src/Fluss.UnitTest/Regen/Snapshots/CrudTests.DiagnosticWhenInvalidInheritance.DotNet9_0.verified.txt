@@ -1,0 +1,14 @@
+﻿{
+  Diagnostics: [
+    {
+      Id: FLUSS0008,
+      Title: Invalid inheritance,
+      Severity: Error,
+      WarningLevel: 0,
+      Location: : (7,21)-(7,29),
+      MessageFormat: CRUD classes should not inherit from other classes as they will inherit from AggregateRoot,
+      Message: CRUD classes should not inherit from other classes as they will inherit from AggregateRoot,
+      Category: Fluss.Regen
+    }
+  ]
+}

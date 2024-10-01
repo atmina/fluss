@@ -2,6 +2,7 @@
 using System.Collections.Immutable;
 using System.Threading.Tasks;
 using Fluss.Regen.FileBuilders;
+using Fluss.Regen.Helpers;
 using Fluss.Regen.Inspectors;
 using Fluss.Regen.Models;
 using Microsoft.CodeAnalysis;
@@ -12,23 +13,11 @@ public class SelectorGenerator : ISyntaxGenerator
 {
     public void Generate(SourceProductionContext context, Compilation compilation, ImmutableArray<SyntaxInfo> syntaxInfos)
     {
-        var selectors = new List<SelectorInfo>();
-
-        foreach (var syntaxInfo in syntaxInfos)
-        {
-            if (syntaxInfo is not SelectorInfo selector)
-            {
-                continue;
-            }
-
-            selectors.Add(selector);
-        }
-
         using var generator = new SelectorFileBuilder();
         generator.WriteHeader();
         generator.WriteClassHeader();
 
-        foreach (var selector in selectors)
+        foreach (var selector in syntaxInfos.OfType<SelectorInfo>())
         {
             var parametersWithoutUnitOfWork = new List<IParameterSymbol>();
 
@@ -46,12 +35,12 @@ public class SelectorGenerator : ISyntaxGenerator
 
             var returnType = ExtractValueType(selector.MethodSymbol.ReturnType);
 
-            generator.WriteMethodSignatureStart(selector.Name, returnType, parametersWithoutUnitOfWork.Count == 0);
+            generator.WriteMethodSignatureStart(selector.Name, returnType.ToFullyQualified(), parametersWithoutUnitOfWork.Count == 0);
 
             for (var index = 0; index < parametersWithoutUnitOfWork.Count; index++)
             {
                 var parameter = parametersWithoutUnitOfWork[index];
-                generator.WriteMethodSignatureParameter(parameter.Type, parameter.Name, parametersWithoutUnitOfWork.Count - 1 == index);
+                generator.WriteMethodSignatureParameter(parameter.Type.ToFullyQualified(), parameter.Name, parametersWithoutUnitOfWork.Count - 1 == index);
             }
 
             generator.WriteMethodSignatureEnd();
@@ -70,7 +59,7 @@ public class SelectorGenerator : ISyntaxGenerator
             }
 
             generator.WriteKeyEnd();
-            generator.WriteMethodCacheHit(returnType);
+            generator.WriteMethodCacheHit(returnType.ToFullyQualified());
 
             generator.WriteMethodCall(selector.ContainingType, selector.Name, isAsync);
             for (var index = 0; index < selector.MethodSymbol.Parameters.Length; index++)
@@ -89,17 +78,84 @@ public class SelectorGenerator : ISyntaxGenerator
 
             generator.WriteMethodCallEnd(isAsync);
 
-            generator.WriteMethodCacheMiss(returnType);
+            generator.WriteMethodCacheMiss(returnType.ToFullyQualified());
 
             generator.WriteMethodEnd();
+        }
+
+        foreach (var crudInfo in syntaxInfos.OfType<CrudInfo>())
+        {
+            if (crudInfo.IdProperty != null)
+            {
+                // Generate single item selector
+                var singleSelectorName = $"Get{crudInfo.Name}";
+                var idType = crudInfo.IdProperty.Type.ToFullyQualified();
+                var idName = crudInfo.IdProperty.Name.ToLowerInvariant();
+
+                generator.WriteMethodSignatureStart(crudInfo.Name, crudInfo.ClassSymbol.ToFullyQualified() + ".ReadModel", false);
+                generator.WriteMethodSignatureParameter(idType, idName, true);
+                generator.WriteMethodSignatureEnd();
+
+                generator.WriteRecordingUnitOfWork();
+                generator.WriteKeyStart(crudInfo.ClassSymbol.ToFullyQualified(), singleSelectorName, false);
+                generator.WriteKeyParameter(idName, true);
+                generator.WriteKeyEnd();
+                generator.WriteMethodCacheHit(crudInfo.ClassSymbol.ToFullyQualified() + ".ReadModel");
+
+                generator.WriteMethodCall(crudInfo.ClassSymbol.ToFullyQualified(), singleSelectorName, true);
+                generator.WriteMethodCallParameter("recordingUnitOfWork", false);
+                generator.WriteMethodCallParameter(idName, true);
+                generator.WriteMethodCallEnd(true);
+
+                generator.WriteMethodCacheMiss(crudInfo.ClassSymbol.ToFullyQualified() + ".ReadModel");
+                generator.WriteMethodEnd();
+
+                // Generate all items selector
+                var allSelectorName = $"GetAll{crudInfo.Name}s";
+
+                generator.WriteMethodSignatureStart($"All{crudInfo.Name}s", $"global::System.Collections.Generic.IReadOnlyList<{crudInfo.ClassSymbol.ToFullyQualified()}.ReadModel>", true);
+                generator.WriteMethodSignatureEnd();
+
+                generator.WriteRecordingUnitOfWork();
+                generator.WriteKeyStart(crudInfo.ClassSymbol.ToFullyQualified(), allSelectorName, true);
+                generator.WriteKeyEnd();
+                generator.WriteMethodCacheHit($"global::System.Collections.Generic.IReadOnlyList<{crudInfo.ClassSymbol.ToFullyQualified()}.ReadModel>");
+
+                generator.WriteMethodCall(crudInfo.ClassSymbol.ToFullyQualified(), allSelectorName, true);
+                generator.WriteMethodCallParameter("recordingUnitOfWork", true);
+                generator.WriteMethodCallEnd(true);
+
+                generator.WriteMethodCacheMiss($"global::System.Collections.Generic.IReadOnlyList<{crudInfo.ClassSymbol.ToFullyQualified()}.ReadModel>");
+                generator.WriteMethodEnd();
+            }
+            else
+            {
+                // Generate global selector
+                var globalSelectorName = $"Get{crudInfo.Name}";
+
+                generator.WriteMethodSignatureStart(crudInfo.Name, crudInfo.ClassSymbol.ToFullyQualified() + ".ReadModel", true);
+                generator.WriteMethodSignatureEnd();
+
+                generator.WriteRecordingUnitOfWork();
+                generator.WriteKeyStart(crudInfo.ClassSymbol.ToFullyQualified(), globalSelectorName, true);
+                generator.WriteKeyEnd();
+                generator.WriteMethodCacheHit(crudInfo.ClassSymbol.ToFullyQualified() + ".ReadModel");
+
+                generator.WriteMethodCall(crudInfo.ClassSymbol.ToFullyQualified(), globalSelectorName, true);
+                generator.WriteMethodCallParameter("recordingUnitOfWork", true);
+                generator.WriteMethodCallEnd(true);
+
+                generator.WriteMethodCacheMiss(crudInfo.ClassSymbol.ToFullyQualified() + ".ReadModel");
+                generator.WriteMethodEnd();
+            }
         }
 
         generator.WriteEndNamespace();
 
         context.AddSource("Selectors.g.cs", generator.ToSourceText());
     }
-    
-    
+
+
     private static ITypeSymbol ExtractValueType(ITypeSymbol returnType)
     {
         if (returnType is INamedTypeSymbol namedTypeSymbol && (ToTypeNameNoGenerics(returnType) == typeof(ValueTask).FullName ||

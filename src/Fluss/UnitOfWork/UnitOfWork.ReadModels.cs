@@ -34,7 +34,12 @@ public partial class UnitOfWork
 
         eventListener = await UpdateAndApplyPublished(eventListener, at);
 
-        if (!await AuthorizeUsage(readModel))
+        if (eventListener is not IReadModel newReadModel)
+        {
+            throw new InvalidOperationException("Type " + tReadModel.FullName + " is not a read model.");
+        }
+
+        if (!await AuthorizeUsage(newReadModel))
         {
             throw new UnauthorizedAccessException($"Cannot read {eventListener.GetType()} as the current user.");
         }
@@ -44,7 +49,7 @@ public partial class UnitOfWork
             RegisterReadModel(eventListener);
         }
 
-        return readModel;
+        return newReadModel;
     }
 
     public async ValueTask<TReadModel> GetReadModel<TReadModel>(long? at = null)

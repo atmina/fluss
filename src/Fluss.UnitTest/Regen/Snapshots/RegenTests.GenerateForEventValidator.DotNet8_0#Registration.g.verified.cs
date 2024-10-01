@@ -7,14 +7,14 @@ using System;
 using System.Runtime.CompilerServices;
 
 namespace Microsoft.Extensions.DependencyInjection {
-    public static partial class RegenTestsESComponentsComponentsServiceCollectionExtensions {
-        public static global::Microsoft.Extensions.DependencyInjection.IServiceCollection AddRegenTestsESComponentsValidators(this global::Microsoft.Extensions.DependencyInjection.IServiceCollection sc) {
+    public static partial class RegenTestsESComponentsServiceCollectionExtensions {
+        public static global::Microsoft.Extensions.DependencyInjection.IServiceCollection AddRegenTestsESValidators(this global::Microsoft.Extensions.DependencyInjection.IServiceCollection sc) {
             global::Fluss.Validation.ValidationServiceCollectionExtension.AddEventValidator<global::TestNamespace.TestEventValidator>(sc);
             return sc;
         }
 
-        public static global::Microsoft.Extensions.DependencyInjection.IServiceCollection AddRegenTestsESComponentsComponents(this global::Microsoft.Extensions.DependencyInjection.IServiceCollection sc) {
-            AddRegenTestsESComponentsValidators(sc);
+        public static global::Microsoft.Extensions.DependencyInjection.IServiceCollection AddRegenTestsESComponents(this global::Microsoft.Extensions.DependencyInjection.IServiceCollection sc) {
+            AddRegenTestsESValidators(sc);
             return sc;
         }
     }
