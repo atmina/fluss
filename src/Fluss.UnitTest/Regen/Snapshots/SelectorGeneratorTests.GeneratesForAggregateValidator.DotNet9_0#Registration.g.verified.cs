@@ -8,8 +8,13 @@ using System.Runtime.CompilerServices;
 
 namespace Microsoft.Extensions.DependencyInjection {
     public static partial class SelectorGeneratorTestsESComponentsServiceCollectionExtensions {
-        public static global::Microsoft.Extensions.DependencyInjection.IServiceCollection AddSelectorGeneratorTestsESComponents(this global::Microsoft.Extensions.DependencyInjection.IServiceCollection sc) {
+        public static global::Microsoft.Extensions.DependencyInjection.IServiceCollection AddSelectorGeneratorTestsESValidators(this global::Microsoft.Extensions.DependencyInjection.IServiceCollection sc) {
             global::Fluss.Validation.ValidationServiceCollectionExtension.AddAggregateValidator<global::TestNamespace.TestAggregateValidator>(sc);
+            return sc;
+        }
+
+        public static global::Microsoft.Extensions.DependencyInjection.IServiceCollection AddSelectorGeneratorTestsESComponents(this global::Microsoft.Extensions.DependencyInjection.IServiceCollection sc) {
+            AddSelectorGeneratorTestsESValidators(sc);
             return sc;
         }
     }

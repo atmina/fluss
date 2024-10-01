@@ -41,7 +41,7 @@ public sealed class RegistrationSyntaxGenerator : IDisposable
 
     public void WriteBeginClass()
     {
-        _writer.WriteIndentedLine("public static partial class {0}ServiceCollectionExtensions {{", _moduleName);
+        _writer.WriteIndentedLine("public static partial class {0}ComponentsServiceCollectionExtensions {{", _moduleName);
         _writer.IncreaseIndent();
     }
 
@@ -51,19 +51,23 @@ public sealed class RegistrationSyntaxGenerator : IDisposable
         _writer.WriteIndentedLine("}");
     }
 
-    public void WriteBeginRegistrationMethod()
+    public void WriteBeginRegistrationMethod(string componentType)
     {
         _writer.WriteIndentedLine(
-            "public static global::Microsoft.Extensions.DependencyInjection.IServiceCollection Add{0}(this global::Microsoft.Extensions.DependencyInjection.IServiceCollection sc) {{",
-            _moduleName);
+            "public static global::Microsoft.Extensions.DependencyInjection.IServiceCollection Add{0}{1}(this global::Microsoft.Extensions.DependencyInjection.IServiceCollection sc) {{",
+            _moduleName, componentType);
         _writer.IncreaseIndent();
     }
 
-    public void WriteEndRegistrationMethod()
+    public void WriteEndRegistrationMethod(bool includeNewLine = true)
     {
         _writer.WriteIndentedLine("return sc;");
         _writer.DecreaseIndent();
         _writer.WriteIndentedLine("}");
+        if (includeNewLine)
+        {
+            _writer.WriteLine();
+        }
     }
 
     public void WriteAggregateValidatorRegistration(string aggregateValidatorType)
@@ -89,6 +93,11 @@ public sealed class RegistrationSyntaxGenerator : IDisposable
     public void WriteUpcasterRegistration(string upcasterType)
     {
         _writer.WriteIndentedLine("global::Fluss.ServiceCollectionExtensions.AddUpcaster<{0}>(sc);", upcasterType);
+    }
+
+    public void WriteComponentRegistration(string componentName)
+    {
+        _writer.WriteIndentedLine("Add{0}{1}(sc);", _moduleName, componentName);
     }
 
     public override string ToString()
