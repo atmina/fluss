@@ -23,9 +23,20 @@ jobs:
             9.x
       - name: Strip v from tag to determine version
         run: echo "VERSION=${VERSION/v/}" >> $GITHUB_ENV
-      - name: Package
-        run: dotnet pack --configuration Release /p:Version=${VERSION}
+        # dotnet pack says it already builds the project but it for some reason does not properly generate
+        #  the analyzers directory when skipping an explicit build. It's unclear to me what the difference is.
+      - name: Build
+        run: dotnet build --configuration Release /p:Version=${VERSION}
         working-directory: src/${{ matrix.package }}
+      - name: Package
+        run: dotnet pack --no-build --configuration Release /p:Version=${VERSION}
+        working-directory: src/${{ matrix.package }}
+      - name: DEBUG - Upload artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ matrix.package }}.nupkg
+          path: src/${{ matrix.package }}/bin/Release
+          retention-days: 1
       - name: Publish
         run: dotnet nuget push bin/Release/${{ matrix.package }}.${VERSION}.nupkg --source https://api.nuget.org/v3/index.json --api-key ${{ secrets.NUGET_API_KEY }}
         working-directory: src/${{ matrix.package }}

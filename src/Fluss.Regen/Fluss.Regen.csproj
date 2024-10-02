@@ -16,6 +16,10 @@
         <RepositoryType>git</RepositoryType>
         <PackageLicenseExpression>MIT</PackageLicenseExpression>
         <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+        
+        <NoWarn>$(NoWarn);NU5128</NoWarn>
+        <IncludeSymbols>false</IncludeSymbols>
+        <IncludeBuildOutput>false</IncludeBuildOutput>
     </PropertyGroup>
 
     <ItemGroup>
