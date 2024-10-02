@@ -17,7 +17,7 @@ public class EventUpcasterService(
 {
     private readonly List<IUpcaster> _sortedUpcasters = sorter.SortByDependencies(upcasters);
 
-    private readonly CancellationTokenSource _onCompletedSource = new();
+    private readonly TaskCompletionSource _onCompletedSource = new();
 
     public async ValueTask Run()
     {
@@ -47,13 +47,11 @@ public class EventUpcasterService(
             events = upcastedEvents;
         }
 
-        _onCompletedSource.Cancel();
+        _onCompletedSource.SetResult();
     }
 
     public async Task WaitForCompletionAsync()
     {
-        var tcs = new TaskCompletionSource<bool>();
-        _onCompletedSource.Token.Register(s => ((TaskCompletionSource<bool>)s!).SetResult(true), tcs);
-        await tcs.Task;
+        await _onCompletedSource.Task;
     }
 }
