@@ -32,11 +32,16 @@ public sealed class SideEffectDispatcher : IHostedService
         CacheSideEffects(sideEffects);
     }
 
-    public async Task StartAsync(CancellationToken cancellationToken)
+    public Task StartAsync(CancellationToken cancellationToken)
+    {
+        Init();
+        return Task.CompletedTask;
+    }
+
+    private async void Init()
     {
         var upcaster = _serviceProvider.GetRequiredService<EventUpcasterService>();
         await upcaster.WaitForCompletionAsync();
-
         _transientEventRepository.NewEvents += HandleNewEvents;
         _transientEventRepository.NewTransientEvents += HandleNewTransientEvents;
     }

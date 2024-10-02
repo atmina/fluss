@@ -65,13 +65,16 @@ public class Migrator(ILogger<Migrator> logger, IServiceProvider serviceProvider
                 var migrationRunner = scope.ServiceProvider.GetRequiredService<IMigrationRunner>();
                 migrationRunner.MigrateUp();
 
-                _didFinish = true;
-                _didFinishChanged.Release();
             }
             catch (Exception e)
             {
                 logger.LogError(e, "Error while migrating");
                 Environment.Exit(-1);
+            }
+            finally
+            {
+                _didFinish = true;
+                _didFinishChanged.Release();
             }
         }, stoppingToken);
     }
