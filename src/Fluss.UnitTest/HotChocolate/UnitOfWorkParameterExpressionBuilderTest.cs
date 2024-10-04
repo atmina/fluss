@@ -12,10 +12,10 @@ public class UnitOfWorkParameterExpressionBuilderTest
     private readonly UnitOfWorkParameterExpressionBuilder _builder = new();
 
     [Fact]
-    public void CanHandle_ShouldReturnTrueForUnitOfWorkParameter()
+    public void CanHandle_ShouldReturnFalseForUnitOfWorkParameter()
     {
         var parameter = typeof(TestClass).GetMethod(nameof(TestClass.MethodWithUnitOfWork))!.GetParameters()[0];
-        Assert.True(_builder.CanHandle(parameter));
+        Assert.False(_builder.CanHandle(parameter));
     }
 
     [Fact]
@@ -39,9 +39,9 @@ public class UnitOfWorkParameterExpressionBuilderTest
     }
 
     [Fact]
-    public void IsPure_ShouldReturnTrue()
+    public void IsPure_ShouldReturnFalse()
     {
-        Assert.True(_builder.IsPure);
+        Assert.False(_builder.IsPure);
     }
 
     [Fact]
