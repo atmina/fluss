@@ -2,7 +2,7 @@ name: "CodeQL"
 
 on:
   push:
-    branches: [ "main", "*" ]
+    branches: [ "main" ]
   pull_request:
     branches: [ "main" ]
   schedule:
@@ -31,10 +31,18 @@ jobs:
         uses: github/codeql-action/init@v3
         with:
           languages: ${{ matrix.language }}
-
-      - name: Autobuild
-        uses: github/codeql-action/autobuild@v3
-
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: |
+            8.x
+            9.x
+      - name: Restore
+        run: dotnet restore
+        working-directory: ./src
+      - name: Build
+        run: dotnet build --no-restore
+        working-directory: ./src
       - name: Perform CodeQL Analysis
         uses: github/codeql-action/analyze@v3
         with:
