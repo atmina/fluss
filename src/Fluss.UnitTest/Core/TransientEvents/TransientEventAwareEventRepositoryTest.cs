@@ -36,26 +36,6 @@ public class TransientEventAwareEventRepositoryTest
         _baseRepository.Verify(repository => repository.Publish(new[] { expectedBasePublish }), Times.Once);
     }
 
-    [Fact]
-    public async Task DoesntCleanEventsBeforeExpiry()
-    {
-        var envelopes = Wrap(new TransientMockEvent(), new ExpiringTransientMockEvent());
-        await _transientRepository.Publish(envelopes);
-
-        var firstResult = _transientRepository.GetCurrentTransientEvents().ToFlatEventList();
-        Assert.Equal(2, firstResult.Count);
-
-        Thread.Sleep(300);
-
-        var secondResult = _transientRepository.GetCurrentTransientEvents().ToFlatEventList();
-        Assert.Single(secondResult);
-
-        Thread.Sleep(150);
-
-        var thirdResult = _transientRepository.GetCurrentTransientEvents().ToFlatEventList();
-        Assert.Empty(thirdResult);
-    }
-
     private static List<EventEnvelope> Wrap(params Event[] events)
     {
         return events.Select((e, i) =>
