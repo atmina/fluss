@@ -1,4 +1,6 @@
-﻿using Fluss.Events;
+﻿using System.Text.Json;
+using System.Text.Json.Nodes;
+using Fluss.Events;
 using Fluss.Upcasting;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -150,7 +152,7 @@ public class PostgreSQLTest : IAsyncLifetime
             Version = 0,
             At = DateTimeOffset.UtcNow,
             By = null,
-            RawEvent = JObject.FromObject(new TestEvent(2), JsonSerializer.Create(PostgreSQLEventRepository.JsonSerializerSettings))
+            RawEvent = EventSerializer.Serialize(new TestEvent(2))
         };
 
         await baseEventRepository.ReplaceEvent(0, [newEvent]);
@@ -196,14 +198,14 @@ public class PostgreSQLTest : IAsyncLifetime
                 Version = 0,
                 At = DateTimeOffset.UtcNow,
                 By = null,
-                RawEvent = JObject.FromObject(new TestEvent(2), JsonSerializer.Create(PostgreSQLEventRepository.JsonSerializerSettings))
+                RawEvent = EventSerializer.Serialize(new TestEvent(2))
             },
             new RawEventEnvelope
             {
                 Version = 1,
                 At = DateTimeOffset.UtcNow,
                 By = null,
-                RawEvent = JObject.FromObject(new TestEvent(3), JsonSerializer.Create(PostgreSQLEventRepository.JsonSerializerSettings))
+                RawEvent = EventSerializer.Serialize(new TestEvent(3))
             }
         };
 
@@ -435,12 +437,12 @@ public class PostgreSQLTest : IAsyncLifetime
 
     public record TestEventUpcaster : IUpcaster
     {
-        public IEnumerable<JObject>? Upcast(JObject eventJson)
+        public IEnumerable<JsonObject>? Upcast(JsonObject eventJson)
         {
-            var eventType = eventJson["$type"]?.Value<string>();
+            var eventType = eventJson["$type"]!.GetValue<string>();
             if (eventType == typeof(TestEvent).AssemblyQualifiedName)
             {
-                var eventJson2 = new JObject(eventJson)
+                var eventJson2 = new JsonObject(eventJson)
                 {
                     ["$type"] = typeof(TestEvent2).AssemblyQualifiedName
                 };

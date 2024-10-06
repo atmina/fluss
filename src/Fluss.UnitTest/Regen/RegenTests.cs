@@ -1,7 +1,6 @@
 using Fluss.Regen;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
-using Newtonsoft.Json.Linq;
 
 namespace Fluss.UnitTest.Regen;
 
@@ -179,12 +178,12 @@ public class RegenTests
             """
             using Fluss;
             using Fluss.Upcasting;
-            using Newtonsoft.Json.Linq;
+            using System.Text.Json;
 
             namespace TestNamespace;
 
             public class TestUpcaster : IUpcaster {
-                public IEnumerable<JObject>? Upcast(JObject eventJson) {
+                public IEnumerable<JsonObject>? Upcast(JsonObject eventJson) {
                     return null;
                 }
             }
@@ -226,7 +225,6 @@ public class RegenTests
             [
                 MetadataReference.CreateFromFile(typeof(object).Assembly.Location),
                 MetadataReference.CreateFromFile(typeof(UnitOfWork).Assembly.Location),
-                MetadataReference.CreateFromFile(typeof(JObject).Assembly.Location),
             ]);
 
         var runResult = driver.RunGenerators(compilation).GetRunResult();

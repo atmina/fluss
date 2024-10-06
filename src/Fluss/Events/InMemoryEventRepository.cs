@@ -1,7 +1,6 @@
 using System.Collections.ObjectModel;
 using Collections.Pooled;
 using Fluss.Exceptions;
-using Newtonsoft.Json;
 
 namespace Fluss.Events;
 
@@ -46,7 +45,7 @@ public class InMemoryEventRepository : IBaseEventRepository, IDisposable
     {
         var rawEnvelopes = _events.Select(envelope =>
         {
-            var rawEvent = envelope.Event.ToJObject();
+            var rawEvent = EventSerializer.Serialize(envelope.Event);
 
             return new RawEventEnvelope
             {
@@ -71,11 +70,10 @@ public class InMemoryEventRepository : IBaseEventRepository, IDisposable
         }
 
         _events.RemoveAt(checkedAt);
-        var serializer = new JsonSerializer { TypeNameHandling = TypeNameHandling.All };
-
+        
         var eventEnvelopes = events.Select(envelope =>
         {
-            var @event = envelope.RawEvent.ToObject<Event>(serializer);
+            var @event = EventSerializer.Deserialize(envelope.RawEvent);
 
             if (@event is null) throw new Exception("Failed to convert raw event to Event");
 

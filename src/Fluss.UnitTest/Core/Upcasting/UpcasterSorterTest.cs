@@ -1,5 +1,5 @@
+using System.Text.Json.Nodes;
 using Fluss.Upcasting;
-using Newtonsoft.Json.Linq;
 
 namespace Fluss.UnitTest.Core.Upcasting;
 
@@ -50,34 +50,34 @@ public class UpcasterSorterTest
 
 internal class ExampleUpcasterNoDeps : IUpcaster
 {
-    public IEnumerable<JObject> Upcast(JObject eventJson) => throw new NotImplementedException();
+    public IEnumerable<JsonObject> Upcast(JsonObject eventJson) => throw new NotImplementedException();
 }
 
 internal class ExampleUpcasterDeps1 : IUpcaster
 {
-    public IEnumerable<JObject> Upcast(JObject eventJson) => throw new NotImplementedException();
+    public IEnumerable<JsonObject> Upcast(JsonObject eventJson) => throw new NotImplementedException();
 }
 
 [DependsOn(typeof(ExampleUpcasterDeps1), typeof(ExampleUpcasterNoDeps))]
 internal class ExampleUpcasterDeps2 : IUpcaster
 {
-    public IEnumerable<JObject> Upcast(JObject eventJson) => throw new NotImplementedException();
+    public IEnumerable<JsonObject> Upcast(JsonObject eventJson) => throw new NotImplementedException();
 }
 
 [DependsOn(typeof(ExampleUpcasterDeps1), typeof(ExampleUpcasterDeps2))]
 internal class ExampleUpcasterDeps3 : IUpcaster
 {
-    public IEnumerable<JObject> Upcast(JObject eventJson) => throw new NotImplementedException();
+    public IEnumerable<JsonObject> Upcast(JsonObject eventJson) => throw new NotImplementedException();
 }
 
 [DependsOn(typeof(ExampleUpcasterCyclic2))]
 internal class ExampleUpcasterCyclic1 : IUpcaster
 {
-    public IEnumerable<JObject> Upcast(JObject eventJson) => throw new NotImplementedException();
+    public IEnumerable<JsonObject> Upcast(JsonObject eventJson) => throw new NotImplementedException();
 }
 
 [DependsOn(typeof(ExampleUpcasterCyclic1))]
 internal class ExampleUpcasterCyclic2 : IUpcaster
 {
-    public IEnumerable<JObject> Upcast(JObject eventJson) => throw new NotImplementedException();
+    public IEnumerable<JsonObject> Upcast(JsonObject eventJson) => throw new NotImplementedException();
 }
