@@ -33,7 +33,7 @@ public partial class PostgreSQLEventRepository : IDisposable
         }
 
         _triggerInitialized = true;
-        await using var listenConnection = dataSource.CreateConnection();
+        await using var listenConnection = _dataSource.CreateConnection();
         await listenConnection.OpenAsync(_cancellationTokenSource.Token);
 
         listenConnection.Notification += (_, _) =>

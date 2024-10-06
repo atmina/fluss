@@ -11,13 +11,13 @@ using Npgsql;
 
 namespace Benchmark;
 
-[GitJob("879573d", baseline: true, id: "0_before")]
-[SimpleJob(id: "1_after")]
+[GitJob("HEAD", baseline: true, id: "0_before", iterationCount: 10)]
+[SimpleJob(id: "1_after", iterationCount: 10)]
 [RPlotExporter]
 [MemoryDiagnoser]
 public class Bench
 {
-    [Params("postgres", "in-memory")]
+    [Params("postgres")]
     public string StorageType { get; set; } = "in-memory";
 
     [IterationSetup]

@@ -1,3 +1,4 @@
+using System.Text.Json.Nodes;
 using Fluss.Events;
 using Fluss.Upcasting;
 using Microsoft.Extensions.Logging;
@@ -10,14 +11,14 @@ public class EventUpcasterServiceTest
 {
     private static RawEventEnvelope GetRawTestEvent1Envelope(int version)
     {
-        var jObject = new TestEvent1("Value").ToJObject();
+        var jObject = EventSerializer.Serialize(new TestEvent1("Value"));
 
         return new RawEventEnvelope { Version = version, RawEvent = jObject };
     }
 
     private static RawEventEnvelope GetRawTestEvent2Envelope(int version)
     {
-        var jObject = new TestEvent2("Value2").ToJObject();
+        var jObject = EventSerializer.Serialize(new TestEvent2("Value2"));
 
         return new RawEventEnvelope { Version = version, RawEvent = jObject };
     }
@@ -62,7 +63,7 @@ public class EventUpcasterServiceTest
             repo => repo.ReplaceEvent(
                 It.IsAny<long>(),
                 It.Is<IEnumerable<RawEventEnvelope>>(
-                    newEvents => newEvents.SingleOrDefault()!.RawEvent["Property1"]!.ToObject<string>() == "Upcast"
+                    newEvents => newEvents.SingleOrDefault()!.RawEvent["Property1"]!.GetValue<string>() == "Upcast"
                 )
             ),
             Times.Exactly(4)
@@ -101,7 +102,7 @@ public class EventUpcasterServiceTest
             repo => repo.ReplaceEvent(
                 It.IsAny<long>(),
                 It.Is<IEnumerable<RawEventEnvelope>>(
-                    newEvents => newEvents.SingleOrDefault()!.RawEvent["Property2"]!.ToObject<string>() == "Value"
+                    newEvents => newEvents.SingleOrDefault()!.RawEvent["Property2"]!.GetValue<string>() == "Value"
                 )
             ),
             Times.Exactly(4)
@@ -111,7 +112,7 @@ public class EventUpcasterServiceTest
             repo => repo.ReplaceEvent(
                 It.IsAny<long>(),
                 It.Is<IEnumerable<RawEventEnvelope>>(
-                    newEvents => newEvents.SingleOrDefault()!.RawEvent["Property2"]!.ToObject<string>() == "Upcast-Value"
+                    newEvents => newEvents.SingleOrDefault()!.RawEvent["Property2"]!.GetValue<string>() == "Upcast-Value"
                 )
             ),
             Times.Exactly(4)
@@ -121,7 +122,7 @@ public class EventUpcasterServiceTest
             repo => repo.ReplaceEvent(
                 It.IsAny<long>(),
                 It.Is<IEnumerable<RawEventEnvelope>>(
-                    newEvents => newEvents.SingleOrDefault()!.RawEvent["Property2"]!.ToObject<string>() == "Upcast-Value2")
+                    newEvents => newEvents.SingleOrDefault()!.RawEvent["Property2"]!.GetValue<string>() == "Upcast-Value2")
             ),
             Times.Once
         );
@@ -155,19 +156,21 @@ record TestEvent2(string Property2) : Event;
 
 internal class NoopUpcast : IUpcaster
 {
-    public IEnumerable<JObject>? Upcast(JObject eventJson) => null;
+    public IEnumerable<JsonObject>? Upcast(JsonObject eventJson) => null;
 }
 
 internal class SingleEventUpcast : IUpcaster
 {
-    public IEnumerable<JObject>? Upcast(JObject eventJson)
+    public IEnumerable<JsonObject>? Upcast(JsonObject eventJson)
     {
-        var type = eventJson.GetValue("$type")?.ToObject<string>();
+        var type = eventJson["$type"]!.GetValue<string>();
 
         if (type != typeof(TestEvent1).AssemblyQualifiedName) return null;
 
-        var clone = (JObject)eventJson.DeepClone();
-        clone["Property1"] = "Upcast";
+        var clone = new JsonObject(eventJson)
+        {
+            ["Property1"] = "Upcast"
+        };
 
         return [clone];
     }
@@ -175,9 +178,9 @@ internal class SingleEventUpcast : IUpcaster
 
 internal class MultiEventUpcast : IUpcaster
 {
-    public IEnumerable<JObject>? Upcast(JObject eventJson)
+    public IEnumerable<JsonObject>? Upcast(JsonObject eventJson)
     {
-        var type = eventJson.GetValue("$type")?.ToObject<string>();
+        var type = eventJson["$type"]!.GetValue<string>();
 
         if (type != typeof(TestEvent1).AssemblyQualifiedName) return null;
 
@@ -187,16 +190,18 @@ internal class MultiEventUpcast : IUpcaster
 
 internal class ChainedEventUpcast : IUpcaster
 {
-    public IEnumerable<JObject>? Upcast(JObject eventJson)
+    public IEnumerable<JsonObject>? Upcast(JsonObject eventJson)
     {
-        var type = eventJson.GetValue("$type")?.ToObject<string>();
+        var type = eventJson["$type"]!.GetValue<string>();
 
         if (type != typeof(TestEvent1).AssemblyQualifiedName) return null;
 
-        var clone = (JObject)eventJson.DeepClone();
-        clone["Property2"] = clone["Property1"];
+        var clone = new JsonObject(eventJson)
+        {
+            ["Property2"] = eventJson["Property1"],
+            ["$type"] = typeof(TestEvent2).AssemblyQualifiedName
+        };
         clone.Remove("Property1");
-        clone["$type"] = typeof(TestEvent2).AssemblyQualifiedName;
 
         return [clone];
     }
@@ -205,14 +210,16 @@ internal class ChainedEventUpcast : IUpcaster
 [DependsOn(typeof(ChainedEventUpcast))]
 internal class ChainedEventUpcast2 : IUpcaster
 {
-    public IEnumerable<JObject>? Upcast(JObject eventJson)
+    public IEnumerable<JsonObject>? Upcast(JsonObject eventJson)
     {
-        var type = eventJson.GetValue("$type")?.ToObject<string>();
+        var type = eventJson["$type"]!.GetValue<string>();
 
         if (type != typeof(TestEvent2).AssemblyQualifiedName) return null;
 
-        var clone = (JObject)eventJson.DeepClone();
-        clone["Property2"] = "Upcast-" + clone["Property2"]!.ToObject<string>();
+        var clone = new JsonObject(eventJson)
+        {
+            ["Property2"] = "Upcast-" + eventJson["Property2"]!.GetValue<string>()
+        };
 
         return [clone];
     }

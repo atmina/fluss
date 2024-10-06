@@ -1,5 +1,4 @@
-using System.Runtime.InteropServices;
-using Newtonsoft.Json.Linq;
+using System.Text.Json.Nodes;
 
 namespace Fluss.Events;
 
@@ -13,7 +12,7 @@ public abstract record Envelope
 
 public sealed record RawEventEnvelope : Envelope
 {
-    public required JObject RawEvent { get; init; }
+    public required JsonObject RawEvent { get; init; }
 }
 
 public record EventEnvelope : Envelope

@@ -1,5 +1,4 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
-
     <PropertyGroup>
         <TargetFrameworks>net8.0;net9.0</TargetFrameworks>
         <ImplicitUsings>enable</ImplicitUsings>
@@ -11,14 +10,12 @@
         <RepositoryUrl>https://github.com/atmina/fluss</RepositoryUrl>
         <RepositoryType>git</RepositoryType>
         <PackageLicenseExpression>MIT</PackageLicenseExpression>
-        <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
     </PropertyGroup>
 
     <ItemGroup>
         <PackageReference Include="FluentMigrator.Runner.Postgres" Version="5.2.0" />
         <PackageReference Include="Microsoft.Extensions.Hosting.Abstractions" Version="8.0.0" />
         <PackageReference Include="Npgsql" Version="8.0.4" />
-        <PackageReference Include="Npgsql.Json.NET" Version="8.0.4" />
     </ItemGroup>
 
     <ItemGroup>
@@ -28,5 +25,4 @@
     <ItemGroup>
         <None Include="./README.md" Pack="True" PackagePath="/" />
     </ItemGroup>
-
 </Project>

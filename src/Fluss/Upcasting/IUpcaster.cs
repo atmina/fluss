@@ -1,11 +1,11 @@
 using System.Collections.Immutable;
-using Newtonsoft.Json.Linq;
+using System.Text.Json.Nodes;
 
 namespace Fluss.Upcasting;
 
 public interface IUpcaster
 {
-    public IEnumerable<JObject>? Upcast(JObject eventJson);
+    public IEnumerable<JsonObject>? Upcast(JsonObject eventJson);
 }
 
 [AttributeUsage(AttributeTargets.Class)]

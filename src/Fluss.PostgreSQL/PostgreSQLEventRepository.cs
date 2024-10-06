@@ -1,10 +1,9 @@
 using System.Collections.ObjectModel;
 using System.Data;
 using System.Diagnostics;
+using System.Text.Json.Nodes;
 using Fluss.Events;
 using Fluss.Exceptions;
-using Newtonsoft.Json;
-using Newtonsoft.Json.Linq;
 using Npgsql;
 using NpgsqlTypes;
 
@@ -12,19 +11,14 @@ namespace Fluss.PostgreSQL;
 
 public partial class PostgreSQLEventRepository : IBaseEventRepository
 {
-    private readonly NpgsqlDataSource dataSource;
+    private readonly NpgsqlDataSource _dataSource;
+    
+    
 
     public PostgreSQLEventRepository(PostgreSQLConfig config)
     {
         var dataSourceBuilder = new NpgsqlDataSourceBuilder(config.ConnectionString);
-        dataSourceBuilder.UseJsonNet(settings: new JsonSerializerSettings
-        {
-            TypeNameHandling = TypeNameHandling.All,
-            TypeNameAssemblyFormatHandling = TypeNameAssemblyFormatHandling.Full,
-            MetadataPropertyHandling =
-                    MetadataPropertyHandling.ReadAhead // While this is marked as a performance hit, profiling approves
-        });
-        dataSource = dataSourceBuilder.Build();
+        _dataSource = dataSourceBuilder.Build();
     }
 
     private async ValueTask Publish<TEnvelope>(IReadOnlyList<TEnvelope> envelopes, Func<TEnvelope, object> eventExtractor,
@@ -34,7 +28,7 @@ public partial class PostgreSQLEventRepository : IBaseEventRepository
         activity?.SetTag("EventSourcing.EventRepository", nameof(PostgreSQLEventRepository));
 
         // await using var connection has the side-effect that our connection passed from the outside is also disposed, so we split this up.
-        await using var freshConnection = dataSource.OpenConnection();
+        await using var freshConnection = _dataSource.OpenConnection();
         var connection = conn ?? freshConnection;
 
         activity?.AddEvent(new ActivityEvent("Connection open"));
@@ -89,7 +83,7 @@ public partial class PostgreSQLEventRepository : IBaseEventRepository
     private async ValueTask<TResult> WithReader<TResult>(long fromExclusive, long toInclusive,
         Func<NpgsqlDataReader, ValueTask<TResult>> action)
     {
-        await using var connection = dataSource.OpenConnection();
+        await using var connection = _dataSource.OpenConnection();
         await using var cmd =
             new NpgsqlCommand(
                 """
@@ -149,7 +143,7 @@ public partial class PostgreSQLEventRepository : IBaseEventRepository
                     Version = reader.GetInt64(0),
                     At = reader.GetDateTime(1),
                     By = reader.IsDBNull(2) ? null : reader.GetGuid(2),
-                    RawEvent = reader.GetFieldValue<JObject>(3),
+                    RawEvent = reader.GetFieldValue<JsonObject>(3),
                 });
             }
 
@@ -161,7 +155,7 @@ public partial class PostgreSQLEventRepository : IBaseEventRepository
     {
         var envelopes = newEnvelopes.ToList();
 
-        await using var connection = dataSource.OpenConnection();
+        await using var connection = _dataSource.OpenConnection();
         await using var transaction = connection.BeginTransaction();
 
         await using var deleteCommand =
@@ -231,7 +225,7 @@ public partial class PostgreSQLEventRepository : IBaseEventRepository
 
     private async Task<long> GetLatestVersionImpl()
     {
-        await using var connection = dataSource.OpenConnection();
+        await using var connection = _dataSource.OpenConnection();
 
         await using var cmd = new NpgsqlCommand("""SELECT MAX("Version") FROM "Events";""", connection);
         await cmd.PrepareAsync();
