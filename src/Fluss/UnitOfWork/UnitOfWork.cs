@@ -34,7 +34,6 @@ public partial class UnitOfWork : IWriteUnitOfWork
         var unitOfWork = Pool.Get();
         unitOfWork._eventRepository = eventRepository;
         unitOfWork._eventListenerFactory = eventListenerFactory;
-        unitOfWork._policies.Clear();
         unitOfWork._policies.AddRange(policies);
         unitOfWork._userIdProvider = userIdProvider;
         unitOfWork._validator = validator;
