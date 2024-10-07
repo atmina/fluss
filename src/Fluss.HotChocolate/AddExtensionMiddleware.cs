@@ -21,7 +21,7 @@ public class AddExtensionMiddleware(
     {
         await _next.Invoke(context);
 
-        if (!context.ContextData.TryGetValue(nameof(UnitOfWork), out var unitOfWork))
+        if (!context.ContextData.TryGetValue(nameof(IUnitOfWork), out var unitOfWork))
         {
             return;
         }
@@ -38,7 +38,7 @@ public class AddExtensionMiddleware(
         {
             if (context.Result is QueryResult subsequentQueryResult)
             {
-                context.Result = QueryResultBuilder.FromResult(subsequentQueryResult).AddContextData(nameof(UnitOfWork),
+                context.Result = QueryResultBuilder.FromResult(subsequentQueryResult).AddContextData(nameof(IUnitOfWork),
 unitOfWork).Create();
             }
 
@@ -84,7 +84,7 @@ unitOfWork).Create();
 
         while (true)
         {
-            if (contextData == null || !contextData.TryGetValue(nameof(UnitOfWork), out var value))
+            if (contextData == null || !contextData.TryGetValue(nameof(IUnitOfWork), out var value))
             {
                 break;
             }

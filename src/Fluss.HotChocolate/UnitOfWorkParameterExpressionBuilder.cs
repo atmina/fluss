@@ -12,7 +12,7 @@ public class UnitOfWorkParameterExpressionBuilder : IParameterExpressionBuilder
     private static readonly MethodInfo GetOrSetGlobalStateUnitOfWorkMethod =
         typeof(ResolverContextExtensions).GetMethods()
             .First(m => m.Name == nameof(ResolverContextExtensions.GetOrSetGlobalState))
-            .MakeGenericMethod(typeof(UnitOfWork));
+            .MakeGenericMethod(typeof(IUnitOfWork));
 
     private static readonly MethodInfo GetGlobalStateOrDefaultLongMethod =
         typeof(ResolverContextExtensions).GetMethods()
@@ -21,22 +21,22 @@ public class UnitOfWorkParameterExpressionBuilder : IParameterExpressionBuilder
 
     private static readonly MethodInfo ServiceUnitOfWorkMethod =
         typeof(IPureResolverContext).GetMethods().First(
-            method => method is { Name: nameof(IPureResolverContext.Service), IsGenericMethod: true })
-            .MakeGenericMethod(typeof(UnitOfWork));
+                method => method is { Name: nameof(IPureResolverContext.Service), IsGenericMethod: true })
+            .MakeGenericMethod(typeof(IUnitOfWork));
 
     private static readonly MethodInfo WithPrefilledVersionMethod =
-        typeof(UnitOfWork).GetMethods(BindingFlags.Instance | BindingFlags.Public)
-            .First(m => m.Name == nameof(UnitOfWork.WithPrefilledVersion));
+        typeof(IUnitOfWork).GetMethods(BindingFlags.Instance | BindingFlags.Public)
+            .First(m => m.Name == nameof(IUnitOfWork.WithPrefilledVersion));
 
-    public bool CanHandle(ParameterInfo parameter) => typeof(UnitOfWork) == parameter.ParameterType
-                                                      || typeof(IUnitOfWork) == parameter.ParameterType;
+    public bool CanHandle(ParameterInfo parameter) =>
+        typeof(IUnitOfWork) == parameter.ParameterType;
 
     /*
      * Produces something like this: context.GetOrSetGlobalState(
-     *      nameof(UnitOfWork.UnitOfWork),
+     *      nameof(IUnitOfWork),
      *      _ =>
      *          context
-     *              .Service<UnitOfWork.UnitOfWork>()
+     *              .Service<IUnitOfWork>()
      *              .WithPrefilledVersion(
      *                  context.GetGlobalState<long>(PrefillUnitOfWorkVersion)
      *              ))!;
@@ -53,13 +53,14 @@ public class UnitOfWorkParameterExpressionBuilder : IParameterExpressionBuilder
                 context,
                 Expression.Constant(PrefillUnitOfWorkVersion)));
 
-        return Expression.Call(null, GetOrSetGlobalStateUnitOfWorkMethod, context, Expression.Constant(nameof(UnitOfWork)),
-            Expression.Lambda<Func<string, UnitOfWork>>(
+        return Expression.Call(null, GetOrSetGlobalStateUnitOfWorkMethod, context,
+            Expression.Constant(nameof(IUnitOfWork)),
+            Expression.Lambda<Func<string, IUnitOfWork>>(
                 getNewUnitOfWork,
                 Expression.Parameter(typeof(string))));
     }
 
     public ArgumentKind Kind => ArgumentKind.Custom;
-    public bool IsPure => true;
+    public bool IsPure => false;
     public bool IsDefaultHandler => false;
 }
