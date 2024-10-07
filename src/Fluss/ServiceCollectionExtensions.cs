@@ -39,13 +39,8 @@ public static class ServiceCollectionExtensions
                 return eventListenerFactory;
             })
             .AddSingleton<IArbitraryUserUnitOfWorkCache, ArbitraryUserUnitOfWorkCache>()
-            .AddTransient<UnitOfWork>(sp => UnitOfWork.Create(
-                sp.GetRequiredService<IEventRepository>(),
-                sp.GetRequiredService<IEventListenerFactory>(),
-                sp.GetServices<Policy>(),
-                sp.GetRequiredService<UserIdProvider>(),
-                sp.GetRequiredService<IRootValidator>()))
-            .AddTransient<IUnitOfWork>(sp => sp.GetRequiredService<UnitOfWork>())
+            .AddTransient<UnitOfWork>(CreateNewUnitOfWork)
+            .AddTransient<IUnitOfWork>(CreateNewUnitOfWork)
             .AddTransient<UnitOfWorkFactory>()
             .AddSingleton<IRootValidator, RootValidator>()
             .AddHostedService<SideEffectDispatcher>()
@@ -64,7 +59,20 @@ public static class ServiceCollectionExtensions
         return services;
     }
 
-    public static IServiceCollection AddEventRepositoryPipeline<[DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicConstructors)] TEventRepository>(this IServiceCollection services)
+    private static UnitOfWork CreateNewUnitOfWork(IServiceProvider sp)
+    {
+        return UnitOfWork.Create(
+            sp.GetRequiredService<IEventRepository>(),
+            sp.GetRequiredService<IEventListenerFactory>(),
+            sp.GetServices<Policy>(),
+            sp.GetRequiredService<UserIdProvider>(),
+            sp.GetRequiredService<IRootValidator>()
+        );
+    }
+
+    public static IServiceCollection AddEventRepositoryPipeline<
+        [DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicConstructors)] TEventRepository>(
+        this IServiceCollection services)
         where TEventRepository : EventRepositoryPipeline
     {
         return services
@@ -72,14 +80,17 @@ public static class ServiceCollectionExtensions
             .AddSingleton<EventRepositoryPipeline>(sp => sp.GetRequiredService<TEventRepository>());
     }
 
-    public static IServiceCollection AddBaseEventRepository<[DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicConstructors)] TBaseEventRepository>(this IServiceCollection services)
+    public static IServiceCollection AddBaseEventRepository<
+        [DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicConstructors)] TBaseEventRepository>(
+        this IServiceCollection services)
         where TBaseEventRepository : class, IBaseEventRepository
     {
         ArgumentNullException.ThrowIfNull(services);
 
         return services
             .AddSingleton<TBaseEventRepository>()
-            .AddSingleton<IBaseEventRepository, TBaseEventRepository>(sp => sp.GetRequiredService<TBaseEventRepository>())
+            .AddSingleton<IBaseEventRepository, TBaseEventRepository>(sp =>
+                sp.GetRequiredService<TBaseEventRepository>())
             .AddSingleton(sp =>
             {
                 var pipeline = sp.GetServices<EventRepositoryPipeline>();
@@ -94,7 +105,9 @@ public static class ServiceCollectionExtensions
             });
     }
 
-    public static IServiceCollection AddUpcaster<[DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicConstructors)] TUpcaster>(this IServiceCollection services) where TUpcaster : class, IUpcaster
+    public static IServiceCollection AddUpcaster<
+        [DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicConstructors)] TUpcaster>(
+        this IServiceCollection services) where TUpcaster : class, IUpcaster
     {
         return services.AddSingleton<IUpcaster, TUpcaster>();
     }

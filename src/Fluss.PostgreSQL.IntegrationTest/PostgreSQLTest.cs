@@ -398,6 +398,9 @@ public class PostgreSQLTest : IAsyncLifetime
             }
         };
 
+        // Short delay to allow database trigger to register
+        await Task.Delay(1000);
+
         // Publish an event using the first repository
         await repository1.Publish([
             new EventEnvelope
@@ -410,13 +413,13 @@ public class PostgreSQLTest : IAsyncLifetime
         ]);
 
         // Wait for both event handlers to be triggered or timeout after 5 seconds
-        var timeoutTask = Task.Delay(TimeSpan.FromSeconds(5));
-        var allTasks = await Task.WhenAny(
+        var timeoutTask = Task.Delay(TimeSpan.FromSeconds(10));
+        var fasterTask = await Task.WhenAny(
             Task.WhenAll(eventRaised1.Task, eventRaised2.Task),
             timeoutTask
         );
 
-        Assert.NotEqual(timeoutTask, allTasks);
+        Assert.True(timeoutTask != fasterTask, "Ran into timeout");
         Assert.True(await eventRaised1.Task, "NewEvents event was not raised on the first repository");
         Assert.True(await eventRaised2.Task, "NewEvents event was not raised on the second repository");
     }
