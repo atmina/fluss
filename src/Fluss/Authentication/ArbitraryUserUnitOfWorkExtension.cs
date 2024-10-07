@@ -42,16 +42,22 @@ public class ArbitraryUserUnitOfWorkCache(IServiceProvider serviceProvider) : IA
         collection.AddSingleton<IRootValidator>(_ => serviceProvider.GetRequiredService<IRootValidator>());
 
         collection.ProvideUserIdFrom(_ => providedId);
-        collection.AddTransient<UnitOfWork>(sp => UnitOfWork.Create(
+        collection.AddTransient<UnitOfWork>(CreateUnitOfWork);
+        collection.AddTransient<IUnitOfWork>(CreateUnitOfWork);
+        collection.AddTransient<UnitOfWorkFactory>();
+
+        return collection.BuildServiceProvider();
+    }
+
+    private UnitOfWork CreateUnitOfWork(IServiceProvider sp)
+    {
+        return UnitOfWork.Create(
             sp.GetRequiredService<IEventRepository>(),
             sp.GetRequiredService<IEventListenerFactory>(),
             sp.GetServices<Policy>(),
             sp.GetRequiredService<UserIdProvider>(),
-            sp.GetRequiredService<IRootValidator>()));
-        collection.AddTransient<IUnitOfWork>(sp => sp.GetRequiredService<UnitOfWork>());
-        collection.AddTransient<UnitOfWorkFactory>();
-
-        return collection.BuildServiceProvider();
+            sp.GetRequiredService<IRootValidator>()
+        );
     }
 }
 
