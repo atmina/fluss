@@ -1,9 +1,10 @@
-﻿using System.Collections.Concurrent;
-using System.Diagnostics.CodeAnalysis;
+﻿using System.Diagnostics.CodeAnalysis;
 using Fluss.Events;
 using Fluss.ReadModel;
 
 namespace Fluss;
+
+public class AtNotAllowedInSelectorException : Exception;
 
 public class UnitOfWorkRecordingProxy(IUnitOfWork impl) : IUnitOfWork
 {
@@ -18,42 +19,54 @@ public class UnitOfWorkRecordingProxy(IUnitOfWork impl) : IUnitOfWork
 
     public ValueTask<IReadModel> GetReadModel([DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicParameterlessConstructor)] Type tReadModel, object? key, long? at = null)
     {
+        if (at.HasValue) throw new AtNotAllowedInSelectorException();
         return impl.GetReadModel(tReadModel, key, at);
     }
 
     public ValueTask<TReadModel> GetReadModel<TReadModel>(long? at = null) where TReadModel : EventListener, IRootEventListener, IReadModel, new()
     {
+        if (at.HasValue) throw new AtNotAllowedInSelectorException();
         return Record(impl.GetReadModel<TReadModel>(at));
     }
 
     public ValueTask<TReadModel> GetReadModel<TReadModel, TKey>(TKey key, long? at = null) where TReadModel : EventListener, IEventListenerWithKey<TKey>, IReadModel, new()
     {
+        if (at.HasValue) throw new AtNotAllowedInSelectorException();
         return Record(impl.GetReadModel<TReadModel, TKey>(key, at));
     }
 
     public ValueTask<TReadModel> UnsafeGetReadModelWithoutAuthorization<TReadModel>(long? at = null) where TReadModel : EventListener, IRootEventListener, IReadModel, new()
     {
+        if (at.HasValue) throw new AtNotAllowedInSelectorException();
         return Record(impl.UnsafeGetReadModelWithoutAuthorization<TReadModel>(at));
     }
 
     public ValueTask<TReadModel> UnsafeGetReadModelWithoutAuthorization<TReadModel, TKey>(TKey key, long? at = null) where TReadModel : EventListener, IEventListenerWithKey<TKey>, IReadModel, new()
     {
+        if (at.HasValue) throw new AtNotAllowedInSelectorException();
         return Record(impl.UnsafeGetReadModelWithoutAuthorization<TReadModel, TKey>(key, at));
     }
 
     public ValueTask<IReadOnlyList<TReadModel>> GetMultipleReadModels<TReadModel, TKey>(IEnumerable<TKey> keys, long? at = null) where TReadModel : EventListener, IReadModel, IEventListenerWithKey<TKey>, new() where TKey : notnull
     {
+        if (at.HasValue) throw new AtNotAllowedInSelectorException();
         return Record(impl.GetMultipleReadModels<TReadModel, TKey>(keys, at));
     }
 
     public ValueTask<IReadOnlyList<TReadModel>> UnsafeGetMultipleReadModelsWithoutAuthorization<TReadModel, TKey>(IEnumerable<TKey> keys, long? at = null) where TReadModel : EventListener, IReadModel, IEventListenerWithKey<TKey>, new() where TKey : notnull
     {
+        if (at.HasValue) throw new AtNotAllowedInSelectorException();
         return Record(impl.UnsafeGetMultipleReadModelsWithoutAuthorization<TReadModel, TKey>(keys, at));
     }
 
     public IUnitOfWork WithPrefilledVersion(long? version)
     {
-        return impl.WithPrefilledVersion(version);
+        throw new AtNotAllowedInSelectorException();
+    }
+
+    public IUnitOfWork CopyWithVersion(long version)
+    {
+        throw new AtNotAllowedInSelectorException();
     }
 
     private async ValueTask<TReadModel> Record<TReadModel>(ValueTask<TReadModel> readModel) where TReadModel : EventListener
