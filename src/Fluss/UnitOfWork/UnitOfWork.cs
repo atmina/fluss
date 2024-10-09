@@ -90,6 +90,14 @@ public partial class UnitOfWork : IWriteUnitOfWork
         return this;
     }
 
+    public IUnitOfWork CopyWithVersion(long version)
+    {
+        EnsureInstantiated();
+
+        var unitOfWork = Create(_eventRepository!, _eventListenerFactory!, _policies, _userIdProvider!, _validator!);
+        return unitOfWork.WithPrefilledVersion(version);
+    }
+
     private Guid CurrentUserId()
     {
         EnsureInstantiated();

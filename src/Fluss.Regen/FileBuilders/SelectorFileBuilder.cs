@@ -39,11 +39,14 @@ public sealed class SelectorFileBuilder : IDisposable
 
     public void WriteEndNamespace()
     {
-        _writer.WriteIndentedLine("private record CacheEntryValue(object Value, global::System.Collections.Generic.IReadOnlyList<global::Fluss.UnitOfWorkRecordingProxy.EventListenerTypeWithKeyAndVersion>? EventListeners);");
+        _writer.WriteIndentedLine("private record CacheEntryValue(object Value, global::System.Collections.Generic.IReadOnlyList<global::Fluss.UnitOfWorkRecordingProxy.EventListenerTypeWithKeyAndVersion>? EventListeners, long CreatedAtVersion);");
         _writer.WriteLine();
         _writer.WriteIndented("private static async global::System.Threading.Tasks.ValueTask<bool> MatchesEventListenerState(global::Fluss.IUnitOfWork unitOfWork, CacheEntryValue value) ");
         using (_writer.WriteBraces())
         {
+            _writer.WriteIndentedLine("var version = await unitOfWork.ConsistentVersion();");
+            _writer.WriteIndentedLine("if (value.CreatedAtVersion == version) return true;");
+
             _writer.WriteIndented("foreach (var eventListenerData in value.EventListeners ?? global::System.Array.Empty<global::Fluss.UnitOfWorkRecordingProxy.EventListenerTypeWithKeyAndVersion>()) ");
             using (_writer.WriteBraces())
             {
@@ -152,7 +155,7 @@ public sealed class SelectorFileBuilder : IDisposable
 
         using (_writer.WriteBraces())
         {
-            _writer.WriteIndentedLine("entry.Value = new CacheEntryValue(result, recordingUnitOfWork.GetRecordedListeners());");
+            _writer.WriteIndentedLine("entry.Value = new CacheEntryValue(result, recordingUnitOfWork.GetRecordedListeners(), await unitOfWork.ConsistentVersion());");
             _writer.WriteIndentedLine("entry.Size = 1;");
         }
 

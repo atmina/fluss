@@ -34,4 +34,5 @@ public interface IUnitOfWork : IDisposable
         where TKey : notnull where TReadModel : EventListener, IReadModel, IEventListenerWithKey<TKey>, new();
 
     IUnitOfWork WithPrefilledVersion(long? version);
+    IUnitOfWork CopyWithVersion(long version);
 }
