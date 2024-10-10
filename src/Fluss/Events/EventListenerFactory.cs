@@ -14,7 +14,7 @@ public sealed class EventListenerFactory(IEventRepository eventRepository) : IEv
 
     public TEventListener UpdateWithEvents<TEventListener>(TEventListener eventListener, ReadOnlyCollection<ReadOnlyMemory<EventEnvelope>> events) where TEventListener : EventListener
     {
-        EventListener updatedEventListener = eventListener;
+        EventListener updatedEventListener = eventListener with {};
         // ReSharper disable once ForCanBeConvertedToForeach
         for (var i = 0; i < events.Count; i++)
         {

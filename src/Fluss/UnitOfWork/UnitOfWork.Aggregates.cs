@@ -110,8 +110,7 @@ public partial class UnitOfWork
         where TEventListener : EventListener
     {
         EnsureInstantiated();
-
-        eventListener = await _eventListenerFactory!.UpdateTo(eventListener, at ?? await ConsistentVersion());
+        eventListener = await _eventListenerFactory!.UpdateTo(eventListener, at ?? await ConsistentVersion()) with {};
 
         foreach (var publishedEventEnvelope in PublishedEventEnvelopes)
         {
