@@ -25,6 +25,7 @@ public class UnitOfWorkFactory(IServiceProvider serviceProvider)
             {
                 var unitOfWork = serviceProvider.GetRequiredService<UnitOfWork>();
                 await action(unitOfWork);
+                
                 await unitOfWork.CommitInternal();
                 await unitOfWork.Return();
             });
@@ -39,6 +40,7 @@ public class UnitOfWorkFactory(IServiceProvider serviceProvider)
             {
                 var unitOfWork = serviceProvider.GetRequiredService<UnitOfWork>();
                 var result = await action(unitOfWork);
+                
                 await unitOfWork.CommitInternal();
                 await unitOfWork.Return();
                 return result;
