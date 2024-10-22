@@ -14,9 +14,9 @@
     </PropertyGroup>
 
     <ItemGroup>
-        <PackageReference Include="HotChocolate" Version="13.9.12" />
-        <PackageReference Include="HotChocolate.AspNetCore" Version="13.9.12" />
-        <PackageReference Include="HotChocolate.Data" Version="13.9.12" />
+        <PackageReference Include="HotChocolate" Version="14.0.0" />
+        <PackageReference Include="HotChocolate.AspNetCore" Version="14.0.0" />
+        <PackageReference Include="HotChocolate.Data" Version="14.0.0" />
         <PackageReference Include="System.Text.Json" Version="8.0.5" />
     </ItemGroup>
 
