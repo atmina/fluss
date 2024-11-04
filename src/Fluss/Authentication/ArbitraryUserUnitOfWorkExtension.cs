@@ -1,4 +1,5 @@
 using System.Collections.Concurrent;
+using System.Diagnostics.Contracts;
 using Fluss.Events;
 using Fluss.Validation;
 using Microsoft.Extensions.DependencyInjection;
@@ -21,6 +22,7 @@ public class ArbitraryUserUnitOfWorkCache(IServiceProvider serviceProvider) : IA
         return sp.GetRequiredService<UnitOfWorkFactory>();
     }
 
+    [Pure]
     public IUnitOfWork GetUserUnitOfWork(Guid userId)
     {
         var sp = GetCachedServiceProvider(userId);

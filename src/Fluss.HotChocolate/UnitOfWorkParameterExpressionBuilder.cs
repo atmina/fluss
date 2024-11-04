@@ -1,66 +1,33 @@
-using System.Linq.Expressions;
-using System.Reflection;
 using HotChocolate.Internal;
 using HotChocolate.Resolvers;
 
 namespace Fluss.HotChocolate;
 
-public class UnitOfWorkParameterExpressionBuilder : IParameterExpressionBuilder
+public class UnitOfWorkParameterExpressionBuilder() :
+    CustomParameterExpressionBuilder<IUnitOfWork>(ctx => CreateIUnitOfWork(ctx))
 {
-    public const string PrefillUnitOfWorkVersion = nameof(AddExtensionMiddleware) + ".prefillUnitOfWorkVersion";
-
-    private static readonly MethodInfo GetOrSetGlobalStateUnitOfWorkMethod =
-        typeof(ResolverContextExtensions).GetMethods()
-            .First(m => m.Name == nameof(ResolverContextExtensions.GetOrSetGlobalState))
-            .MakeGenericMethod(typeof(IUnitOfWork));
-
-    private static readonly MethodInfo GetGlobalStateOrDefaultLongMethod =
-        typeof(ResolverContextExtensions).GetMethods()
-            .First(m => m.Name == nameof(ResolverContextExtensions.GetGlobalStateOrDefault))
-            .MakeGenericMethod(typeof(long?));
-
-    private static readonly MethodInfo ServiceUnitOfWorkMethod =
-        typeof(IPureResolverContext).GetMethods().First(
-                method => method is { Name: nameof(IPureResolverContext.Service), IsGenericMethod: true })
-            .MakeGenericMethod(typeof(IUnitOfWork));
-
-    private static readonly MethodInfo WithPrefilledVersionMethod =
-        typeof(IUnitOfWork).GetMethods(BindingFlags.Instance | BindingFlags.Public)
-            .First(m => m.Name == nameof(IUnitOfWork.WithPrefilledVersion));
-
-    public bool CanHandle(ParameterInfo parameter) =>
-        typeof(IUnitOfWork) == parameter.ParameterType;
-
-    /*
-     * Produces something like this: context.GetOrSetGlobalState(
-     *      nameof(IUnitOfWork),
-     *      _ =>
-     *          context
-     *              .Service<IUnitOfWork>()
-     *              .WithPrefilledVersion(
-     *                  context.GetGlobalState<long>(PrefillUnitOfWorkVersion)
-     *              ))!;
-     */
-    public Expression Build(ParameterExpressionBuilderContext builderContext)
+    private static IUnitOfWork CreateIUnitOfWork(IResolverContext context)
     {
-        var context = builderContext.ResolverContext;
-        var getNewUnitOfWork = Expression.Call(
-            Expression.Call(context, ServiceUnitOfWorkMethod),
-            WithPrefilledVersionMethod,
-            Expression.Call(
-                null,
-                GetGlobalStateOrDefaultLongMethod,
-                context,
-                Expression.Constant(PrefillUnitOfWorkVersion)));
+        var unitOfWork = context.GetOrSetGlobalState(
+           nameof(IUnitOfWork),
+           _ =>
+           {
+               var createdUnitOfWork = context
+                   .Service<IUnitOfWork>()
+                   .WithPrefilledVersion(
+                       context.GetGlobalState<long>(PrefillUnitOfWorkVersion)
+                   );
+               
+               ((IMiddlewareContext)context).RegisterForCleanup(createdUnitOfWork.Return);
 
-        return Expression.Call(null, GetOrSetGlobalStateUnitOfWorkMethod, context,
-            Expression.Constant(nameof(IUnitOfWork)),
-            Expression.Lambda<Func<string, IUnitOfWork>>(
-                getNewUnitOfWork,
-                Expression.Parameter(typeof(string))));
+               return createdUnitOfWork;
+           });
+
+        return unitOfWork;
     }
+    
+    public const string PrefillUnitOfWorkVersion = nameof(AddExtensionMiddleware) + ".prefillUnitOfWorkVersion";
 
     public ArgumentKind Kind => ArgumentKind.Custom;
     public bool IsPure => false;
-    public bool IsDefaultHandler => false;
 }

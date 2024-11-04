@@ -1,5 +1,4 @@
-﻿using System.Collections.Concurrent;
-using System.Diagnostics.CodeAnalysis;
+﻿using System.Diagnostics.CodeAnalysis;
 using Fluss.Events;
 using Fluss.ReadModel;
 
@@ -95,11 +94,6 @@ public class UnitOfWorkRecordingProxy(IUnitOfWork impl) : IUnitOfWork
             return readModel.LastAcceptedEvent <= Version;
         }
     }
-
-    public void Dispose()
-    {
-        impl.Dispose();
-
-        GC.SuppressFinalize(this);
-    }
+    
+    public ValueTask Return() => ValueTask.CompletedTask;
 }

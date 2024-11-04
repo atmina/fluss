@@ -66,7 +66,6 @@ public class Migrator(ILogger<Migrator> logger, IServiceProvider serviceProvider
                 var scope = serviceProvider.CreateScope();
                 var migrationRunner = scope.ServiceProvider.GetRequiredService<IMigrationRunner>();
                 migrationRunner.MigrateUp();
-
             }
             catch (Exception e)
             {
