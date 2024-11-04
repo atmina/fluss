@@ -96,7 +96,7 @@ public partial class UnitOfWork : IWriteUnitOfWork
         return _userIdProvider!.Get();
     }
 
-    public void Dispose()
+    public ValueTask Return()
     {
         _eventListenerFactory = null;
         _eventRepository = null;
@@ -109,6 +109,6 @@ public partial class UnitOfWork : IWriteUnitOfWork
 
         Pool.Return(this);
 
-        GC.SuppressFinalize(this);
+        return ValueTask.CompletedTask;
     }
 }

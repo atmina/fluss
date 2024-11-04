@@ -62,9 +62,10 @@ public class Bench
                 }
             });
 
-            using var unitOfWork = _sp.GetSystemUserUnitOfWork();
+            var unitOfWork = _sp.GetSystemUserUnitOfWork();
             var readModel1 = await unitOfWork.GetReadModel<EventsEqualReadModel, int>(1);
             var readModel2 = await unitOfWork.GetReadModel<EventsEqualReadModel, int>(2);
+            await unitOfWork.Return();
             sum += readModel1.GotEvents + readModel2.GotEvents;
         }
 
@@ -118,8 +119,9 @@ public class Bench
 
         for (var j = 0; j < limit; j++)
         {
-            using var unitOfWork = _sp.GetSystemUserUnitOfWork();
+            var unitOfWork = _sp.GetSystemUserUnitOfWork();
             var readModel1 = await unitOfWork.GetReadModel<EventsModEqualReadModel, int>(3);
+            await unitOfWork.Return();
             sum += readModel1.GotEvents;
         }
 
@@ -134,8 +136,9 @@ public class Bench
         var limit = StorageType == "postgres" ? 400 : 5000;
         for (var j = 1; j < limit; j++)
         {
-            using var unitOfWork = _sp.GetSystemUserUnitOfWork();
+            var unitOfWork = _sp.GetSystemUserUnitOfWork();
             var readModel1 = await unitOfWork.GetReadModel<EventsModEqualReadModel, int>(j);
+            await unitOfWork.Return();
             sum += readModel1.GotEvents;
         }
 
@@ -181,8 +184,9 @@ public class Bench
 
         var tasks = blocks.Select(async b =>
         {
-            using var unitOfWork = _sp.GetSystemUserUnitOfWork();
+            var unitOfWork = _sp.GetSystemUserUnitOfWork();
             var readModel1 = await unitOfWork.GetMultipleReadModels<EventsModEqualReadModel, int>(b);
+            await unitOfWork.Return();
             sum += readModel1.Sum(e => e.GotEvents);
         });
 
