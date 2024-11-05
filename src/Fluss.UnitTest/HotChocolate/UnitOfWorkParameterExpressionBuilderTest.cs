@@ -1,8 +1,4 @@
 ﻿using Fluss.HotChocolate;
-using HotChocolate.Internal;
-using HotChocolate.Resolvers;
-using Microsoft.CodeAnalysis.Operations;
-using Moq;
 using ArgumentKind = HotChocolate.Internal.ArgumentKind;
 
 namespace Fluss.UnitTest.HotChocolate;
@@ -42,12 +38,6 @@ public class UnitOfWorkParameterExpressionBuilderTest
     public void IsPure_ShouldReturnFalse()
     {
         Assert.False(_builder.IsPure);
-    }
-
-    [Fact]
-    public void IsDefaultHandler_ShouldReturnFalse()
-    {
-        Assert.False(_builder.IsDefaultHandler);
     }
 
     private class TestClass

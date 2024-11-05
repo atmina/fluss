@@ -135,8 +135,6 @@ public sealed class SideEffectDispatcher : IHostedService
                                     $"Result of SideEffect {sideEffect.GetType().Name} handler is not a Task<IEnumerable<Event>>");
                             }
 
-                            await versionedUnitOfWork.Return();
-
                             var newEvents = await resultTask;
                             foreach (var newEvent in newEvents)
                             {

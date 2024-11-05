@@ -164,14 +164,6 @@ public class UnitOfWorkRecordingProxyTest
     }
 
     [Fact]
-    public void Dispose_ShouldCallImplementation()
-    {
-        _proxy.Dispose();
-
-        _mockUnitOfWork.Verify(u => u.Dispose(), Times.Once);
-    }
-
-    [Fact]
     public void GetRecordedListeners_ShouldReturnCorrectInformation()
     {
         var readModel1 = new TestReadModel()

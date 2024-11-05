@@ -50,14 +50,6 @@ public partial class UnitOfWork : IWriteUnitOfWork
         }
     }
 
-    public void DeleteMeEnsureInstantiated()
-    {
-        if (!_isInstantiated)
-        {
-            throw new InvalidOperationException("UnitOfWork is not properly instantiated.");
-        }
-    }
-
     public async ValueTask<long> ConsistentVersion()
     {
         EnsureInstantiated();
