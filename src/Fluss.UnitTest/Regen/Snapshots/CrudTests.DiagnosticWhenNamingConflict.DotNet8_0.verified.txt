@@ -1,14 +1,23 @@
 ﻿{
   Diagnostics: [
     {
-      Id: FLUSS0007,
-      Title: Naming conflict,
-      Severity: Error,
-      WarningLevel: 0,
-      Location: : (7,16)-(7,30),
-      MessageFormat: The name '{0}' conflicts with a generated command or event name,
+      Location: /*
+    public int Id { get; set; }
+    public void TestCrudCreate() { }
+                ^^^^^^^^^^^^^^
+}
+*/
+ : (7,16)-(7,30),
       Message: The name 'TestCrudCreate' conflicts with a generated command or event name,
-      Category: Fluss.Regen
+      Severity: Error,
+      Descriptor: {
+        Id: FLUSS0007,
+        Title: Naming conflict,
+        MessageFormat: The name '{0}' conflicts with a generated command or event name,
+        Category: Fluss.Regen,
+        DefaultSeverity: Error,
+        IsEnabledByDefault: true
+      }
     }
   ]
 }

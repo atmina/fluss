@@ -1,14 +1,23 @@
 ﻿{
   Diagnostics: [
     {
-      Id: FLUSS0005,
-      Title: Namespace missing,
-      Severity: Error,
-      WarningLevel: 0,
-      Location: : (3,21)-(3,29),
-      MessageFormat: CRUD classes must be defined within a namespace,
+      Location: /*
+[Crud]
+public partial class TestCrud {
+                     ^^^^^^^^
+    public int Id { get; set; }
+*/
+ : (3,21)-(3,29),
       Message: CRUD classes must be defined within a namespace,
-      Category: Fluss.Regen
+      Severity: Error,
+      Descriptor: {
+        Id: FLUSS0005,
+        Title: Namespace missing,
+        MessageFormat: CRUD classes must be defined within a namespace,
+        Category: Fluss.Regen,
+        DefaultSeverity: Error,
+        IsEnabledByDefault: true
+      }
     }
   ]
 }

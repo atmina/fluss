@@ -1,14 +1,23 @@
 ﻿{
   Diagnostics: [
     {
-      Id: FLUSS0006,
-      Title: Unsupported property type,
-      Severity: Error,
-      WarningLevel: 0,
-      Location: : (7,21)-(7,25),
-      MessageFormat: Property '{0}' has an unsupported type '{1}' for CRUD operations,
+      Location: /*
+public partial class TestCrud {
+    public List<int> Test { get; set; }
+                     ^^^^
+}
+*/
+ : (7,21)-(7,25),
       Message: Property 'Test' has an unsupported type 'System.Collections.Generic.List<int>' for CRUD operations,
-      Category: Fluss.Regen
+      Severity: Error,
+      Descriptor: {
+        Id: FLUSS0006,
+        Title: Unsupported property type,
+        MessageFormat: Property '{0}' has an unsupported type '{1}' for CRUD operations,
+        Category: Fluss.Regen,
+        DefaultSeverity: Error,
+        IsEnabledByDefault: true
+      }
     }
   ]
 }
