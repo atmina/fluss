@@ -15,10 +15,11 @@ public class UnitOfWorkParameterExpressionBuilder() :
                var createdUnitOfWork = context
                    .Service<IUnitOfWork>()
                    .WithPrefilledVersion(
-                       context.GetGlobalState<long>(PrefillUnitOfWorkVersion)
+                       context.GetGlobalStateOrDefault<long?>(PrefillUnitOfWorkVersion)
                    );
                
-               ((IMiddlewareContext)context).RegisterForCleanup(createdUnitOfWork.Return);
+               // When uncommenting this, switch to copying lists in the middleware (= undesirable?)
+               ((IMiddlewareContext)context).RegisterForCleanup(createdUnitOfWork.Return, CleanAfter.Request);
 
                return createdUnitOfWork;
            });

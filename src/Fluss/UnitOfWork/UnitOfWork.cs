@@ -1,3 +1,4 @@
+using System.Diagnostics;
 using Collections.Pooled;
 using Fluss.Authentication;
 using Fluss.Events;

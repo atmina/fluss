@@ -24,10 +24,16 @@ public class UnitOfWorkFactory(IServiceProvider serviceProvider)
             .ExecuteAsync(async () =>
             {
                 var unitOfWork = serviceProvider.GetRequiredService<UnitOfWork>();
-                await action(unitOfWork);
                 
-                await unitOfWork.CommitInternal();
-                await unitOfWork.Return();
+                try
+                {
+                    await action(unitOfWork);
+                    await unitOfWork.CommitInternal();
+                }
+                finally
+                {
+                    await unitOfWork.Return();
+                }
             });
     }
 
@@ -39,11 +45,17 @@ public class UnitOfWorkFactory(IServiceProvider serviceProvider)
             .ExecuteAsync(async () =>
             {
                 var unitOfWork = serviceProvider.GetRequiredService<UnitOfWork>();
-                var result = await action(unitOfWork);
-                
-                await unitOfWork.CommitInternal();
-                await unitOfWork.Return();
-                return result;
+                try
+                {
+                    var result = await action(unitOfWork);
+                    await unitOfWork.CommitInternal();
+
+                    return result;
+                }
+                finally
+                {
+                    await unitOfWork.Return();
+                }
             });
     }
 }
