@@ -1,14 +1,23 @@
 ﻿{
   Diagnostics: [
     {
-      Id: FLUSS0004,
-      Title: Reserved property name,
-      Severity: Error,
-      WarningLevel: 0,
-      Location: : (6,16)-(6,22),
-      MessageFormat: The property name 'Exists' is reserved for internal use in CRUD classes,
+      Location: /*
+public partial class TestCrud {
+    public bool Exists { get; set; }
+                ^^^^^^
+}
+*/
+ : (6,16)-(6,22),
       Message: The property name 'Exists' is reserved for internal use in CRUD classes,
-      Category: Fluss.Regen
+      Severity: Error,
+      Descriptor: {
+        Id: FLUSS0004,
+        Title: Reserved property name,
+        MessageFormat: The property name 'Exists' is reserved for internal use in CRUD classes,
+        Category: Fluss.Regen,
+        DefaultSeverity: Error,
+        IsEnabledByDefault: true
+      }
     }
   ]
 }

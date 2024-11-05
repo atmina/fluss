@@ -1,14 +1,28 @@
 ﻿{
   Diagnostics: [
     {
-      Id: FLUSS0001,
-      Title: Class must be partial,
-      Severity: Error,
-      WarningLevel: 0,
-      Location: : (4,0)-(7,1),
-      MessageFormat: Class '{0}' must be partial,
+      Location: /*
+
+[Crud]
+^^^^^^
+public class TestCrud {
+^^^^^^^^^^^^^^^^^^^^^^^
+    public int Id { get; set; }
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+}
+^
+*/
+ : (4,0)-(7,1),
       Message: Class 'TestCrud' must be partial,
-      Category: Fluss.Regen
+      Severity: Error,
+      Descriptor: {
+        Id: FLUSS0001,
+        Title: Class must be partial,
+        MessageFormat: Class '{0}' must be partial,
+        Category: Fluss.Regen,
+        DefaultSeverity: Error,
+        IsEnabledByDefault: true
+      }
     }
   ]
 }
