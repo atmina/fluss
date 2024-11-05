@@ -18,7 +18,9 @@ public class UnitOfWorkParameterExpressionBuilder() :
                        context.GetGlobalStateOrDefault<long?>(PrefillUnitOfWorkVersion)
                    );
                
-               // When uncommenting this, switch to copying lists in the middleware (= undesirable?)
+               // CleanAfter.Requests allows us to read the used ReadModels after the resolver and before returning
+               //  the first result. The default CleanAfter.Resolver immediately returns the unitOfWork after the
+               //  resolver, losing us valuable information.
                ((IMiddlewareContext)context).RegisterForCleanup(createdUnitOfWork.Return, CleanAfter.Request);
 
                return createdUnitOfWork;

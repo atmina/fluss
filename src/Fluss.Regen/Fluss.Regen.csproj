@@ -15,7 +15,7 @@
         <RepositoryUrl>https://github.com/atmina/fluss</RepositoryUrl>
         <RepositoryType>git</RepositoryType>
         <PackageLicenseExpression>MIT</PackageLicenseExpression>
-<!--        <TreatWarningsAsErrors>true</TreatWarningsAsErrors>-->
+        <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
         
         <NoWarn>$(NoWarn);NU5128</NoWarn>
         <IncludeSymbols>false</IncludeSymbols>

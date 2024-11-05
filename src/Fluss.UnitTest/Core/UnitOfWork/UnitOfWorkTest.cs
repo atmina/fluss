@@ -324,7 +324,7 @@ public partial class UnitOfWorkTest
     public async Task ThrowsWhenTryingToUseAfterDispose()
     {
         var unitOfWork = GetUnitOfWork();
-        unitOfWork.Dispose();
+        await unitOfWork.Return();
 
         await Assert.ThrowsAsync<InvalidOperationException>(async () =>
         {
