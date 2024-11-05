@@ -44,9 +44,9 @@ public class Tests
         Host.UseWebSockets();
         Host.MapGraphQL();
         Host.MapGraphQLWebSocket();
-        
+
         await Host.StartAsync();
-        
+
         var server = Host.Services.GetRequiredService<IServer>();
         var addressFeature = server.Features.Get<IServerAddressesFeature>();
         Address = addressFeature!.Addresses.First();
@@ -57,14 +57,14 @@ public class Tests
     {
         var tokenSource = new CancellationTokenSource();
         tokenSource.CancelAfter(30000);
-        
+
         var channel = await SubscribeToTodos(default);
-        
+
         // Receive initial response
         await channel.Reader.WaitToReadAsync(tokenSource.Token);
         var ids = await channel.Reader.ReadAsync(tokenSource.Token);
         Assert.That(ids, Is.Empty);
-        
+
         for (var i = 0; i < 10; i++)
         {
             var newId = await CreateTodo($"Todo {i}");
@@ -87,7 +87,7 @@ public class Tests
             query = "mutation CreateTodo($todo: String!) { createTodo(todo: $todo) { id } }",
             variables = new { todo },
         };
-        
+
         var response = await httpClient.PostAsJsonAsync("/graphql", body);
         response.EnsureSuccessStatusCode();
 
@@ -113,7 +113,7 @@ public class Tests
                 var message = Encoding.UTF8.GetString(buffer.AsSpan(0, result.Count));
 
                 if (message.Contains("connection_ack")) continue;
-                
+
                 var document = JsonDocument.Parse(message);
                 var ids = document.RootElement.GetProperty("payload").GetProperty("data").GetProperty("todos").EnumerateArray()
                     .Select(t => t.GetProperty("id").GetGuid())
@@ -127,13 +127,13 @@ public class Tests
 
         const string init = """{"type":"connection_init"}""";
         await socket.SendAsync(Encoding.UTF8.GetBytes(init).AsMemory(), WebSocketMessageType.Text, true, ct);
-        
+
         const string subscription = """{"id":"0","type":"subscribe","payload":{"query":"\n  query Todos {\n todos { id } }\n","operationName":"Todos","variables":{}}}""";
         await socket.SendAsync(Encoding.UTF8.GetBytes(subscription).AsMemory(), WebSocketMessageType.Text, true, ct);
-        
+
         return channel;
     }
-    
+
     [TearDown]
     public async Task TearDown()
     {
@@ -265,7 +265,7 @@ public class TodoMutations
     public async Task<TodoRead> CreateTodo([Service] IServiceProvider serviceProvider, string todo)
     {
         var unitOfWorkFactory = serviceProvider.GetSystemUserUnitOfWorkFactory();
-        
+
         return await unitOfWorkFactory.Commit(async unitOfWork =>
         {
             var created = await TodoWrite.Create(unitOfWork, todo);
