@@ -9,6 +9,13 @@ public static class SystemUser
         return serviceProvider.GetUserUnitOfWorkFactory(SystemUserGuid);
     }
 
+    /// <summary>
+    /// Returns a UnitOfWork that is configured to use the system user for authorization.
+    ///
+    /// <b>You MUST call .Return() on the result of this function once it's not required any more.</b>
+    /// </summary>
+    /// <param name="serviceProvider">this</param>
+    /// <returns>A UnitOfWork that is configured to use the system user for authorization.</returns>
     public static IUnitOfWork GetSystemUserUnitOfWork(this IServiceProvider serviceProvider)
     {
         return serviceProvider.GetUserUnitOfWork(SystemUserGuid);

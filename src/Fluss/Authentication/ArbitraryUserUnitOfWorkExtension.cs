@@ -70,6 +70,14 @@ public static class ArbitraryUserUnitOfWorkExtension
         return serviceProvider.GetRequiredService<IArbitraryUserUnitOfWorkCache>().GetUserUnitOfWorkFactory(userId);
     }
 
+    /// <summary>
+    /// Returns a UnitOfWork that is configured to use the provided Guid for determining the current user.
+    ///
+    /// <b>You MUST call .Return() on the result of this function once it's not required any more.</b>
+    /// </summary>
+    /// <param name="serviceProvider">this</param>
+    /// <param name="userId">The id of the user that the UnitOfWork should use for authorization.</param>
+    /// <returns>A UnitOfWork that is configured to use the provided Guid for determining the current user.</returns>
     public static IUnitOfWork GetUserUnitOfWork(this IServiceProvider serviceProvider, Guid userId)
     {
         return serviceProvider.GetRequiredService<IArbitraryUserUnitOfWorkCache>().GetUserUnitOfWork(userId);
