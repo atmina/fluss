@@ -54,18 +54,36 @@ unitOfWork).Create();
         }
     }
 
+    private IReadOnlyCollection<EventListener> GetCurrentListeners(IReadOnlyDictionary<string, object?>? contextData)
+    {
+        if (contextData == null)
+        {
+            logger.LogWarning("Trying to add live results but {ContextData} is null!", nameof(contextData));
+            throw new InvalidOperationException("Cannot fetch ReadModels from null context.");
+        }
+        
+        if (!contextData.TryGetValue(nameof(IUnitOfWork), out var value) || value is not IUnitOfWork unitOfWork)
+        {
+            logger.LogWarning("Trying to add live results but {ContextData} does not contain UnitOfWork!", nameof(contextData));
+            throw new InvalidOperationException("Cannot fetch ReadModels when no UnitOfWork is present.");
+        }
+
+        return unitOfWork.ReadModels.ToList().AsReadOnly();
+    }
+    
     private async IAsyncEnumerable<IQueryResult> LiveResults(IReadOnlyDictionary<string, object?>? contextData, QueryResult firstResult, IQueryRequest originalRequest)
     {
-        yield return firstResult;
-
-        using var serviceScope = rootServiceProvider.CreateScope();
-        var serviceProvider = serviceScope.ServiceProvider;
-
         if (contextData == null)
         {
             logger.LogWarning("Trying to add live results but {ContextData} is null!", nameof(contextData));
             yield break;
         }
+        
+        var listeners = GetCurrentListeners(contextData);
+        yield return firstResult;
+
+        using var serviceScope = rootServiceProvider.CreateScope();
+        var serviceProvider = serviceScope.ServiceProvider;
 
         contextData.TryGetValue(nameof(HttpContext), out var httpContext);
         var isWebsocket = (httpContext as HttpContext)?.WebSockets.IsWebSocketRequest ?? false;
@@ -84,20 +102,7 @@ unitOfWork).Create();
 
         while (true)
         {
-            if (contextData == null || !contextData.TryGetValue(nameof(IUnitOfWork), out var value))
-            {
-                break;
-            }
-
-            if (value is not UnitOfWork unitOfWork)
-            {
-                break;
-            }
-
-            var latestPersistedEventVersion = await WaitForChange(
-                serviceProvider,
-                unitOfWork.ReadModels
-            );
+            var latestPersistedEventVersion = await WaitForChange(serviceProvider, listeners);
 
             if (isWebsocket && contextSocketSession is ISocketSession socketSession && socketSession.Operations.All(operationSession => operationSession.Id != operationId?.ToString()))
             {
@@ -119,8 +124,8 @@ unitOfWork).Create();
                 break;
             }
 
+            listeners = GetCurrentListeners(executionResult.ContextData);
             yield return result;
-            contextData = executionResult.ContextData;
 
             if (result.Errors?.Count > 0)
             {

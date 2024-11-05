@@ -45,6 +45,9 @@ jobs:
       - name: Test
         run: dotnet test --collect:"XPlat Code Coverage" --no-restore --no-build
         working-directory: ./src/Fluss.UnitTest
+      - name: Test HotChocolate
+        run: dotnet test --collect:"XPlat Code Coverage" --no-restore --no-build
+        working-directory: ./src/Fluss.HotChocolate.IntegrationTest
       - name: Start PostgreSQL
         run: docker compose up -d
         working-directory: ./src/Fluss.PostgreSQL.IntegrationTest

@@ -34,12 +34,11 @@ public class Tests
             .AddQueryType()
             .AddMutationType()
             .AddTypeExtension<TodoQueries>()
-            .AddTypeExtension<TodoExtensions>()
             .AddTypeExtension<TodoMutations>()
             .AddLiveEventSourcing();
 
-        hostBuilder.WebHost.ConfigureKestrel(serveroptions =>
-            serveroptions.Configure().Endpoint(IPAddress.Loopback, 0));
+        hostBuilder.WebHost.ConfigureKestrel(serverOptions =>
+            serverOptions.Configure().Endpoint(IPAddress.Loopback, 0));
 
         Host = hostBuilder.Build();
         Host.UseWebSockets();
@@ -53,21 +52,9 @@ public class Tests
         Address = addressFeature!.Addresses.First();
     }
 
-    private readonly Guid _aGuid = Guid.NewGuid();
-    protected UnitOfWorkFactory ArrangeUnitOfWorkFactory => Host.Services.GetUserUnitOfWorkFactory(_aGuid);
-
     [Test]
-    public async Task JustWorks()
+    public async Task SubscriberReceivesLiveUpdates()
     {
-        const int initialTodos = 5;
-        for (var i = 0; i < initialTodos; i++)
-        {
-            await ArrangeUnitOfWorkFactory.Commit(async unitOfWork =>
-            {
-                await TodoWrite.Create(unitOfWork, "Todo " + i);
-            });
-        }
-        
         var tokenSource = new CancellationTokenSource();
         tokenSource.CancelAfter(30000);
         
@@ -76,24 +63,21 @@ public class Tests
         // Receive initial response
         await channel.Reader.WaitToReadAsync(tokenSource.Token);
         var ids = await channel.Reader.ReadAsync(tokenSource.Token);
-        Assert.That(ids, Has.Count.EqualTo(initialTodos));
+        Assert.That(ids, Is.Empty);
         
         for (var i = 0; i < 10; i++)
         {
-            if (i % 2 == 0)
-            {
-                await SubscribeToTodos(default);
-            }
-            
-            var newId = await CreateTodo("Todo");
+            var newId = await CreateTodo($"Todo {i}");
             await channel.Reader.WaitToReadAsync(tokenSource.Token);
             ids = await channel.Reader.ReadAsync(tokenSource.Token);
-            Assert.That(ids, Has.Count.EqualTo(i + initialTodos + 1));
-            Assert.That(ids, Contains.Item(Guid.Parse(newId)));
+            Assert.That(ids, Has.Count.EqualTo(i + 1));
+            Assert.That(ids, Contains.Item(newId));
         }
+
+        await tokenSource.CancelAsync();
     }
 
-    private async Task<string> CreateTodo(string todo)
+    private async Task<Guid> CreateTodo(string todo)
     {
         var httpClient = new HttpClient();
         httpClient.BaseAddress = new Uri(Address);
@@ -110,7 +94,7 @@ public class Tests
         var responseBody = await response.Content.ReadFromJsonAsync<JsonElement>();
         var id = responseBody.GetProperty("data").GetProperty("createTodo").GetProperty("id").GetString();
 
-        return id ?? "";
+        return Guid.Parse(id ?? "");
     }
 
     private async Task<Channel<List<Guid>>> SubscribeToTodos(CancellationToken ct)
@@ -135,26 +119,17 @@ public class Tests
                     .Select(t => t.GetProperty("id").GetGuid())
                     .ToList();
 
-                var messageId = document.RootElement.GetProperty("id").GetString();
-                if (messageId == "0")
-                {
-                    await channel.Writer.WriteAsync(ids, ct);
-                }
-                else
-                {
-                    await socket.SendAsync(Encoding.UTF8.GetBytes($$"""{"id":"{{messageId}}","type":"complete"}""").ToArray().AsMemory(), WebSocketMessageType.Text, true, ct);
-                    break;
-                }
+                await channel.Writer.WriteAsync(ids, ct);
 
                 if (ct.IsCancellationRequested) break;
             }
         }, ct);
 
-        var init = """{"type":"connection_init"}""";
+        const string init = """{"type":"connection_init"}""";
         await socket.SendAsync(Encoding.UTF8.GetBytes(init).AsMemory(), WebSocketMessageType.Text, true, ct);
         
-        var x = """{"id":"0","type":"subscribe","payload":{"query":"\n  query Todos {\n todos { id \n index } }\n","operationName":"Todos","variables":{}}}""";
-        await socket.SendAsync(Encoding.UTF8.GetBytes(x).AsMemory(), WebSocketMessageType.Text, true, ct);
+        const string subscription = """{"id":"0","type":"subscribe","payload":{"query":"\n  query Todos {\n todos { id } }\n","operationName":"Todos","variables":{}}}""";
+        await socket.SendAsync(Encoding.UTF8.GetBytes(subscription).AsMemory(), WebSocketMessageType.Text, true, ct);
         
         return channel;
     }
@@ -281,16 +256,6 @@ public class TodoQueries
         var ids = await unitOfWork.GetReadModel<AllTodoIds>();
         await Task.Delay(500);
         return await unitOfWork.GetMultipleReadModels<TodoRead, Guid>(ids);
-    }
-}
-
-[ExtendObjectType<TodoRead>]
-public class TodoExtensions
-{
-    public async Task<int> Index([Parent] TodoRead todo, IUnitOfWork unitOfWork)
-    {
-        var indexModel = await unitOfWork.GetReadModel<TodoIndex, Guid>(todo.Id);
-        return indexModel.Index;
     }
 }
 
