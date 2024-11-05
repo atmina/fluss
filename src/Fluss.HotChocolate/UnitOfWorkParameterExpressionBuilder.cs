@@ -17,7 +17,7 @@ public class UnitOfWorkParameterExpressionBuilder() :
                    .WithPrefilledVersion(
                        context.GetGlobalStateOrDefault<long?>(PrefillUnitOfWorkVersion)
                    );
-               
+
                // CleanAfter.Requests allows us to read the used ReadModels after the resolver and before returning
                //  the first result. The default CleanAfter.Resolver immediately returns the unitOfWork after the
                //  resolver, losing us valuable information.
@@ -28,7 +28,7 @@ public class UnitOfWorkParameterExpressionBuilder() :
 
         return unitOfWork;
     }
-    
+
     public const string PrefillUnitOfWorkVersion = nameof(AddExtensionMiddleware) + ".prefillUnitOfWorkVersion";
 
     public ArgumentKind Kind => ArgumentKind.Custom;

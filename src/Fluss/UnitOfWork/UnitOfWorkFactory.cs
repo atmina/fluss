@@ -24,7 +24,7 @@ public class UnitOfWorkFactory(IServiceProvider serviceProvider)
             .ExecuteAsync(async () =>
             {
                 var unitOfWork = serviceProvider.GetRequiredService<UnitOfWork>();
-                
+
                 try
                 {
                     await action(unitOfWork);

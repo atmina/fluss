@@ -94,6 +94,6 @@ public class UnitOfWorkRecordingProxy(IUnitOfWork impl) : IUnitOfWork
             return readModel.LastAcceptedEvent <= Version;
         }
     }
-    
+
     public ValueTask Return() => ValueTask.CompletedTask;
 }

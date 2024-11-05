@@ -61,7 +61,7 @@ unitOfWork).Create();
             logger.LogWarning("Trying to add live results but {ContextData} is null!", nameof(contextData));
             throw new InvalidOperationException("Cannot fetch ReadModels from null context.");
         }
-        
+
         if (!contextData.TryGetValue(nameof(IUnitOfWork), out var value) || value is not IUnitOfWork unitOfWork)
         {
             logger.LogWarning("Trying to add live results but {ContextData} does not contain UnitOfWork!", nameof(contextData));
@@ -70,7 +70,7 @@ unitOfWork).Create();
 
         return unitOfWork.ReadModels.ToList().AsReadOnly();
     }
-    
+
     private async IAsyncEnumerable<IQueryResult> LiveResults(IReadOnlyDictionary<string, object?>? contextData, QueryResult firstResult, IQueryRequest originalRequest)
     {
         if (contextData == null)
@@ -78,7 +78,7 @@ unitOfWork).Create();
             logger.LogWarning("Trying to add live results but {ContextData} is null!", nameof(contextData));
             yield break;
         }
-        
+
         var listeners = GetCurrentListeners(contextData);
         yield return firstResult;
 
