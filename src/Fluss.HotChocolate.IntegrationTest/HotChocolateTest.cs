@@ -104,7 +104,7 @@ public class Tests
         socket.Options.AddSubProtocol("graphql-transport-ws");
         await socket.ConnectAsync(new Uri(Address.Replace("http", "ws") + "/graphql"), CancellationToken.None);
 
-        Task.Run(async () =>
+        _ = Task.Run(async () =>
         {
             while (true)
             {
