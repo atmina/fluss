@@ -105,6 +105,8 @@ public partial class UnitOfWork : IWriteUnitOfWork
         _validator = null;
         _userIdProvider = null;
         _consistentVersion = null;
+        
+        PublishedEventEnvelopes.Clear();
         _readModels.Clear();
         _isInstantiated = false;
 

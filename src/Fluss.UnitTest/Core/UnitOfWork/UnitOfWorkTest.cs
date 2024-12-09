@@ -35,7 +35,7 @@ public partial class UnitOfWorkTest
 
         _unitOfWorkFactory = new UnitOfWorkFactory(
             new ServiceCollection()
-                .AddScoped(_ => GetUnitOfWork())
+                .AddTransient(_ => GetUnitOfWork())
                 .BuildServiceProvider());
     }
 
@@ -330,6 +330,33 @@ public partial class UnitOfWorkTest
         {
             await unitOfWork.GetReadModel<TestRootReadModel>();
         });
+    }
+
+    [Fact]
+    public async Task FailingCommitDoesNotCacheEventsToWrite()
+    {
+        _policies.Add(new AllowAllPolicy());
+        
+        try
+        {
+            await _unitOfWorkFactory.Commit(async unitOfWork =>
+            {
+                var aggregate = await unitOfWork.GetAggregate<TestAggregate, int>(100);
+                await aggregate.Create();
+
+                throw new Exception();
+            });
+        }
+        catch
+        {
+        }
+
+        await _unitOfWorkFactory.Commit(_ => ValueTask.CompletedTask);
+        
+        var unitOfWork = GetUnitOfWork();
+        var aggregate = await unitOfWork.GetAggregate<TestAggregate, int>(100);
+        
+        Assert.False(aggregate.Exists);
     }
 
     private record TestRootReadModel : RootReadModel
