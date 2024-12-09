@@ -336,7 +336,7 @@ public partial class UnitOfWorkTest
     public async Task FailingCommitDoesNotCacheEventsToWrite()
     {
         _policies.Add(new AllowAllPolicy());
-        
+
         try
         {
             await _unitOfWorkFactory.Commit(async unitOfWork =>
@@ -352,10 +352,10 @@ public partial class UnitOfWorkTest
         }
 
         await _unitOfWorkFactory.Commit(_ => ValueTask.CompletedTask);
-        
+
         var unitOfWork = GetUnitOfWork();
         var aggregate = await unitOfWork.GetAggregate<TestAggregate, int>(100);
-        
+
         Assert.False(aggregate.Exists);
     }
 
