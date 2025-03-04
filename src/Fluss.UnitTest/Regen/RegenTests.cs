@@ -183,8 +183,8 @@ public class RegenTests
 
             namespace TestNamespace;
 
-            public class TestUpcaster : IUpcaster {
-                public IEnumerable<JObject>? Upcast(JObject eventJson) {
+            public class TestUpcaster : Upcaster {
+                public override IEnumerable<JObject>? Upcast(JObject eventJson) {
                     return null;
                 }
             }
