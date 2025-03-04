@@ -107,8 +107,8 @@ public static class ServiceCollectionExtensions
 
     public static IServiceCollection AddUpcaster<
         [DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicConstructors)] TUpcaster>(
-        this IServiceCollection services) where TUpcaster : class, IUpcaster
+        this IServiceCollection services) where TUpcaster : Upcaster
     {
-        return services.AddSingleton<IUpcaster, TUpcaster>();
+        return services.AddSingleton<Upcaster, TUpcaster>();
     }
 }

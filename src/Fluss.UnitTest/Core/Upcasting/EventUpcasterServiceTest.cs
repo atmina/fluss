@@ -22,7 +22,7 @@ public class EventUpcasterServiceTest
         return new RawEventEnvelope { Version = version, RawEvent = jObject };
     }
 
-    private (EventUpcasterService, Mock<IBaseEventRepository>) GetServices(IEnumerable<IUpcaster> upcasters, IEnumerable<RawEventEnvelope>? events = null)
+    private (EventUpcasterService, Mock<IBaseEventRepository>) GetServices(IEnumerable<Upcaster> upcasters, IEnumerable<RawEventEnvelope>? events = null)
     {
         var eventRepository = new Mock<IBaseEventRepository>();
         var logger = new Mock<ILogger<EventUpcasterService>>();
@@ -153,14 +153,14 @@ record TestEvent1(string Property1) : Event;
 // ReSharper disable once NotAccessedPositionalProperty.Global
 record TestEvent2(string Property2) : Event;
 
-internal class NoopUpcast : IUpcaster
+internal class NoopUpcast : Upcaster
 {
-    public IEnumerable<JObject>? Upcast(JObject eventJson) => null;
+    public override IEnumerable<JObject>? Upcast(JObject eventJson) => null;
 }
 
-internal class SingleEventUpcast : IUpcaster
+internal class SingleEventUpcast : Upcaster
 {
-    public IEnumerable<JObject>? Upcast(JObject eventJson)
+    public override IEnumerable<JObject>? Upcast(JObject eventJson)
     {
         var type = eventJson.GetValue("$type")?.ToObject<string>();
 
@@ -173,9 +173,9 @@ internal class SingleEventUpcast : IUpcaster
     }
 }
 
-internal class MultiEventUpcast : IUpcaster
+internal class MultiEventUpcast : Upcaster
 {
-    public IEnumerable<JObject>? Upcast(JObject eventJson)
+    public override IEnumerable<JObject>? Upcast(JObject eventJson)
     {
         var type = eventJson.GetValue("$type")?.ToObject<string>();
 
@@ -185,9 +185,9 @@ internal class MultiEventUpcast : IUpcaster
     }
 }
 
-internal class ChainedEventUpcast : IUpcaster
+internal class ChainedEventUpcast : Upcaster
 {
-    public IEnumerable<JObject>? Upcast(JObject eventJson)
+    public override IEnumerable<JObject>? Upcast(JObject eventJson)
     {
         var type = eventJson.GetValue("$type")?.ToObject<string>();
 
@@ -203,9 +203,9 @@ internal class ChainedEventUpcast : IUpcaster
 }
 
 [DependsOn(typeof(ChainedEventUpcast))]
-internal class ChainedEventUpcast2 : IUpcaster
+internal class ChainedEventUpcast2 : Upcaster
 {
-    public IEnumerable<JObject>? Upcast(JObject eventJson)
+    public override IEnumerable<JObject>? Upcast(JObject eventJson)
     {
         var type = eventJson.GetValue("$type")?.ToObject<string>();
 
