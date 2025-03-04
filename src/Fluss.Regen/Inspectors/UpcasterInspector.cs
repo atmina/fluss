@@ -1,5 +1,4 @@
 using System.Diagnostics.CodeAnalysis;
-using System.Linq;
 using Fluss.Regen.Models;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
@@ -16,7 +15,7 @@ public sealed class UpcasterInspector : ISyntaxInspector
         {
             var symbol = context.SemanticModel.GetDeclaredSymbol(classSyntax);
             if (symbol is INamedTypeSymbol classSymbol &&
-                classSymbol.BaseType?.ToDisplayString() ==  "Fluss.Upcasting.Upcaster")
+                classSymbol.BaseType?.ToDisplayString() == "Fluss.Upcasting.Upcaster")
             {
                 syntaxInfo = new UpcasterInfo(classSymbol, classSyntax);
                 return true;
