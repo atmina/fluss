@@ -21,17 +21,19 @@ public class EventUpcasterService(
 
     public async ValueTask Run()
     {
-        var events = await eventRepository.GetRawEvents();
+        var events = (await eventRepository.GetRawEvents()).ToList();
 
         foreach (var upcaster in _sortedUpcasters)
         {
             logger.LogInformation("Running Upcaster {UpcasterName}", upcaster.GetType().Name);
 
             var upcastedEvents = new List<RawEventEnvelope>();
+            var rawEvents = events.Select(e => e.RawEvent).ToList();
 
-            foreach (var @event in events)
+            for (var i = 0; i < rawEvents.Count; i++)
             {
-                var upcastResult = upcaster.Upcast(@event.RawEvent);
+                var @event = events[i];
+                var upcastResult = upcaster.Upcast(@event, rawEvents.Skip(i));
                 if (upcastResult is null)
                 {
                     upcastedEvents.Add(@event);

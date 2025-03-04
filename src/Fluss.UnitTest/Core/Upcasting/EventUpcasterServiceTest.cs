@@ -155,12 +155,12 @@ record TestEvent2(string Property2) : Event;
 
 internal class NoopUpcast : Upcaster
 {
-    public IEnumerable<JObject>? Upcast(JObject eventJson) => null;
+    public override IEnumerable<JObject>? Upcast(JObject eventJson) => null;
 }
 
 internal class SingleEventUpcast : Upcaster
 {
-    public IEnumerable<JObject>? Upcast(JObject eventJson)
+    public override IEnumerable<JObject>? Upcast(JObject eventJson)
     {
         var type = eventJson.GetValue("$type")?.ToObject<string>();
 
@@ -175,7 +175,7 @@ internal class SingleEventUpcast : Upcaster
 
 internal class MultiEventUpcast : Upcaster
 {
-    public IEnumerable<JObject>? Upcast(JObject eventJson)
+    public override IEnumerable<JObject>? Upcast(JObject eventJson)
     {
         var type = eventJson.GetValue("$type")?.ToObject<string>();
 
@@ -187,7 +187,7 @@ internal class MultiEventUpcast : Upcaster
 
 internal class ChainedEventUpcast : Upcaster
 {
-    public IEnumerable<JObject>? Upcast(JObject eventJson)
+    public override IEnumerable<JObject>? Upcast(JObject eventJson)
     {
         var type = eventJson.GetValue("$type")?.ToObject<string>();
 
@@ -205,7 +205,7 @@ internal class ChainedEventUpcast : Upcaster
 [DependsOn(typeof(ChainedEventUpcast))]
 internal class ChainedEventUpcast2 : Upcaster
 {
-    public IEnumerable<JObject>? Upcast(JObject eventJson)
+    public override IEnumerable<JObject>? Upcast(JObject eventJson)
     {
         var type = eventJson.GetValue("$type")?.ToObject<string>();
 

@@ -50,34 +50,34 @@ public class UpcasterSorterTest
 
 internal class ExampleUpcasterNoDeps : Upcaster
 {
-    public IEnumerable<JObject> Upcast(JObject eventJson) => throw new NotImplementedException();
+    public override IEnumerable<JObject> Upcast(JObject eventJson) => throw new NotImplementedException();
 }
 
 internal class ExampleUpcasterDeps1 : Upcaster
 {
-    public IEnumerable<JObject> Upcast(JObject eventJson) => throw new NotImplementedException();
+    public override IEnumerable<JObject> Upcast(JObject eventJson) => throw new NotImplementedException();
 }
 
 [DependsOn(typeof(ExampleUpcasterDeps1), typeof(ExampleUpcasterNoDeps))]
 internal class ExampleUpcasterDeps2 : Upcaster
 {
-    public IEnumerable<JObject> Upcast(JObject eventJson) => throw new NotImplementedException();
+    public override IEnumerable<JObject> Upcast(JObject eventJson) => throw new NotImplementedException();
 }
 
 [DependsOn(typeof(ExampleUpcasterDeps1), typeof(ExampleUpcasterDeps2))]
 internal class ExampleUpcasterDeps3 : Upcaster
 {
-    public IEnumerable<JObject> Upcast(JObject eventJson) => throw new NotImplementedException();
+    public override IEnumerable<JObject> Upcast(JObject eventJson) => throw new NotImplementedException();
 }
 
 [DependsOn(typeof(ExampleUpcasterCyclic2))]
 internal class ExampleUpcasterCyclic1 : Upcaster
 {
-    public IEnumerable<JObject> Upcast(JObject eventJson) => throw new NotImplementedException();
+    public override IEnumerable<JObject> Upcast(JObject eventJson) => throw new NotImplementedException();
 }
 
 [DependsOn(typeof(ExampleUpcasterCyclic1))]
 internal class ExampleUpcasterCyclic2 : Upcaster
 {
-    public IEnumerable<JObject> Upcast(JObject eventJson) => throw new NotImplementedException();
+    public override IEnumerable<JObject> Upcast(JObject eventJson) => throw new NotImplementedException();
 }
