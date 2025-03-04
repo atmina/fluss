@@ -9,13 +9,13 @@ public interface AwaitableService
 }
 
 public class EventUpcasterService(
-    IEnumerable<IUpcaster> upcasters,
+    IEnumerable<Upcaster> upcasters,
     UpcasterSorter sorter,
     IEventRepository eventRepository,
     ILogger<EventUpcasterService> logger)
     : AwaitableService
 {
-    private readonly List<IUpcaster> _sortedUpcasters = sorter.SortByDependencies(upcasters);
+    private readonly List<Upcaster> _sortedUpcasters = sorter.SortByDependencies(upcasters);
 
     private readonly TaskCompletionSource _onCompletedSource = new();
 

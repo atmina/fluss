@@ -436,9 +436,9 @@ public class PostgreSQLTest : IAsyncLifetime
     public record TestEvent(int Test) : Event;
     public record TestEvent2(int Test) : Event;
 
-    public record TestEventUpcaster : IUpcaster
+    public class TestEventUpcaster : Upcasting.Upcaster
     {
-        public IEnumerable<JObject>? Upcast(JObject eventJson)
+        public override IEnumerable<JObject>? Upcast(JObject eventJson)
         {
             var eventType = eventJson["$type"]?.Value<string>();
             if (eventType == typeof(TestEvent).AssemblyQualifiedName)
