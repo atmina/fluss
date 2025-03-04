@@ -17,7 +17,7 @@
         <PackageReference Include="Collections.Pooled" Version="1.0.82" />
         <PackageReference Include="Microsoft.Extensions.Caching.Memory" Version="8.0.1" />
         <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="9.0.0" />
-        <PackageReference Include="Microsoft.Extensions.Hosting.Abstractions" Version="8.0.0" />
+        <PackageReference Include="Microsoft.Extensions.Hosting.Abstractions" Version="9.0.2" />
         <PackageReference Include="Microsoft.Extensions.Logging" Version="8.0.1" />
         <PackageReference Include="Microsoft.Extensions.ObjectPool" Version="8.0.8" />
         <PackageReference Include="Newtonsoft.Json" Version="13.0.3"/>
