@@ -11,7 +11,8 @@ public static class EventExtension
 {
     public static JObject ToJObject(this Event @event)
     {
-        var serializer = new JsonSerializerSettings {
+        var serializer = new JsonSerializerSettings
+        {
             TypeNameHandling = TypeNameHandling.All,
             TypeNameAssemblyFormatHandling = TypeNameAssemblyFormatHandling.Full,
         };

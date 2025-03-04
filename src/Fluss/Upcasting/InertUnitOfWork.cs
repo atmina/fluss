@@ -9,20 +9,25 @@ namespace Fluss.Upcasting;
  * A custom implementation of the IUnitOfWork interface aimed at providing very basic EventSourcing functionality for use in Upcasters.
  * Neither the envelope's At value, nor the By value can be trusted!
  */
-public class InertUnitOfWork : IWriteUnitOfWork {
+public class InertUnitOfWork : IWriteUnitOfWork
+{
     public IReadOnlyCollection<EventListener> ReadModels { get; } = new List<EventListener>();
-    private readonly IEventRepository _eventRepository = new InMemoryEventCache {
+    private readonly IEventRepository _eventRepository = new InMemoryEventCache
+    {
         Next = new InMemoryEventRepository()
     };
     private readonly IEventListenerFactory _eventListenerFactory;
 
-    public InertUnitOfWork() {
-        _eventListenerFactory = new InMemoryEventListenerCache {
+    public InertUnitOfWork()
+    {
+        _eventListenerFactory = new InMemoryEventListenerCache
+        {
             Next = new EventListenerFactory(_eventRepository)
         };
     }
 
-    public ValueTask<TAggregate> GetAggregate<TAggregate, TKey>(TKey key) where TAggregate : AggregateRoot<TKey>, new() {
+    public ValueTask<TAggregate> GetAggregate<TAggregate, TKey>(TKey key) where TAggregate : AggregateRoot<TKey>, new()
+    {
         throw new Exception($"Aggregates are by design not functional on the {nameof(InertUnitOfWork)}");
     }
 
@@ -31,7 +36,8 @@ public class InertUnitOfWork : IWriteUnitOfWork {
         throw new Exception($"Aggregates are by design not functional on the {nameof(InertUnitOfWork)}");
     }
 
-    public async ValueTask Publish(Event @event, AggregateRoot? aggregate = null) {
+    public async ValueTask Publish(Event @event, AggregateRoot? aggregate = null)
+    {
         var currentVersion = await ConsistentVersion();
         await _eventRepository.Publish(new[] {
             new EventEnvelope {
@@ -43,7 +49,8 @@ public class InertUnitOfWork : IWriteUnitOfWork {
         });
     }
 
-    public async ValueTask<long> ConsistentVersion() {
+    public async ValueTask<long> ConsistentVersion()
+    {
         return await _eventRepository.GetLatestVersion();
     }
 
@@ -73,39 +80,46 @@ public class InertUnitOfWork : IWriteUnitOfWork {
         return newReadModel;
     }
 
-    public ValueTask<TReadModel> GetReadModel<TReadModel>(long? at = null) where TReadModel : EventListener, IRootEventListener, IReadModel, new() {
+    public ValueTask<TReadModel> GetReadModel<TReadModel>(long? at = null) where TReadModel : EventListener, IRootEventListener, IReadModel, new()
+    {
         return UnsafeGetReadModelWithoutAuthorization<TReadModel>(at);
     }
 
-    public ValueTask<TReadModel> GetReadModel<TReadModel, TKey>(TKey key, long? at = null) where TReadModel : EventListener, IEventListenerWithKey<TKey>, IReadModel, new() {
+    public ValueTask<TReadModel> GetReadModel<TReadModel, TKey>(TKey key, long? at = null) where TReadModel : EventListener, IEventListenerWithKey<TKey>, IReadModel, new()
+    {
         return UnsafeGetReadModelWithoutAuthorization<TReadModel, TKey>(key, at);
     }
 
-    public async ValueTask<TReadModel> UnsafeGetReadModelWithoutAuthorization<TReadModel>(long? at = null) where TReadModel : EventListener, IRootEventListener, IReadModel, new() {
+    public async ValueTask<TReadModel> UnsafeGetReadModelWithoutAuthorization<TReadModel>(long? at = null) where TReadModel : EventListener, IRootEventListener, IReadModel, new()
+    {
         var model = new TReadModel();
         model = await ApplyEvents(model, at);
 
         return model;
     }
 
-    public async ValueTask<TReadModel> UnsafeGetReadModelWithoutAuthorization<TReadModel, TKey>(TKey key, long? at = null) where TReadModel : EventListener, IEventListenerWithKey<TKey>, IReadModel, new() {
+    public async ValueTask<TReadModel> UnsafeGetReadModelWithoutAuthorization<TReadModel, TKey>(TKey key, long? at = null) where TReadModel : EventListener, IEventListenerWithKey<TKey>, IReadModel, new()
+    {
         var model = new TReadModel { Id = key };
         model = await ApplyEvents(model, at);
 
         return model;
     }
 
-    public ValueTask<IReadOnlyList<TReadModel>> GetMultipleReadModels<TReadModel, TKey>(IEnumerable<TKey> keys, long? at = null) where TReadModel : EventListener, IReadModel, IEventListenerWithKey<TKey>, new() where TKey : notnull {
+    public ValueTask<IReadOnlyList<TReadModel>> GetMultipleReadModels<TReadModel, TKey>(IEnumerable<TKey> keys, long? at = null) where TReadModel : EventListener, IReadModel, IEventListenerWithKey<TKey>, new() where TKey : notnull
+    {
         return UnsafeGetMultipleReadModelsWithoutAuthorization<TReadModel, TKey>(keys, at);
     }
 
     public async ValueTask<IReadOnlyList<TReadModel>>
         UnsafeGetMultipleReadModelsWithoutAuthorization<TReadModel, TKey>(IEnumerable<TKey> keys, long? at = null)
-        where TReadModel : EventListener, IReadModel, IEventListenerWithKey<TKey>, new() where TKey : notnull {
+        where TReadModel : EventListener, IReadModel, IEventListenerWithKey<TKey>, new() where TKey : notnull
+    {
         var dictionary = new ConcurrentDictionary<TKey, TReadModel>();
         var keysList = keys.ToList();
 
-        await Parallel.ForEachAsync(keysList, async (key, _) => {
+        await Parallel.ForEachAsync(keysList, async (key, _) =>
+        {
             dictionary[key] = await UnsafeGetReadModelWithoutAuthorization<TReadModel, TKey>(key, at);
         });
 
@@ -122,7 +136,8 @@ public class InertUnitOfWork : IWriteUnitOfWork {
         return ValueTask.CompletedTask;
     }
 
-    private async Task<TEventListener> ApplyEvents<TEventListener>(TEventListener readModel, long? at = null) where TEventListener : EventListener {
+    private async Task<TEventListener> ApplyEvents<TEventListener>(TEventListener readModel, long? at = null) where TEventListener : EventListener
+    {
         return await _eventListenerFactory.UpdateTo(readModel, at ?? await ConsistentVersion());
     }
 }
