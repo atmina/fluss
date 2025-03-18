@@ -1,7 +1,8 @@
-using System.Diagnostics;
+using System.Diagnostics.Metrics;
 using Collections.Pooled;
 using Fluss.Authentication;
 using Fluss.Events;
+using Fluss.Metrics;
 using Fluss.Validation;
 using Microsoft.Extensions.ObjectPool;
 
@@ -16,6 +17,7 @@ public partial class UnitOfWork : IWriteUnitOfWork
     }
 
     private static readonly ObjectPool<UnitOfWork> Pool = new DefaultObjectPool<UnitOfWork>(new UnitOfWorkObjectPolicy());
+    private static readonly UpDownCounter<int> UnitOfWorkActiveInstances = FlussMetrics.Meter.CreateUpDownCounter<int>("active_unit_of_work_instances", unit: "Instances", description: "Number of active UnitOfWork instances that are not returned to the Pool");
 
     private IEventListenerFactory? _eventListenerFactory;
     private IEventRepository? _eventRepository;
@@ -39,6 +41,8 @@ public partial class UnitOfWork : IWriteUnitOfWork
         unitOfWork._userIdProvider = userIdProvider;
         unitOfWork._validator = validator;
         unitOfWork._isInstantiated = true;
+        UnitOfWorkActiveInstances.Add(1);
+
         return unitOfWork;
     }
 
@@ -110,6 +114,7 @@ public partial class UnitOfWork : IWriteUnitOfWork
         _isInstantiated = false;
 
         Pool.Return(this);
+        UnitOfWorkActiveInstances.Add(-1);
 
         return ValueTask.CompletedTask;
     }
