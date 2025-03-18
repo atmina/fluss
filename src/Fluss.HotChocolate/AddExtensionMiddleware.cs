@@ -1,4 +1,6 @@
+using System.Diagnostics.Metrics;
 using Fluss.Events;
+using Fluss.Metrics;
 using HotChocolate.AspNetCore.Subscriptions;
 using HotChocolate.Execution;
 using Microsoft.AspNetCore.Http;
@@ -14,6 +16,11 @@ public class AddExtensionMiddleware(
     ILogger<AddExtensionMiddleware> logger)
 {
     private const string SubsequentRequestMarker = nameof(AddExtensionMiddleware) + ".subsequentRequestMarker";
+    private static readonly UpDownCounter<int> ActiveLiveQueries = FlussMetrics.Meter.CreateUpDownCounter<int>(
+        "active_live_queries",
+        unit: "Queries",
+        description: "Number of active Live Queries stuck in a while loop."
+    );
 
     private readonly RequestDelegate _next = next ?? throw new ArgumentNullException(nameof(next));
 
@@ -100,6 +107,7 @@ unitOfWork).Create();
                 yield break;
         }
 
+        ActiveLiveQueries.Add(1);
         while (true)
         {
             var latestPersistedEventVersion = await WaitForChange(serviceProvider, listeners);
@@ -132,6 +140,8 @@ unitOfWork).Create();
                 break;
             }
         }
+
+        ActiveLiveQueries.Add(-1);
     }
 
     /**
