@@ -108,14 +108,25 @@ unitOfWork).Create();
         }
 
         ActiveLiveQueries.Add(1);
+
+        var loopCancellation = new CancellationTokenSource();
+        _ = Task.Run(async () =>
+        {
+            while (true)
+            {
+                if (loopCancellation.IsCancellationRequested) return;
+                if (IsCancelled())
+                {
+                    loopCancellation.Cancel();
+                    return;
+                }
+                await Task.Delay(5_000, loopCancellation.Token);
+            }
+        }, loopCancellation.Token);
+
         while (true)
         {
-            var latestPersistedEventVersion = await WaitForChange(serviceProvider, listeners);
-
-            if (isWebsocket && contextSocketSession is ISocketSession socketSession && socketSession.Operations.All(operationSession => operationSession.Id != operationId?.ToString()))
-            {
-                break;
-            }
+            var latestPersistedEventVersion = await WaitForChange(serviceProvider, listeners, loopCancellation.Token);
 
             var readOnlyQueryRequest = QueryRequestBuilder
                     .From(originalRequest)
@@ -142,12 +153,19 @@ unitOfWork).Create();
         }
 
         ActiveLiveQueries.Add(-1);
+        yield break;
+
+        bool IsCancelled()
+        {
+            return isWebsocket && contextSocketSession is ISocketSession socketSession &&
+                   socketSession.Operations.All(operationSession => operationSession.Id != operationId?.ToString());
+        }
     }
 
     /**
      * Returns the received latest persistent event version after a change has occured.
      */
-    private static async ValueTask<long> WaitForChange(IServiceProvider serviceProvider, IEnumerable<EventListener> eventListeners)
+    private static async ValueTask<long> WaitForChange(IServiceProvider serviceProvider, IEnumerable<EventListener> eventListeners, CancellationToken ct)
     {
         var currentEventListener = eventListeners.ToList();
 
@@ -155,7 +173,7 @@ unitOfWork).Create();
         var newTransientEventNotifier = serviceProvider.GetRequiredService<NewTransientEventNotifier>();
         var eventListenerFactory = serviceProvider.GetRequiredService<EventListenerFactory>();
 
-        var cancellationTokenSource = new CancellationTokenSource();
+        var cancellationTokenSource = CancellationTokenSource.CreateLinkedTokenSource(ct);
 
         var latestPersistedEventVersion = currentEventListener.Min(el => el.LastSeenEvent);
         var latestTransientEventVersion = currentEventListener.Min(el => el.LastSeenTransientEvent);
