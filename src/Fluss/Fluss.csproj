@@ -1,4 +1,4 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="Microsoft.NET.Sdk">
 
     <PropertyGroup>
         <TargetFrameworks>net8.0;net9.0</TargetFrameworks>
@@ -22,7 +22,7 @@
         <PackageReference Include="Microsoft.Extensions.ObjectPool" Version="8.0.8" />
         <PackageReference Include="Newtonsoft.Json" Version="13.0.3"/>
         <PackageReference Include="OpenTelemetry.Api" Version="1.10.0" />
-        <PackageReference Include="Polly" Version="8.4.2" />
+        <PackageReference Include="Polly" Version="8.5.2" />
         <PackageReference Include="Polly.Contrib.WaitAndRetry" Version="1.1.1"/>
     </ItemGroup>
 
