@@ -13,6 +13,7 @@ using HotChocolate;
 using HotChocolate.Types;
 using Microsoft.AspNetCore.Hosting.Server;
 using Microsoft.AspNetCore.Hosting.Server.Features;
+using Microsoft.Extensions.Diagnostics.Metrics.Testing;
 
 namespace Fluss.HotChocolate.IntegrationTest;
 
@@ -58,7 +59,7 @@ public class Tests
         var tokenSource = new CancellationTokenSource();
         tokenSource.CancelAfter(30000);
 
-        var channel = await SubscribeToTodos(default);
+        var (channel, _) = await SubscribeToTodos(default);
 
         // Receive initial response
         await channel.Reader.WaitToReadAsync(tokenSource.Token);
@@ -75,6 +76,30 @@ public class Tests
         }
 
         await tokenSource.CancelAsync();
+    }
+
+    [Test]
+    public async Task LiveQueryUnsubscribesAfterClientDisconnects()
+    {
+        var metricsCollector = new MetricCollector<int>(AddExtensionMiddleware.ActiveLiveQueries);
+        var metric = 0;
+        var (_, socket) = await SubscribeToTodos(CancellationToken.None);
+        await metricsCollector.WaitForMeasurementsAsync(1, TimeSpan.FromMilliseconds(3500));
+        var metricDelta = metricsCollector.LastMeasurement!.Value;
+        metric += metricDelta;
+        Assert.That(metric, Is.EqualTo(1));
+        try
+        {
+            await socket.CloseAsync(WebSocketCloseStatus.NormalClosure, "Normal closure", CancellationToken.None);
+        }
+        catch
+        {
+        }
+
+        await metricsCollector.WaitForMeasurementsAsync(2, TimeSpan.FromMilliseconds(15_000));
+        metricDelta = metricsCollector.LastMeasurement!.Value;
+        metric += metricDelta;
+        Assert.That(metric, Is.Zero);
     }
 
     private async Task<Guid> CreateTodo(string todo)
@@ -97,7 +122,7 @@ public class Tests
         return Guid.Parse(id ?? "");
     }
 
-    private async Task<Channel<List<Guid>>> SubscribeToTodos(CancellationToken ct)
+    private async Task<(Channel<List<Guid>>, WebSocket)> SubscribeToTodos(CancellationToken ct)
     {
         var channel = Channel.CreateUnbounded<List<Guid>>();
         var socket = new ClientWebSocket();
@@ -131,7 +156,7 @@ public class Tests
         const string subscription = """{"id":"0","type":"subscribe","payload":{"query":"\n  query Todos {\n todos { id } }\n","operationName":"Todos","variables":{}}}""";
         await socket.SendAsync(Encoding.UTF8.GetBytes(subscription).AsMemory(), WebSocketMessageType.Text, true, ct);
 
-        return channel;
+        return (channel, socket);
     }
 
     [TearDown]

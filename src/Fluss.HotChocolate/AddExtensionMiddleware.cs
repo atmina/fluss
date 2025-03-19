@@ -16,7 +16,7 @@ public class AddExtensionMiddleware(
     ILogger<AddExtensionMiddleware> logger)
 {
     private const string SubsequentRequestMarker = nameof(AddExtensionMiddleware) + ".subsequentRequestMarker";
-    private static readonly UpDownCounter<int> ActiveLiveQueries = FlussMetrics.Meter.CreateUpDownCounter<int>(
+    internal static readonly UpDownCounter<int> ActiveLiveQueries = FlussMetrics.Meter.CreateUpDownCounter<int>(
         "active_live_queries",
         unit: "Queries",
         description: "Number of active Live Queries stuck in a while loop."
@@ -138,7 +138,8 @@ unitOfWork).Create();
 
             await using var executionResult = await serviceProvider.ExecuteRequestAsync(readOnlyQueryRequest);
 
-            if (executionResult is not IQueryResult result)
+            if (executionResult is not IQueryResult result
+                || contextSocketSession is ISocketSession { Connection.IsClosed: true })
             {
                 break;
             }
