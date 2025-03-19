@@ -16,7 +16,7 @@ public class AddExtensionMiddleware(
     ILogger<AddExtensionMiddleware> logger)
 {
     private const string SubsequentRequestMarker = nameof(AddExtensionMiddleware) + ".subsequentRequestMarker";
-    private static readonly UpDownCounter<int> ActiveLiveQueries = FlussMetrics.Meter.CreateUpDownCounter<int>(
+    internal static readonly UpDownCounter<int> ActiveLiveQueries = FlussMetrics.Meter.CreateUpDownCounter<int>(
         "active_live_queries",
         unit: "Queries",
         description: "Number of active Live Queries stuck in a while loop."
@@ -108,14 +108,25 @@ unitOfWork).Create();
         }
 
         ActiveLiveQueries.Add(1);
+
+        var loopCancellation = new CancellationTokenSource();
+        _ = Task.Run(async () =>
+        {
+            while (true)
+            {
+                if (loopCancellation.IsCancellationRequested) return;
+                if (IsCancelled())
+                {
+                    loopCancellation.Cancel();
+                    return;
+                }
+                await Task.Delay(5_000, loopCancellation.Token);
+            }
+        }, loopCancellation.Token);
+
         while (true)
         {
-            var latestPersistedEventVersion = await WaitForChange(serviceProvider, listeners);
-
-            if (isWebsocket && contextSocketSession is ISocketSession socketSession && socketSession.Operations.All(operationSession => operationSession.Id != operationId?.ToString()))
-            {
-                break;
-            }
+            var latestPersistedEventVersion = await WaitForChange(serviceProvider, listeners, loopCancellation.Token);
 
             var readOnlyQueryRequest = QueryRequestBuilder
                     .From(originalRequest)
@@ -127,7 +138,8 @@ unitOfWork).Create();
 
             await using var executionResult = await serviceProvider.ExecuteRequestAsync(readOnlyQueryRequest);
 
-            if (executionResult is not IQueryResult result)
+            if (executionResult is not IQueryResult result
+                || contextSocketSession is ISocketSession { Connection.IsClosed: true })
             {
                 break;
             }
@@ -142,12 +154,19 @@ unitOfWork).Create();
         }
 
         ActiveLiveQueries.Add(-1);
+        yield break;
+
+        bool IsCancelled()
+        {
+            return isWebsocket && contextSocketSession is ISocketSession socketSession &&
+                   socketSession.Operations.All(operationSession => operationSession.Id != operationId?.ToString());
+        }
     }
 
     /**
      * Returns the received latest persistent event version after a change has occured.
      */
-    private static async ValueTask<long> WaitForChange(IServiceProvider serviceProvider, IEnumerable<EventListener> eventListeners)
+    private static async ValueTask<long> WaitForChange(IServiceProvider serviceProvider, IEnumerable<EventListener> eventListeners, CancellationToken ct)
     {
         var currentEventListener = eventListeners.ToList();
 
@@ -155,7 +174,7 @@ unitOfWork).Create();
         var newTransientEventNotifier = serviceProvider.GetRequiredService<NewTransientEventNotifier>();
         var eventListenerFactory = serviceProvider.GetRequiredService<EventListenerFactory>();
 
-        var cancellationTokenSource = new CancellationTokenSource();
+        var cancellationTokenSource = CancellationTokenSource.CreateLinkedTokenSource(ct);
 
         var latestPersistedEventVersion = currentEventListener.Min(el => el.LastSeenEvent);
         var latestTransientEventVersion = currentEventListener.Min(el => el.LastSeenTransientEvent);

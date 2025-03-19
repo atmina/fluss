@@ -1,6 +1,9 @@
+using System.Runtime.CompilerServices;
 using HotChocolate.Execution.Configuration;
 using HotChocolate.Internal;
 using Microsoft.Extensions.DependencyInjection;
+
+[assembly: InternalsVisibleTo("Fluss.HotChocolate.IntegrationTest")]
 
 namespace Fluss.HotChocolate;
 
