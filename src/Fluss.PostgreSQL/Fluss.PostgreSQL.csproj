@@ -1,4 +1,4 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="Microsoft.NET.Sdk">
 
     <PropertyGroup>
         <TargetFrameworks>net8.0;net9.0</TargetFrameworks>
@@ -15,7 +15,7 @@
 
     <ItemGroup>
         <PackageReference Include="FluentMigrator.Runner.Postgres" Version="5.2.0" />
-        <PackageReference Include="Microsoft.Extensions.Hosting.Abstractions" Version="8.0.0" />
+        <PackageReference Include="Microsoft.Extensions.Hosting.Abstractions" Version="9.0.3" />
         <PackageReference Include="Npgsql" Version="8.0.4" />
         <PackageReference Include="Npgsql.Json.NET" Version="8.0.4" />
     </ItemGroup>
